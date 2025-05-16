@@ -1,0 +1,92 @@
+import 'package:flutter/material.dart';
+import 'package:ntsc_ui/ApiService.dart';
+import 'package:ntsc_ui/NtpServerWidget.dart';
+import 'package:provider/provider.dart';
+
+class MyTabbedPage extends StatefulWidget {
+  @override
+  _MyTabbedPageState createState() => _MyTabbedPageState();
+}
+
+class _MyTabbedPageState extends State<MyTabbedPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 7, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void switchTab(int index) {
+    _tabController.animateTo(index);
+  }
+
+  Widget getTabContent(int index) {
+    switch (index) {
+      case 4:
+        return NtpServerWidget(); // No need to pass api anymore
+      // Add other tabs...
+      default:
+        return Center(child: Text('Unknown Tab'));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Novus Time Server Config'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(icon: Icon(Icons.settings), text: 'Config'),
+            Tab(icon: Icon(Icons.tune), text: 'Advanced'),
+            Tab(icon: Icon(Icons.lock_clock), text: 'CLK Clock'),
+            Tab(icon: Icon(Icons.sync), text: 'PTP OC'),
+            Tab(icon: Icon(Icons.access_time), text: 'NTP Server'),
+            Tab(icon: Icon(Icons.monitor_heart), text: 'PPS Slave'),
+            Tab(icon: Icon(Icons.satellite_alt), text: 'TOD Slave'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: List.generate(7, (index) => getTabContent(index)),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => switchTab(4),
+        child: Icon(Icons.access_time),
+      ),
+    );
+  }
+}
+
+void main() {
+  final apiService = ApiService(baseUrl: "http://100.127.98.7:8080/api/v1");
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => NtpServerProvider(api: apiService),
+        ),
+        // Add more providers here as needed
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(home: MyTabbedPage());
+  }
+}
