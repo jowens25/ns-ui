@@ -31,6 +31,8 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
       provider.getVlanStatus();
 
       provider.getIpAddress();
+
+      provider.getIpMode();
     });
   }
 
@@ -149,6 +151,28 @@ List<CardInfo> cards = [
               Row(
                 children: [
                   Expanded(
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: "IP Mode",
+                        labelStyle: TextStyle(fontSize: 12.0),
+                        border: OutlineInputBorder(),
+                      ),
+                      value:
+                          (['IPv4', 'Ipv6'].contains(ntp.ipMode))
+                              ? ntp.ipMode
+                              : null,
+                      items: const [
+                        DropdownMenuItem(value: 'IPv4', child: Text('IPv4')),
+                        DropdownMenuItem(value: 'IPv6', child: Text('IPv6')),
+                      ],
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          ntp.updateIpMode(newValue);
+                        }
+                      },
+                    ),
+                  ),
+                  Expanded(
                     child: TextField(
                       controller: TextEditingController(text: ntp.ipAddress),
                       onSubmitted: (value) {
@@ -157,79 +181,50 @@ List<CardInfo> cards = [
                       decoration: InputDecoration(labelText: 'IP'),
                     ),
                   ),
-                  // Expanded(
-                  //   child: DropdownButtonFormField<String>(
-                  //     decoration: const InputDecoration(
-                  //       labelText: "Vlan Status",
-                  //       labelStyle: TextStyle(fontSize: 12.0),
-                  //       border: OutlineInputBorder(),
-                  //     ),
-                  //     value:
-                  //         (['IPv4', 'Ipv6'].contains(ntp.vlanStatus))
-                  //             ? ntp.vlanStatus
-                  //             : null,
-                  //     items: const [
-                  //       DropdownMenuItem(
-                  //         value: 'enabled',
-                  //         child: Text('Enabled'),
-                  //       ),
-                  //       DropdownMenuItem(
-                  //         value: 'disabled',
-                  //         child: Text('Disabled'),
-                  //       ),
-                  //       //DropdownMenuItem(value: 'NA', child: Text('NA')),
-                  //     ],
-                  //     onChanged: (String? newValue) {
-                  //       if (newValue != null) {
-                  //         ntp.updateVlanStatus(newValue);
-                  //       }
-                  //     },
-                  //   ),
-                  // ),
                 ],
               ),
             ],
           ),
     ),
   ),
-  CardInfo(
-    title: 'Actions',
-    content: Consumer<NtpServerProvider>(
-      builder:
-          (context, ntp, _) => Row(
-            children: [
-              ElevatedButton(
-                onPressed: () => ntp.getVersion(),
-                child: Text('Read Version'),
-              ),
-              SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => ntp.getMacAddress(),
-                child: Text('Read Mac'),
-              ),
-            ],
-          ),
-    ),
-  ),
-  CardInfo(
-    title: 'Actions',
-    content: Consumer<NtpServerProvider>(
-      builder:
-          (context, ntp, _) => Row(
-            children: [
-              ElevatedButton(
-                onPressed: () => ntp.getVersion(),
-                child: Text('Read Version'),
-              ),
-              SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => ntp.getMacAddress(),
-                child: Text('Read Mac'),
-              ),
-            ],
-          ),
-    ),
-  ),
+  //CardInfo(
+  //  title: 'Actions',
+  //  content: Consumer<NtpServerProvider>(
+  //    builder:
+  //        (context, ntp, _) => Row(
+  //          children: [
+  //            ElevatedButton(
+  //              onPressed: () => ntp.getVersion(),
+  //              child: Text('Read Version'),
+  //            ),
+  //            SizedBox(width: 8),
+  //            ElevatedButton(
+  //              onPressed: () => ntp.getMacAddress(),
+  //              child: Text('Read Mac'),
+  //            ),
+  //          ],
+  //        ),
+  //  ),
+  //),
+  //CardInfo(
+  //  title: 'Actions',
+  //  content: Consumer<NtpServerProvider>(
+  //    builder:
+  //        (context, ntp, _) => Row(
+  //          children: [
+  //            ElevatedButton(
+  //              onPressed: () => ntp.getVersion(),
+  //              child: Text('Read Version'),
+  //            ),
+  //            SizedBox(width: 8),
+  //            ElevatedButton(
+  //              onPressed: () => ntp.getMacAddress(),
+  //              child: Text('Read Mac'),
+  //            ),
+  //          ],
+  //        ),
+  //  ),
+  //),
   CardInfo(
     title: 'Actions',
     content: Consumer<NtpServerProvider>(
@@ -306,6 +301,7 @@ class NtpServerProvider extends ChangeNotifier {
   String _macAddress = '';
   String _vlanAddress = '';
   String _vlanStatus = '';
+  String _ipMode = '';
   String _ipAddress = '';
 
   bool isLoading = false;
@@ -316,6 +312,7 @@ class NtpServerProvider extends ChangeNotifier {
   String get macAddress => _macAddress;
   String get vlanAddress => _vlanAddress;
   String get vlanStatus => _vlanStatus;
+  String get ipMode => _ipMode;
   String get ipAddress => _ipAddress;
 
   // == version
@@ -444,10 +441,10 @@ class NtpServerProvider extends ChangeNotifier {
     _setLoading(false);
   }
 
-  Future<void> postIpAddress(Map<String, dynamic> newVlanAddress) async {
+  Future<void> postIpAddress(Map<String, dynamic> newIpAddress) async {
     try {
-      await api.post('/ntp-server/ip/address', newVlanAddress);
-      _ipAddress = newVlanAddress['ip-address'] ?? '';
+      await api.post('/ntp-server/ip/address', newIpAddress);
+      _ipAddress = newIpAddress['ip-address'] ?? '';
       error = null;
     } catch (e) {
       error = e.toString();
@@ -457,6 +454,36 @@ class NtpServerProvider extends ChangeNotifier {
   void updateIpAddress(String vlanAddr) async {
     await postIpAddress({'ip-address': vlanAddr});
     await getIpAddress();
+  }
+  // ===
+
+  // ip address
+  Future<void> getIpMode() async {
+    _setLoading(true);
+    try {
+      final data = await api.get('/ntp-server/ip/mode');
+      _ipMode = data['ip-mode'] ?? 'API ERROR?';
+      error = null;
+    } catch (e) {
+      error = e.toString();
+    }
+    _setLoading(false);
+  }
+
+  Future<void> postIpMode(Map<String, dynamic> newIpMode) async {
+    try {
+      await api.post('/ntp-server/ip/mode', newIpMode);
+      _ipMode = newIpMode['ip-mode'] ?? '';
+      print(_ipMode);
+      error = null;
+    } catch (e) {
+      error = e.toString();
+    }
+  }
+
+  void updateIpMode(String newIpMode) async {
+    await postIpMode({'ip-mode': newIpMode});
+    await getIpMode();
   }
 
   // ===
