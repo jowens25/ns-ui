@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'ApiService.dart'; // Import your provider
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
+import 'NtpServer.dart';
+import 'ApiService.dart';
+import 'CardInfo.dart';
 
 class NtpServerWidget extends StatefulWidget {
   @override
@@ -13,54 +10,217 @@ class NtpServerWidget extends StatefulWidget {
 }
 
 class _NtpServerWidgetState extends State<NtpServerWidget> {
-  //final TextEditingController macController = TextEditingController();
-  //final TextEditingController _vlanController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
-    // Schedule fetches after the first build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<NtpServerProvider>(context, listen: false);
-      provider.getVersion();
-      provider.getInstance();
-      provider.getMacAddress();
+    final ntpServerProvider = Provider.of<NtpServerApi>(context, listen: false);
 
-      provider.getVlanAddress();
-
-      provider.getVlanStatus();
-
-      provider.getIpAddress();
-
-      provider.getIpMode();
-    });
+    ntpServerProvider.getRequest(ntpServer.status);
+    ntpServerProvider.getRequest(ntpServer.instanceNumber);
+    ntpServerProvider.getRequest(ntpServer.ipMode);
+    ntpServerProvider.getRequest(ntpServer.ipAddress);
+    ntpServerProvider.getRequest(ntpServer.macAddress);
+    ntpServerProvider.getRequest(ntpServer.vlanStatus);
+    ntpServerProvider.getRequest(ntpServer.vlanAddress);
+    ntpServerProvider.getRequest(ntpServer.unicastMode);
+    ntpServerProvider.getRequest(ntpServer.multicastMode);
+    ntpServerProvider.getRequest(ntpServer.broadcastMode);
+    ntpServerProvider.getRequest(ntpServer.precisionValue);
+    ntpServerProvider.getRequest(ntpServer.pollIntervalValue);
+    ntpServerProvider.getRequest(ntpServer.stratumValue);
+    ntpServerProvider.getRequest(ntpServer.referenceId);
+    ntpServerProvider.getRequest(ntpServer.smearingStatus);
+    ntpServerProvider.getRequest(ntpServer.leap61Progress);
+    ntpServerProvider.getRequest(ntpServer.leap59Progress);
+    ntpServerProvider.getRequest(ntpServer.leap61Status);
+    ntpServerProvider.getRequest(ntpServer.leap59Status);
+    ntpServerProvider.getRequest(ntpServer.utcOffsetStatus);
+    ntpServerProvider.getRequest(ntpServer.utcOffsetValue);
+    ntpServerProvider.getRequest(ntpServer.requestsValue);
+    ntpServerProvider.getRequest(ntpServer.responsesValue);
+    ntpServerProvider.getRequest(ntpServer.requestsDroppedValue);
+    ntpServerProvider.getRequest(ntpServer.broadcastsValue);
+    ntpServerProvider.getRequest(ntpServer.clearCountersStatus);
+    ntpServerProvider.getRequest(ntpServer.version);
   }
 
   @override
   void dispose() {
-    // macController.dispose();
-    // _vlanController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    List<CardInfo> ntpcards = [
+      CardInfo(
+        title: 'NTP Server Configuration',
+        content: Consumer<NtpServerApi>(
+          builder:
+              (context, api, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Text('Core Version : ${api.get(ntpServer.version)}'),
+                  Text('Instance Number: ${api.get(ntpServer.instanceNumber)}'),
+
+                  Row(
+                    children: [
+                      Text("NTP Server Enable: "),
+                      Checkbox(
+                        value: api.get(ntpServer.status) == 'enabled',
+                        onChanged: (bool? value) {
+                          if (value != null) {
+                            api.update(
+                              ntpServer.status,
+                              value ? 'enabled' : 'disabled',
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        child: TextField(
+                          controller: TextEditingController(
+                            text: api.get(ntpServer.macAddress),
+                          ),
+                          onSubmitted: (value) {
+                            api.update(ntpServer.macAddress, value);
+                            //ntp.updateMacAddress(value);
+                          },
+                          decoration: InputDecoration(labelText: 'MAC Address'),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        child: TextField(
+                          controller: TextEditingController(
+                            text: api.get(ntpServer.vlanAddress),
+                          ),
+                          onSubmitted: (value) {
+                            api.update(ntpServer.vlanAddress, value);
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'VLAN Address',
+                          ),
+                        ),
+                      ),
+
+                      Row(
+                        children: [
+                          SizedBox(width: 4),
+                          Text("VLAN Enable: "),
+                          Checkbox(
+                            //value: ntp.vlanStatus == 'enabled',
+                            value: api.get(ntpServer.vlanStatus) == 'enabled',
+                            onChanged: (bool? value) {
+                              if (value != null) {
+                                api.update(
+                                  ntpServer.vlanStatus,
+                                  value ? 'enabled' : 'disabled',
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+
+                    children: [
+                      SizedBox(
+                        width: 325,
+                        child: TextField(
+                          controller: TextEditingController(
+                            text: api.get(ntpServer.ipAddress),
+                          ),
+                          onSubmitted: (value) {},
+                          decoration: InputDecoration(labelText: 'IP Address'),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+
+                      SizedBox(
+                        width: 125,
+                        child: DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: "IP Mode",
+                            border: OutlineInputBorder(),
+                          ),
+                          value:
+                              ([
+                                    'IPv4',
+                                    'IPv6',
+                                  ].contains(api.get(ntpServer.ipMode)))
+                                  ? api.get(ntpServer.ipMode)
+                                  : null,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'IPv4',
+                              child: Text('IPv4'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'IPv6',
+                              child: Text('IPv6'),
+                            ),
+                          ],
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              //ntp.updateIpMode(newValue);
+                              api.update(ntpServer.ipMode, newValue);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Row(
+                    children: [
+                      Text("Clear Counters:"),
+                      SizedBox(width: 10),
+
+                      Checkbox(
+                        value: false, //ntp.vlanStatus == 'enabled',
+                        onChanged: (bool? value) {
+                          if (value != null) {
+                            //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+        ),
+      ),
+    ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        int crossAxisCount = (constraints.maxWidth / constraints.maxWidth * 4)
-            .floor()
-            .clamp(1, 4);
         return GridView.builder(
           padding: EdgeInsets.all(12),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 800,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 0.5,
+            childAspectRatio: 1,
           ),
-          itemCount: cards.length,
+          itemCount: ntpcards.length,
           itemBuilder: (context, index) {
-            final card = cards[index];
+            final card = ntpcards[index];
             return Card(
               elevation: 4,
               margin: EdgeInsets.zero,
@@ -86,409 +246,380 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
   }
 }
 
-class CardInfo {
-  final String title;
-  final Widget content;
-
-  CardInfo({required this.title, required this.content});
+Widget labeledCheckbox(
+  String label,
+  bool value,
+  ValueChanged<bool?> onChanged,
+) {
+  return Row(
+    children: [Text(label), Checkbox(value: value, onChanged: onChanged)],
+  );
 }
 
-List<CardInfo> cards = [
-  CardInfo(
-    title: 'Server Info',
-    content: Consumer<NtpServerProvider>(
-      builder:
-          (context, ntp, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Version: ${ntp.version}'),
-              Text('Instance: ${ntp.instance}'),
-            ],
-          ),
+Widget labeledTextField({
+  required String label,
+  required String value,
+  required ValueChanged<String> onSubmitted,
+  double width = 140,
+}) {
+  final controller = TextEditingController(text: value);
+  return SizedBox(
+    width: width,
+    child: TextField(
+      controller: controller,
+      onSubmitted: onSubmitted,
+      decoration: InputDecoration(labelText: label),
     ),
-  ),
-  CardInfo(
-    title: 'Network',
-    content: Consumer<NtpServerProvider>(
-      builder:
-          (context, ntp, _) => Column(
-            children: [
-              TextField(
-                controller: TextEditingController(text: ntp.macAddress),
-                onSubmitted: (value) {
-                  print(ntp.macAddress);
-                  ntp.updateMacAddress(value);
-                },
-                decoration: InputDecoration(labelText: 'Mac Address'),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: TextEditingController(text: ntp.vlanAddress),
-                      onSubmitted: (value) {
-                        ntp.updateVlanAddress(value);
-                      },
-                      decoration: InputDecoration(labelText: 'Vlan'),
-                    ),
-                  ),
-                  Expanded(
-                    child: CheckboxListTile(
-                      title: Text(
-                        "Vlan Enable",
-                        style: TextStyle(fontSize: 12.0),
-                      ),
-                      value: ntp.vlanStatus == 'enabled',
-                      onChanged: (bool? value) {
-                        if (value != null) {
-                          ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: "IP Mode",
-                        labelStyle: TextStyle(fontSize: 12.0),
-                        border: OutlineInputBorder(),
-                      ),
-                      value:
-                          (['IPv4', 'Ipv6'].contains(ntp.ipMode))
-                              ? ntp.ipMode
-                              : null,
-                      items: const [
-                        DropdownMenuItem(value: 'IPv4', child: Text('IPv4')),
-                        DropdownMenuItem(value: 'IPv6', child: Text('IPv6')),
-                      ],
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          ntp.updateIpMode(newValue);
-                        }
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: TextEditingController(text: ntp.ipAddress),
-                      onSubmitted: (value) {
-                        ntp.updateIpAddress(value);
-                      },
-                      decoration: InputDecoration(labelText: 'IP'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-    ),
-  ),
-  //CardInfo(
-  //  title: 'Actions',
-  //  content: Consumer<NtpServerProvider>(
-  //    builder:
-  //        (context, ntp, _) => Row(
-  //          children: [
-  //            ElevatedButton(
-  //              onPressed: () => ntp.getVersion(),
-  //              child: Text('Read Version'),
-  //            ),
-  //            SizedBox(width: 8),
-  //            ElevatedButton(
-  //              onPressed: () => ntp.getMacAddress(),
-  //              child: Text('Read Mac'),
-  //            ),
-  //          ],
-  //        ),
-  //  ),
-  //),
-  //CardInfo(
-  //  title: 'Actions',
-  //  content: Consumer<NtpServerProvider>(
-  //    builder:
-  //        (context, ntp, _) => Row(
-  //          children: [
-  //            ElevatedButton(
-  //              onPressed: () => ntp.getVersion(),
-  //              child: Text('Read Version'),
-  //            ),
-  //            SizedBox(width: 8),
-  //            ElevatedButton(
-  //              onPressed: () => ntp.getMacAddress(),
-  //              child: Text('Read Mac'),
-  //            ),
-  //          ],
-  //        ),
-  //  ),
-  //),
-  CardInfo(
-    title: 'Actions',
-    content: Consumer<NtpServerProvider>(
-      builder:
-          (context, ntp, _) => Row(
-            children: [
-              ElevatedButton(
-                onPressed: () => ntp.getVersion(),
-                child: Text('Read Version'),
-              ),
-              SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => ntp.getMacAddress(),
-                child: Text('Read Mac'),
-              ),
-            ],
-          ),
-    ),
-  ),
-  // Add more cards as needed
-];
-
-class ApiService {
-  final String baseUrl;
-
-  ApiService({required this.baseUrl});
-
-  Future<dynamic> get(String endpoint) async {
-    final response = await http
-        .get(Uri.parse('$baseUrl$endpoint'))
-        .timeout(
-          const Duration(seconds: 1),
-          onTimeout: () {
-            print("time out");
-            return http.Response('Error', 408);
-          },
-        );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load data: ${response.statusCode}');
-    }
-  }
-
-  Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
-    final response = await http
-        .post(
-          Uri.parse('$baseUrl$endpoint'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(data),
-        )
-        .timeout(
-          const Duration(seconds: 1),
-          onTimeout: () {
-            print("time out");
-            return http.Response('Error', 408);
-          },
-        );
-    ;
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to post data: ${response.statusCode}');
-    }
-  }
+  );
 }
 
-class NtpServerProvider extends ChangeNotifier {
-  NtpServerProvider({required this.api});
-  final ApiService api;
-
-  String _version = '';
-  String _instance = '';
-  String _macAddress = '';
-  String _vlanAddress = '';
-  String _vlanStatus = '';
-  String _ipMode = '';
-  String _ipAddress = '';
-
-  bool isLoading = false;
-  String? error;
-
-  String get version => _version;
-  String get instance => _instance;
-  String get macAddress => _macAddress;
-  String get vlanAddress => _vlanAddress;
-  String get vlanStatus => _vlanStatus;
-  String get ipMode => _ipMode;
-  String get ipAddress => _ipAddress;
-
-  // == version
-  Future<void> getVersion() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/version');
-      _version = data['version'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  // === instance
-  Future<void> getInstance() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/instance');
-      _instance = data['instance'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  // === mac address
-  Future<void> getMacAddress() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/mac-address');
-      _macAddress = data['mac-address'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  Future<void> postMacAddress(Map<String, dynamic> newMac) async {
-    try {
-      await api.post('/ntp-server/mac-address', newMac);
-      _macAddress = newMac['mac-address'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-  }
-
-  void updateMacAddress(String macAddress) async {
-    await postMacAddress({'mac-address': macAddress});
-    await getMacAddress();
-  }
-  // ===
-
-  // vlan address
-  Future<void> getVlanAddress() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/vlan/address');
-      _vlanAddress = data['vlan-address'] ?? 'API ERROR?';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  Future<void> postVlanAddress(Map<String, dynamic> newVlanAddress) async {
-    try {
-      await api.post('/ntp-server/vlan/address', newVlanAddress);
-      _vlanAddress = newVlanAddress['vlan-address'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-  }
-
-  void updateVlanAddress(String vlanAddr) async {
-    await postVlanAddress({'vlan-address': vlanAddr});
-    await getVlanAddress();
-  }
-  // ===
-
-  // === vlan status
-  Future<void> postVlanStatus(Map<String, dynamic> newVlanStatus) async {
-    try {
-      await api.post('/ntp-server/vlan/status', newVlanStatus);
-      _vlanStatus = newVlanStatus['vlan-status'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-  }
-
-  Future<void> getVlanStatus() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/vlan/status');
-      _vlanStatus = data['vlan-status'] ?? 'API ERROR?';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  void updateVlanStatus(String status) async {
-    await postVlanStatus({'vlan-status': status});
-    await getVlanStatus();
-  }
-  // ===
-
-  // ip address
-  Future<void> getIpAddress() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/ip/address');
-      _ipAddress = data['ip-address'] ?? 'API ERROR?';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  Future<void> postIpAddress(Map<String, dynamic> newIpAddress) async {
-    try {
-      await api.post('/ntp-server/ip/address', newIpAddress);
-      _ipAddress = newIpAddress['ip-address'] ?? '';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-  }
-
-  void updateIpAddress(String vlanAddr) async {
-    await postIpAddress({'ip-address': vlanAddr});
-    await getIpAddress();
-  }
-  // ===
-
-  // ip address
-  Future<void> getIpMode() async {
-    _setLoading(true);
-    try {
-      final data = await api.get('/ntp-server/ip/mode');
-      _ipMode = data['ip-mode'] ?? 'API ERROR?';
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-    _setLoading(false);
-  }
-
-  Future<void> postIpMode(Map<String, dynamic> newIpMode) async {
-    try {
-      await api.post('/ntp-server/ip/mode', newIpMode);
-      _ipMode = newIpMode['ip-mode'] ?? '';
-      print(_ipMode);
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    }
-  }
-
-  void updateIpMode(String newIpMode) async {
-    await postIpMode({'ip-mode': newIpMode});
-    await getIpMode();
-  }
-
-  // ===
-  void _setLoading(bool value) {
-    isLoading = value;
-    notifyListeners();
-  }
+Widget labeledDropdown({
+  required String label,
+  required String? value,
+  required List<String> items,
+  required ValueChanged<String?> onChanged,
+  double width = 140,
+}) {
+  return SizedBox(
+    width: width,
+    child: DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      value: value,
+      items:
+          items.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+      onChanged: onChanged,
+    ),
+  );
 }
+
+
+
+
+                  //      SizedBox(height: 12),
+                  //      Divider(height: 2, thickness: 2, color: Colors.black),
+                  //      SizedBox(height: 12),
+                  //
+                  //      Row(
+                  //        children: [
+                  //          Row(
+                  //            children: [
+                  //              Text("Unicast Mode: "),
+                  //              Checkbox(
+                  //                value: ntp.vlanStatus == 'enabled',
+                  //                onChanged: (bool? value) {
+                  //                  if (value != null) {
+                  //                    //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                  }
+                  //                },
+                  //              ),
+                  //            ],
+                  //          ),
+                  //          SizedBox(width: 12),
+                  //          Row(
+                  //            children: [
+                  //              Text("Multicast Mode: "),
+                  //              Checkbox(
+                  //                value: ntp.vlanStatus == 'enabled',
+                  //                onChanged: (bool? value) {
+                  //                  if (value != null) {
+                  //                    //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                  }
+                  //                },
+                  //              ),
+                  //            ],
+                  //          ),
+                  //          SizedBox(width: 12),
+                  //
+                  //          Row(
+                  //            children: [
+                  //              Text("Broadcast Mode: "),
+                  //              Checkbox(
+                  //                value: ntp.vlanStatus == 'enabled',
+                  //                onChanged: (bool? value) {
+                  //                  if (value != null) {
+                  //                    //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                  }
+                  //                },
+                  //              ),
+                  //            ],
+                  //          ),
+                  //        ],
+                  //      ),
+                  //      Row(
+                  //        children: [
+                  //          Column(
+                  //            crossAxisAlignment: CrossAxisAlignment.start,
+                  //
+                  //            children: [
+                  //              Row(
+                  //                crossAxisAlignment: CrossAxisAlignment.end,
+                  //                children: [
+                  //                  SizedBox(
+                  //                    width: 140,
+                  //                    child: TextField(
+                  //                      controller: TextEditingController(
+                  //                        text: ntp.macAddress,
+                  //                      ),
+                  //                      onSubmitted: (value) {
+                  //                        ntp.updateMacAddress(value);
+                  //                      },
+                  //                      decoration: InputDecoration(labelText: 'Stratum'),
+                  //                    ),
+                  //                  ),
+                  //                ],
+                  //              ),
+                  //
+                  //              Row(
+                  //                crossAxisAlignment: CrossAxisAlignment.end,
+                  //                children: [
+                  //                  SizedBox(
+                  //                    width: 140,
+                  //                    child: TextField(
+                  //                      controller: TextEditingController(
+                  //                        text: ntp.macAddress,
+                  //                      ),
+                  //                      onSubmitted: (value) {
+                  //                        ntp.updateMacAddress(value);
+                  //                      },
+                  //                      decoration: InputDecoration(
+                  //                        labelText: 'Poll Interval',
+                  //                      ),
+                  //                    ),
+                  //                  ),
+                  //                ],
+                  //              ),
+                  //              Row(
+                  //                crossAxisAlignment: CrossAxisAlignment.end,
+                  //                children: [
+                  //                  SizedBox(
+                  //                    width: 140,
+                  //                    child: TextField(
+                  //                      controller: TextEditingController(
+                  //                        text: ntp.macAddress,
+                  //                      ),
+                  //                      onSubmitted: (value) {
+                  //                        ntp.updateMacAddress(value);
+                  //                      },
+                  //                      decoration: InputDecoration(
+                  //                        labelText: 'Precision',
+                  //                      ),
+                  //                    ),
+                  //                  ),
+                  //                ],
+                  //              ),
+                  //              SizedBox(height: 12),
+                  //              SizedBox(
+                  //                width: 140,
+                  //                child: DropdownButtonFormField<String>(
+                  //                  decoration: const InputDecoration(
+                  //                    labelText: 'Reference ID',
+                  //                    border: OutlineInputBorder(),
+                  //                  ),
+                  //                  value:
+                  //                      (['IPv4', 'IPv6'].contains(ntp.ipMode))
+                  //                          ? ntp.ipMode
+                  //                          : null,
+                  //                  items: const [
+                  //                    DropdownMenuItem(
+                  //                      value: 'IPv4',
+                  //                      child: Text('IPv4'),
+                  //                    ),
+                  //                    DropdownMenuItem(
+                  //                      value: 'IPv6',
+                  //                      child: Text('IPv6'),
+                  //                    ),
+                  //                  ],
+                  //                  onChanged: (String? newValue) {
+                  //                    if (newValue != null) {
+                  //                      ntp.updateIpMode(newValue);
+                  //                    }
+                  //                  },
+                  //                ),
+                  //              ),
+                  //            ],
+                  //          ),
+                  //          SizedBox(width: 12),
+                  //          Column(
+                  //            crossAxisAlignment: CrossAxisAlignment.start,
+                  //
+                  //            children: [
+                  //              Row(
+                  //                children: [
+                  //                  Text("Leap 59:"),
+                  //                  SizedBox(width: 100),
+                  //
+                  //                  Checkbox(
+                  //                    value: ntp.vlanStatus == 'enabled',
+                  //                    onChanged: (bool? value) {
+                  //                      if (value != null) {
+                  //                        //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                      }
+                  //                    },
+                  //                  ),
+                  //                  Text("In Progress: "),
+                  //                ],
+                  //              ),
+                  //              Row(
+                  //                children: [
+                  //                  Text("Leap 61:"),
+                  //                  SizedBox(width: 100),
+                  //                  Checkbox(
+                  //                    value: ntp.vlanStatus == 'enabled',
+                  //                    onChanged: (bool? value) {
+                  //                      if (value != null) {
+                  //                        //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                      }
+                  //                    },
+                  //                  ),
+                  //                  Text("In Progress: "),
+                  //                ],
+                  //              ),
+                  //              Row(
+                  //                children: [
+                  //                  Text("UTC Smearing Enable:"),
+                  //                  SizedBox(width: 12),
+                  //
+                  //                 Checkbox(
+                  //                   value: ntp.vlanStatus == 'enabled',
+                  //                   onChanged: (bool? value) {
+                  //                     if (value != null) {
+                  //                       //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                     }
+                  //                   },
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //             Row(
+                  //               children: [
+                  //                 Text("UTC Offset Enable:"),
+                  //                 SizedBox(width: 33),
+                  //                 Checkbox(
+                  //                   value: ntp.vlanStatus == 'enabled',
+                  //                   onChanged: (bool? value) {
+                  //                     if (value != null) {
+                  //                       //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                  //                     }
+                  //                   },
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //             SizedBox(height: 12),
+                  //             SizedBox(
+                  //               width: 100,
+                  //               child: TextField(
+                  //                 controller: TextEditingController(
+                  //                   text: ntp.vlanAddress,
+                  //                 ),
+                  //                 onSubmitted: (value) {
+                  //                   ntp.updateVlanAddress(value);
+                  //                 },
+                  //                 decoration: InputDecoration(
+                  //                   labelText: 'UTC Offset: ',
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           ],
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     SizedBox(height: 12),
+                  //     Row(
+                  //       children: [
+                  //         Column(
+                  //           crossAxisAlignment: CrossAxisAlignment.start,
+                  //
+                  //           children: [
+                  //             Row(
+                  //               crossAxisAlignment: CrossAxisAlignment.end,
+                  //               children: [
+                  //                 SizedBox(
+                  //                   width: 140,
+                  //                   child: TextField(
+                  //                     controller: TextEditingController(
+                  //                       text: ntp.macAddress,
+                  //                     ),
+                  //                     onSubmitted: (value) {
+                  //                       ntp.updateMacAddress(value);
+                  //                     },
+                  //                     decoration: InputDecoration(
+                  //                       labelText: 'Requests',
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //
+                  //             Row(
+                  //               crossAxisAlignment: CrossAxisAlignment.end,
+                  //               children: [
+                  //                 SizedBox(
+                  //                   width: 140,
+                  //                   child: TextField(
+                  //                     controller: TextEditingController(
+                  //                       text: ntp.macAddress,
+                  //                     ),
+                  //                     onSubmitted: (value) {
+                  //                       ntp.updateMacAddress(value);
+                  //                     },
+                  //                     decoration: InputDecoration(
+                  //                       labelText: 'Requests Dropped',
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           ],
+                  //         ),
+                  //         SizedBox(width: 12),
+                  //         Column(
+                  //           crossAxisAlignment: CrossAxisAlignment.start,
+                  //
+                  //           children: [
+                  //             Row(
+                  //               crossAxisAlignment: CrossAxisAlignment.end,
+                  //               children: [
+                  //                 SizedBox(
+                  //                   width: 140,
+                  //                   child: TextField(
+                  //                     controller: TextEditingController(
+                  //                       text: ntp.getProperty("mac-address")
+                  //                       ntp.macAddress,
+                  //                     ),
+                  //                     onSubmitted: (value) {
+                  //                       ntp.g
+                  //                       ntp.updateMacAddress(value);
+                  //                     },
+                  //                     decoration: InputDecoration(
+                  //                       labelText: 'Responses',
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //
+                  //             Row(
+                  //               crossAxisAlignment: CrossAxisAlignment.end,
+                  //               children: [
+                  //                 SizedBox(
+                  //                   width: 140,
+                  //                   child: TextField(
+                  //                     controller: TextEditingController(
+                  //                       text: ntp.macAddress,
+                  //                     ),
+                  //                     onSubmitted: (value) {
+                  //                       ntp.updateMacAddress(value);
+                  //                     },
+                  //                     decoration: InputDecoration(
+                  //                       labelText: 'Broadcasts',
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           ],
+                  //         ),
+                  //       ],
+                  //     ),

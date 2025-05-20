@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ntsc_ui/ApiService.dart';
 import 'package:ntsc_ui/NtpServerWidget.dart';
 import 'package:provider/provider.dart';
+import 'package:ntsc_ui/PtpOcWidget.dart';
 
 class MyTabbedPage extends StatefulWidget {
   @override
@@ -30,6 +31,8 @@ class _MyTabbedPageState extends State<MyTabbedPage>
 
   Widget getTabContent(int index) {
     switch (index) {
+      case 3:
+        return PtpOcWidget();
       case 4:
         return NtpServerWidget(); // No need to pass api anymore
       // Add other tabs...
@@ -69,14 +72,15 @@ class _MyTabbedPageState extends State<MyTabbedPage>
 }
 
 void main() {
-  final apiService = ApiService(baseUrl: "http://100.127.98.7:8080/api/v1");
+  final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
+  final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => NtpServerProvider(api: apiService),
-        ),
+        ChangeNotifierProvider(create: (_) => ntpServerApi),
+        ChangeNotifierProvider(create: (_) => ptpOcApi),
+
         // Add more providers here as needed
       ],
       child: MyApp(),
