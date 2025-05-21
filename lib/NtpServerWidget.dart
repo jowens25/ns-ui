@@ -50,514 +50,50 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    List<CardInfo> ntpcards = [
+    List<CardInfo> ntpCards = [
       CardInfo(
         title: 'NTP Server Configuration',
         content: Consumer<NtpServerApi>(
           builder:
               (context, ntp, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
-                  Text('Core Version : ${ntp.version}'),
-                  Text('Instance Number: ${ntp.instanceNumber}'),
-
-                  Row(
-                    children: [
-                      Text("NTP Server Enable: "),
-                      Checkbox(
-                        value: ntp.status == 'enabled',
-                        onChanged: (bool? value) {
-                          if (value != null) {
-                            ntp.update(
-                              ntp.status,
-                              value ? 'enabled' : 'disabled',
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      SizedBox(
-                        width: 140,
-                        child: TextField(
-                          controller: TextEditingController(
-                            text: ntp.macAddress,
-                          ),
-                          onSubmitted: (value) {
-                            ntp.update(ntp.macAddress, value);
-                            //ntp.updateMacAddress(value);
-                          },
-                          decoration: InputDecoration(labelText: 'MAC Address'),
-                        ),
-                      ),
-                    ],
+                  _infoText('Core Version', ntp.version),
+                  _infoText('Instance Number', ntp.instanceNumber),
+                  _checkboxRow(
+                    'NTP Server Enable',
+                    ntp.status == 'enabled',
+                    (v) =>
+                        ntp.update(ntp.statusKey, v ? 'enabled' : 'disabled'),
                   ),
 
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-
-                    children: [
-                      SizedBox(
-                        width: 140,
-                        child: TextField(
-                          controller: TextEditingController(
-                            text: ntp.vlanAddress,
-                          ),
-                          onSubmitted: (value) {
-                            ntp.update(ntp.vlanAddressKey, value);
-                          },
-                          decoration: InputDecoration(
-                            labelText: 'VLAN Address',
-                          ),
-                        ),
-                      ),
-
-                      Row(
-                        children: [
-                          SizedBox(width: 4),
-                          Text("VLAN Enable: "),
-                          Checkbox(
-                            //value: ntp.vlanStatus == 'enabled',
-                            value: ntp.vlanStatus == 'enabled',
-                            onChanged: (bool? value) {
-                              if (value != null) {
-                                ntp.update(
-                                  ntp.vlanStatusKey,
-                                  value ? 'enabled' : 'disabled',
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+                  _textFieldRow(
+                    'MAC Address',
+                    ntp.macAddress,
+                    (v) => ntp.update(ntp.macAddress, v),
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  _vlanRow(ntp),
+                  _ipModeRow(ntp),
+                  const Divider(thickness: 2),
 
-                    children: [
-                      SizedBox(
-                        width: 325,
-                        child: TextField(
-                          controller: TextEditingController(
-                            text: ntp.ipAddress,
-                            //text: ntp.get(ntp.ipAddress),
-                          ),
-                          onSubmitted: (value) {
-                            ntp.update(ntp.ipAddressKey, value);
-                          },
-                          decoration: InputDecoration(labelText: 'IP Address'),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-
-                      SizedBox(
-                        width: 125,
-                        child: DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(
-                            labelText: "IP Mode",
-                            border: OutlineInputBorder(),
-                          ),
-                          value:
-                              (['IPv4', 'IPv6'].contains(ntp.ipMode))
-                                  ? ntp.ipMode
-                                  : null,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'IPv4',
-                              child: Text('IPv4'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'IPv6',
-                              child: Text('IPv6'),
-                            ),
-                          ],
-                          onChanged: (String? newValue) async {
-                            if (newValue != null) {
-                              //ntp.updateIpMode(newValue);
-                              await ntp.update(ntp.ipModeKey, newValue);
-                              await ntp.get(ntp.ipAddressKey);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 12),
-                  Divider(height: 2, thickness: 2, color: Colors.black),
-                  SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Row(
-                        children: [
-                          Text("Unicast Mode: "),
-                          Checkbox(
-                            value: ntp.unicastMode == 'enabled',
-                            onChanged: (bool? value) {
-                              if (value != null) {
-                                ntp.update(
-                                  ntp.unicastModeKey,
-                                  value ? 'enabled' : 'disabled',
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 12),
-                      Row(
-                        children: [
-                          Text("Multicast Mode: "),
-                          Checkbox(
-                            value: ntp.multicastMode == 'enabled',
-                            onChanged: (bool? value) {
-                              if (value != null) {
-                                ntp.update(
-                                  ntp.multicastModeKey,
-                                  value ? 'enabled' : 'disabled',
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 12),
-
-                      Row(
-                        children: [
-                          Text("Broadcast Mode: "),
-                          Checkbox(
-                            value: ntp.broadcastMode == 'enabled',
-                            onChanged: (bool? value) {
-                              if (value != null) {
-                                ntp.update(
-                                  ntp.broadcastModeKey,
-                                  value ? 'enabled' : 'disabled',
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.stratumValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.update(ntp.stratumValueKey, value);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Stratum',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.pollIntervalValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.update(ntp.pollIntervalValueKey, value);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Poll Interval',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.precisionValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.update(ntp.precisionValueKey, value);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Precision',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          SizedBox(
-                            width: 140,
-                            child: DropdownButtonFormField<String>(
-                              decoration: const InputDecoration(
-                                labelText: 'Reference ID',
-                                border: OutlineInputBorder(),
-                              ),
-                              value:
-                                  (['GPS', 'NTP'].contains(ntp.referenceId))
-                                      ? ntp.referenceId
-                                      : null,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'GPS',
-                                  child: Text('GPS'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'NTP',
-                                  child: Text('NTP'),
-                                ),
-                              ],
-                              onChanged: (String? newValue) {
-                                if (newValue != null) {
-                                  ntp.update(ntp.referenceIdKey, newValue);
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-                          Row(
-                            children: [
-                              Text("Leap 59:"),
-                              SizedBox(width: 100),
-
-                              Checkbox(
-                                value: ntp.leap59Status == 'enabled',
-                                onChanged: (bool? value) {
-                                  if (value != null) {
-                                    ntp.update(
-                                      ntp.leap59StatusKey,
-                                      value ? 'enabled' : 'disabled',
-                                    );
-                                  }
-                                },
-                              ),
-                              Text("In Progress: "),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text("Leap 61:"),
-                              SizedBox(width: 100),
-                              Checkbox(
-                                value: ntp.leap61Status == 'enabled',
-                                onChanged: (bool? value) {
-                                  if (value != null) {
-                                    ntp.update(
-                                      ntp.leap61StatusKey,
-                                      value ? 'enabled' : 'disabled',
-                                    );
-                                  }
-                                },
-                              ),
-                              Text("In Progress: "),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text("UTC Smearing Enable:"),
-                              SizedBox(width: 12),
-
-                              Checkbox(
-                                value: ntp.smearingStatus == 'enabled',
-                                onChanged: (bool? value) {
-                                  if (value != null) {
-                                    ntp.update(
-                                      ntp.smearingStatusKey,
-                                      value ? 'enabled' : 'disabled',
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text("UTC Offset Enable:"),
-                              SizedBox(width: 33),
-                              Checkbox(
-                                value: ntp.utcOffsetStatus == 'enabled',
-                                onChanged: (bool? value) {
-                                  if (value != null) {
-                                    ntp.update(
-                                      ntp.utcOffsetStatusKey,
-                                      value ? 'enabled' : 'disabled',
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          SizedBox(
-                            width: 100,
-                            child: TextField(
-                              controller: TextEditingController(
-                                text: ntp.utcOffsetValue,
-                              ),
-                              onSubmitted: (value) {
-                                ntp.update(ntp.utcOffsetValueKey, value);
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'UTC Offset: ',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.requestsValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.get(ntp.requestsValueKey);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Requests',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.requestsDroppedValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.get(ntp.requestsDroppedValueKey);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Requests Dropped',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.responsesValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.get(ntp.responsesValueKey);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Responses',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                width: 140,
-                                child: TextField(
-                                  controller: TextEditingController(
-                                    text: ntp.broadcastsValue,
-                                  ),
-                                  onSubmitted: (value) {
-                                    ntp.get(ntp.broadcastsValueKey);
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: 'Broadcasts',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  Row(
-                    children: [
-                      Text("Clear Counters:"),
-                      SizedBox(width: 10),
-
-                      Checkbox(
-                        value: ntp.clearCountersStatus == 'enabled',
-                        onChanged: (bool? value) {
-                          if (value != null) {
-                            ntp.update(
-                              ntp.clearCountersStatusKey,
-                              value ? 'enabled' : 'disabled',
-                            );
-                          }
-                        },
-                      ),
-                    ],
+                  _modeCheckboxRow(ntp),
+                  _stratumConfig(ntp),
+                  _leapAndUtcConfig(ntp),
+                  _statsConfig(ntp),
+                  _checkboxRow(
+                    'Clear Counters',
+                    ntp.clearCountersStatus == 'enabled',
+                    (v) => ntp.update(
+                      ntp.clearCountersStatusKey,
+                      v ? 'enabled' : 'disabled',
+                    ),
                   ),
                 ],
               ),
         ),
       ),
     ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return GridView.builder(
@@ -566,11 +102,11 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
             maxCrossAxisExtent: 800,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1,
+            childAspectRatio: 0.8,
           ),
-          itemCount: ntpcards.length,
+          itemCount: ntpCards.length,
           itemBuilder: (context, index) {
-            final card = ntpcards[index];
+            final card = ntpCards[index];
             return Card(
               elevation: 4,
               margin: EdgeInsets.zero,
@@ -596,380 +132,259 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
   }
 }
 
-Widget labeledCheckbox(
+Widget _infoText(String label, String value) => Text('$label : $value');
+
+Widget _checkboxRow(String label, bool value, ValueChanged<bool> onChanged) {
+  return Row(
+    children: [
+      Text('$label: '),
+      Checkbox(value: value, onChanged: (v) => v != null ? onChanged(v) : null),
+    ],
+  );
+}
+
+Widget _textFieldRow(
   String label,
-  bool value,
-  ValueChanged<bool?> onChanged,
+  String value,
+  ValueChanged<String> onSubmitted,
 ) {
   return Row(
-    children: [Text(label), Checkbox(value: value, onChanged: onChanged)],
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      SizedBox(
+        width: 140,
+        child: TextField(
+          controller: TextEditingController(text: value),
+          onSubmitted: onSubmitted,
+          decoration: InputDecoration(labelText: label),
+        ),
+      ),
+    ],
   );
 }
 
-Widget labeledTextField({
-  required String label,
-  required String value,
-  required ValueChanged<String> onSubmitted,
-  double width = 140,
-}) {
-  final controller = TextEditingController(text: value);
-  return SizedBox(
-    width: width,
-    child: TextField(
-      controller: controller,
-      onSubmitted: onSubmitted,
-      decoration: InputDecoration(labelText: label),
-    ),
-  );
-}
-
-Widget labeledDropdown({
+Widget _dropdownRow({
   required String label,
   required String? value,
-  required List<String> items,
-  required ValueChanged<String?> onChanged,
-  double width = 140,
+  required List<String> options,
+  required ValueChanged<String> onChanged,
 }) {
   return SizedBox(
-    width: width,
+    width: 140,
     child: DropdownButtonFormField<String>(
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(),
       ),
-      value: value,
+      value: options.contains(value) ? value : null,
       items:
-          items.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-      onChanged: onChanged,
+          options
+              .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+              .toList(),
+      onChanged: (v) => v != null ? onChanged(v) : null,
     ),
   );
 }
 
+Widget _vlanRow(NtpServerApi ntp) {
+  return Row(
+    children: [
+      _textFieldRow(
+        'VLAN Address',
+        ntp.vlanAddress,
+        (v) => ntp.update(ntp.vlanAddressKey, v),
+      ),
+      const SizedBox(width: 8),
+      _checkboxRow(
+        'VLAN Enable',
+        ntp.vlanStatus == 'enabled',
+        (v) => ntp.update(ntp.vlanStatusKey, v ? 'enabled' : 'disabled'),
+      ),
+    ],
+  );
+}
 
+Widget _ipModeRow(NtpServerApi ntp) {
+  return Row(
+    children: [
+      SizedBox(
+        width: 325,
+        child: TextField(
+          controller: TextEditingController(text: ntp.ipAddress),
+          onSubmitted: (v) => ntp.update(ntp.ipAddressKey, v),
+          decoration: const InputDecoration(labelText: 'IP Address'),
+        ),
+      ),
+      const SizedBox(width: 8),
+      _dropdownRow(
+        label: 'IP Mode',
+        value: ntp.ipMode,
+        options: ['IPv4', 'IPv6'],
+        onChanged: (v) async {
+          await ntp.update(ntp.ipModeKey, v);
+          await ntp.get(ntp.ipAddressKey);
+        },
+      ),
+    ],
+  );
+}
 
+Widget _modeCheckboxRow(NtpServerApi ntp) {
+  return Row(
+    children: [
+      _checkboxRow(
+        'Unicast Mode',
+        ntp.unicastMode == 'enabled',
+        (v) => ntp.update(ntp.unicastModeKey, v ? 'enabled' : 'disabled'),
+      ),
+      const SizedBox(width: 12),
+      _checkboxRow(
+        'Multicast Mode',
+        ntp.multicastMode == 'enabled',
+        (v) => ntp.update(ntp.multicastModeKey, v ? 'enabled' : 'disabled'),
+      ),
+      const SizedBox(width: 12),
+      _checkboxRow(
+        'Broadcast Mode',
+        ntp.broadcastMode == 'enabled',
+        (v) => ntp.update(ntp.broadcastModeKey, v ? 'enabled' : 'disabled'),
+      ),
+    ],
+  );
+}
 
-                  //      SizedBox(height: 12),
-                  //      Divider(height: 2, thickness: 2, color: Colors.black),
-                  //      SizedBox(height: 12),
-                  //
-                  //      Row(
-                  //        children: [
-                  //          Row(
-                  //            children: [
-                  //              Text("Unicast Mode: "),
-                  //              Checkbox(
-                  //                value: ntp.vlanStatus == 'enabled',
-                  //                onChanged: (bool? value) {
-                  //                  if (value != null) {
-                  //                    //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                  }
-                  //                },
-                  //              ),
-                  //            ],
-                  //          ),
-                  //          SizedBox(width: 12),
-                  //          Row(
-                  //            children: [
-                  //              Text("Multicast Mode: "),
-                  //              Checkbox(
-                  //                value: ntp.vlanStatus == 'enabled',
-                  //                onChanged: (bool? value) {
-                  //                  if (value != null) {
-                  //                    //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                  }
-                  //                },
-                  //              ),
-                  //            ],
-                  //          ),
-                  //          SizedBox(width: 12),
-                  //
-                  //          Row(
-                  //            children: [
-                  //              Text("Broadcast Mode: "),
-                  //              Checkbox(
-                  //                value: ntp.vlanStatus == 'enabled',
-                  //                onChanged: (bool? value) {
-                  //                  if (value != null) {
-                  //                    //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                  }
-                  //                },
-                  //              ),
-                  //            ],
-                  //          ),
-                  //        ],
-                  //      ),
-                  //      Row(
-                  //        children: [
-                  //          Column(
-                  //            crossAxisAlignment: CrossAxisAlignment.start,
-                  //
-                  //            children: [
-                  //              Row(
-                  //                crossAxisAlignment: CrossAxisAlignment.end,
-                  //                children: [
-                  //                  SizedBox(
-                  //                    width: 140,
-                  //                    child: TextField(
-                  //                      controller: TextEditingController(
-                  //                        text: ntp.macAddress,
-                  //                      ),
-                  //                      onSubmitted: (value) {
-                  //                        ntp.updateMacAddress(value);
-                  //                      },
-                  //                      decoration: InputDecoration(labelText: 'Stratum'),
-                  //                    ),
-                  //                  ),
-                  //                ],
-                  //              ),
-                  //
-                  //              Row(
-                  //                crossAxisAlignment: CrossAxisAlignment.end,
-                  //                children: [
-                  //                  SizedBox(
-                  //                    width: 140,
-                  //                    child: TextField(
-                  //                      controller: TextEditingController(
-                  //                        text: ntp.macAddress,
-                  //                      ),
-                  //                      onSubmitted: (value) {
-                  //                        ntp.updateMacAddress(value);
-                  //                      },
-                  //                      decoration: InputDecoration(
-                  //                        labelText: 'Poll Interval',
-                  //                      ),
-                  //                    ),
-                  //                  ),
-                  //                ],
-                  //              ),
-                  //              Row(
-                  //                crossAxisAlignment: CrossAxisAlignment.end,
-                  //                children: [
-                  //                  SizedBox(
-                  //                    width: 140,
-                  //                    child: TextField(
-                  //                      controller: TextEditingController(
-                  //                        text: ntp.macAddress,
-                  //                      ),
-                  //                      onSubmitted: (value) {
-                  //                        ntp.updateMacAddress(value);
-                  //                      },
-                  //                      decoration: InputDecoration(
-                  //                        labelText: 'Precision',
-                  //                      ),
-                  //                    ),
-                  //                  ),
-                  //                ],
-                  //              ),
-                  //              SizedBox(height: 12),
-                  //              SizedBox(
-                  //                width: 140,
-                  //                child: DropdownButtonFormField<String>(
-                  //                  decoration: const InputDecoration(
-                  //                    labelText: 'Reference ID',
-                  //                    border: OutlineInputBorder(),
-                  //                  ),
-                  //                  value:
-                  //                      (['IPv4', 'IPv6'].contains(ntp.ipMode))
-                  //                          ? ntp.ipMode
-                  //                          : null,
-                  //                  items: const [
-                  //                    DropdownMenuItem(
-                  //                      value: 'IPv4',
-                  //                      child: Text('IPv4'),
-                  //                    ),
-                  //                    DropdownMenuItem(
-                  //                      value: 'IPv6',
-                  //                      child: Text('IPv6'),
-                  //                    ),
-                  //                  ],
-                  //                  onChanged: (String? newValue) {
-                  //                    if (newValue != null) {
-                  //                      ntp.updateIpMode(newValue);
-                  //                    }
-                  //                  },
-                  //                ),
-                  //              ),
-                  //            ],
-                  //          ),
-                  //          SizedBox(width: 12),
-                  //          Column(
-                  //            crossAxisAlignment: CrossAxisAlignment.start,
-                  //
-                  //            children: [
-                  //              Row(
-                  //                children: [
-                  //                  Text("Leap 59:"),
-                  //                  SizedBox(width: 100),
-                  //
-                  //                  Checkbox(
-                  //                    value: ntp.vlanStatus == 'enabled',
-                  //                    onChanged: (bool? value) {
-                  //                      if (value != null) {
-                  //                        //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                      }
-                  //                    },
-                  //                  ),
-                  //                  Text("In Progress: "),
-                  //                ],
-                  //              ),
-                  //              Row(
-                  //                children: [
-                  //                  Text("Leap 61:"),
-                  //                  SizedBox(width: 100),
-                  //                  Checkbox(
-                  //                    value: ntp.vlanStatus == 'enabled',
-                  //                    onChanged: (bool? value) {
-                  //                      if (value != null) {
-                  //                        //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                      }
-                  //                    },
-                  //                  ),
-                  //                  Text("In Progress: "),
-                  //                ],
-                  //              ),
-                  //              Row(
-                  //                children: [
-                  //                  Text("UTC Smearing Enable:"),
-                  //                  SizedBox(width: 12),
-                  //
-                  //                 Checkbox(
-                  //                   value: ntp.vlanStatus == 'enabled',
-                  //                   onChanged: (bool? value) {
-                  //                     if (value != null) {
-                  //                       //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                     }
-                  //                   },
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //             Row(
-                  //               children: [
-                  //                 Text("UTC Offset Enable:"),
-                  //                 SizedBox(width: 33),
-                  //                 Checkbox(
-                  //                   value: ntp.vlanStatus == 'enabled',
-                  //                   onChanged: (bool? value) {
-                  //                     if (value != null) {
-                  //                       //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
-                  //                     }
-                  //                   },
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //             SizedBox(height: 12),
-                  //             SizedBox(
-                  //               width: 100,
-                  //               child: TextField(
-                  //                 controller: TextEditingController(
-                  //                   text: ntp.vlanAddress,
-                  //                 ),
-                  //                 onSubmitted: (value) {
-                  //                   ntp.updateVlanAddress(value);
-                  //                 },
-                  //                 decoration: InputDecoration(
-                  //                   labelText: 'UTC Offset: ',
-                  //                 ),
-                  //               ),
-                  //             ),
-                  //           ],
-                  //         ),
-                  //       ],
-                  //     ),
-                  //     SizedBox(height: 12),
-                  //     Row(
-                  //       children: [
-                  //         Column(
-                  //           crossAxisAlignment: CrossAxisAlignment.start,
-                  //
-                  //           children: [
-                  //             Row(
-                  //               crossAxisAlignment: CrossAxisAlignment.end,
-                  //               children: [
-                  //                 SizedBox(
-                  //                   width: 140,
-                  //                   child: TextField(
-                  //                     controller: TextEditingController(
-                  //                       text: ntp.macAddress,
-                  //                     ),
-                  //                     onSubmitted: (value) {
-                  //                       ntp.updateMacAddress(value);
-                  //                     },
-                  //                     decoration: InputDecoration(
-                  //                       labelText: 'Requests',
-                  //                     ),
-                  //                   ),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //
-                  //             Row(
-                  //               crossAxisAlignment: CrossAxisAlignment.end,
-                  //               children: [
-                  //                 SizedBox(
-                  //                   width: 140,
-                  //                   child: TextField(
-                  //                     controller: TextEditingController(
-                  //                       text: ntp.macAddress,
-                  //                     ),
-                  //                     onSubmitted: (value) {
-                  //                       ntp.updateMacAddress(value);
-                  //                     },
-                  //                     decoration: InputDecoration(
-                  //                       labelText: 'Requests Dropped',
-                  //                     ),
-                  //                   ),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //           ],
-                  //         ),
-                  //         SizedBox(width: 12),
-                  //         Column(
-                  //           crossAxisAlignment: CrossAxisAlignment.start,
-                  //
-                  //           children: [
-                  //             Row(
-                  //               crossAxisAlignment: CrossAxisAlignment.end,
-                  //               children: [
-                  //                 SizedBox(
-                  //                   width: 140,
-                  //                   child: TextField(
-                  //                     controller: TextEditingController(
-                  //                       text: ntp.getProperty("mac-address")
-                  //                       ntp.macAddress,
-                  //                     ),
-                  //                     onSubmitted: (value) {
-                  //                       ntp.g
-                  //                       ntp.updateMacAddress(value);
-                  //                     },
-                  //                     decoration: InputDecoration(
-                  //                       labelText: 'Responses',
-                  //                     ),
-                  //                   ),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //
-                  //             Row(
-                  //               crossAxisAlignment: CrossAxisAlignment.end,
-                  //               children: [
-                  //                 SizedBox(
-                  //                   width: 140,
-                  //                   child: TextField(
-                  //                     controller: TextEditingController(
-                  //                       text: ntp.macAddress,
-                  //                     ),
-                  //                     onSubmitted: (value) {
-                  //                       ntp.updateMacAddress(value);
-                  //                     },
-                  //                     decoration: InputDecoration(
-                  //                       labelText: 'Broadcasts',
-                  //                     ),
-                  //                   ),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //           ],
-                  //         ),
-                  //       ],
-                  //     ),
+Widget _stratumConfig(NtpServerApi ntp) {
+  const referenceIdOptions = <String>[
+    'NTP',
+    'NULL',
+    'LOCL',
+    'CESM',
+    'RBDM',
+    'PPS',
+    'IRIG',
+    'ACTS',
+    'USNO',
+    'PTB',
+    'TDF',
+    'DCF',
+    'MSF',
+    'WWV',
+    'WWVB',
+    'WWVH',
+    'CHU',
+    'LORC',
+    'OMEG',
+    'GPS',
+  ];
+  return Row(
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _textFieldRow(
+            'Stratum',
+            ntp.stratumValue,
+            (v) => ntp.update(ntp.stratumValueKey, v),
+          ),
+          _textFieldRow(
+            'Poll Interval',
+            ntp.pollIntervalValue,
+            (v) => ntp.update(ntp.pollIntervalValueKey, v),
+          ),
+          _textFieldRow(
+            'Precision',
+            ntp.precisionValue,
+            (v) => ntp.update(ntp.precisionValueKey, v),
+          ),
+          const SizedBox(height: 12),
+
+          _dropdownRow(
+            label: 'Reference ID',
+            value: ntp.referenceId,
+            options: referenceIdOptions,
+            onChanged: (v) async {
+              ntp.update(ntp.referenceIdKey, v);
+            },
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+Widget _leapAndUtcConfig(NtpServerApi ntp) {
+  return Row(
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _checkboxRow(
+            'Leap 59 In Progress',
+            ntp.leap59Status == 'enabled',
+            (v) => ntp.update(ntp.leap59StatusKey, v ? 'enabled' : 'disabled'),
+          ),
+          _checkboxRow(
+            'Leap 61 In Progress',
+            ntp.leap61Status == 'enabled',
+            (v) => ntp.update(ntp.leap61StatusKey, v ? 'enabled' : 'disabled'),
+          ),
+          _checkboxRow(
+            'UTC Smearing Enable',
+            ntp.smearingStatus == 'enabled',
+            (v) =>
+                ntp.update(ntp.smearingStatusKey, v ? 'enabled' : 'disabled'),
+          ),
+          _checkboxRow(
+            'UTC Offset Enable',
+            ntp.utcOffsetStatus == 'enabled',
+            (v) =>
+                ntp.update(ntp.utcOffsetStatusKey, v ? 'enabled' : 'disabled'),
+          ),
+          _textFieldRow(
+            'UTC Offset',
+            ntp.utcOffsetValue,
+            (v) => ntp.update(ntp.utcOffsetValueKey, v),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+Widget _statsConfig(NtpServerApi ntp) {
+  return Row(
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _textFieldRow(
+            'Requests',
+            ntp.requestsValue,
+            (v) => ntp.get(ntp.requestsValueKey),
+          ),
+          _textFieldRow(
+            'Requests Dropped',
+            ntp.requestsDroppedValue,
+            (v) => ntp.get(ntp.requestsDroppedValueKey),
+          ),
+        ],
+      ),
+      const SizedBox(width: 12),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _textFieldRow(
+            'Responses',
+            ntp.responsesValue,
+            (v) => ntp.get(ntp.responsesValueKey),
+          ),
+          _textFieldRow(
+            'Broadcasts',
+            ntp.broadcastsValue,
+            (v) => ntp.get(ntp.broadcastsValueKey),
+          ),
+        ],
+      ),
+    ],
+  );
+}

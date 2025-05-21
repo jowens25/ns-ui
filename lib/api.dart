@@ -49,6 +49,7 @@ abstract class ApiService extends ChangeNotifier {
         properties[key] = json[key] ?? '';
         //notifyListeners();
       } else {
+        print(url);
         throw Exception('POST failed: ${response.statusCode}');
       }
     } catch (e) {
