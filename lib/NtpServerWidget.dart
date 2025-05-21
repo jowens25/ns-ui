@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'NtpServer.dart';
-import 'ApiService.dart';
+import 'NtpServerApi.dart';
 import 'CardInfo.dart';
 
 class NtpServerWidget extends StatefulWidget {
@@ -13,35 +12,35 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
   @override
   void initState() {
     super.initState();
-    final ntpServerProvider = Provider.of<NtpServerApi>(context, listen: false);
+    final ntpApi = Provider.of<NtpServerApi>(context, listen: false);
 
-    ntpServerProvider.getRequest(ntpServer.status);
-    ntpServerProvider.getRequest(ntpServer.instanceNumber);
-    ntpServerProvider.getRequest(ntpServer.ipMode);
-    ntpServerProvider.getRequest(ntpServer.ipAddress);
-    ntpServerProvider.getRequest(ntpServer.macAddress);
-    ntpServerProvider.getRequest(ntpServer.vlanStatus);
-    ntpServerProvider.getRequest(ntpServer.vlanAddress);
-    ntpServerProvider.getRequest(ntpServer.unicastMode);
-    ntpServerProvider.getRequest(ntpServer.multicastMode);
-    ntpServerProvider.getRequest(ntpServer.broadcastMode);
-    ntpServerProvider.getRequest(ntpServer.precisionValue);
-    ntpServerProvider.getRequest(ntpServer.pollIntervalValue);
-    ntpServerProvider.getRequest(ntpServer.stratumValue);
-    ntpServerProvider.getRequest(ntpServer.referenceId);
-    ntpServerProvider.getRequest(ntpServer.smearingStatus);
-    ntpServerProvider.getRequest(ntpServer.leap61Progress);
-    ntpServerProvider.getRequest(ntpServer.leap59Progress);
-    ntpServerProvider.getRequest(ntpServer.leap61Status);
-    ntpServerProvider.getRequest(ntpServer.leap59Status);
-    ntpServerProvider.getRequest(ntpServer.utcOffsetStatus);
-    ntpServerProvider.getRequest(ntpServer.utcOffsetValue);
-    ntpServerProvider.getRequest(ntpServer.requestsValue);
-    ntpServerProvider.getRequest(ntpServer.responsesValue);
-    ntpServerProvider.getRequest(ntpServer.requestsDroppedValue);
-    ntpServerProvider.getRequest(ntpServer.broadcastsValue);
-    ntpServerProvider.getRequest(ntpServer.clearCountersStatus);
-    ntpServerProvider.getRequest(ntpServer.version);
+    ntpApi.getRequest(ntpApi.statusKey);
+    ntpApi.getRequest(ntpApi.instanceNumberKey);
+    ntpApi.getRequest(ntpApi.ipModeKey);
+    ntpApi.getRequest(ntpApi.ipAddressKey);
+    ntpApi.getRequest(ntpApi.macAddressKey);
+    ntpApi.getRequest(ntpApi.vlanStatusKey);
+    ntpApi.getRequest(ntpApi.vlanAddressKey);
+    ntpApi.getRequest(ntpApi.unicastModeKey);
+    ntpApi.getRequest(ntpApi.multicastModeKey);
+    ntpApi.getRequest(ntpApi.broadcastModeKey);
+    ntpApi.getRequest(ntpApi.precisionValueKey);
+    ntpApi.getRequest(ntpApi.pollIntervalValueKey);
+    ntpApi.getRequest(ntpApi.stratumValueKey);
+    ntpApi.getRequest(ntpApi.referenceIdKey);
+    ntpApi.getRequest(ntpApi.smearingStatusKey);
+    ntpApi.getRequest(ntpApi.leap61ProgressKey);
+    ntpApi.getRequest(ntpApi.leap59ProgressKey);
+    ntpApi.getRequest(ntpApi.leap61StatusKey);
+    ntpApi.getRequest(ntpApi.leap59StatusKey);
+    ntpApi.getRequest(ntpApi.utcOffsetStatusKey);
+    ntpApi.getRequest(ntpApi.utcOffsetValueKey);
+    ntpApi.getRequest(ntpApi.requestsValueKey);
+    ntpApi.getRequest(ntpApi.responsesValueKey);
+    ntpApi.getRequest(ntpApi.requestsDroppedValueKey);
+    ntpApi.getRequest(ntpApi.broadcastsValueKey);
+    ntpApi.getRequest(ntpApi.clearCountersStatusKey);
+    ntpApi.getRequest(ntpApi.versionKey);
   }
 
   @override
@@ -56,22 +55,22 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
         title: 'NTP Server Configuration',
         content: Consumer<NtpServerApi>(
           builder:
-              (context, api, _) => Column(
+              (context, ntp, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
 
                 children: [
-                  Text('Core Version : ${api.get(ntpServer.version)}'),
-                  Text('Instance Number: ${api.get(ntpServer.instanceNumber)}'),
+                  Text('Core Version : ${ntp.version}'),
+                  Text('Instance Number: ${ntp.instanceNumber}'),
 
                   Row(
                     children: [
                       Text("NTP Server Enable: "),
                       Checkbox(
-                        value: api.get(ntpServer.status) == 'enabled',
+                        value: ntp.status == 'enabled',
                         onChanged: (bool? value) {
                           if (value != null) {
-                            api.update(
-                              ntpServer.status,
+                            ntp.update(
+                              ntp.status,
                               value ? 'enabled' : 'disabled',
                             );
                           }
@@ -86,10 +85,10 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                         width: 140,
                         child: TextField(
                           controller: TextEditingController(
-                            text: api.get(ntpServer.macAddress),
+                            text: ntp.macAddress,
                           ),
                           onSubmitted: (value) {
-                            api.update(ntpServer.macAddress, value);
+                            ntp.update(ntp.macAddress, value);
                             //ntp.updateMacAddress(value);
                           },
                           decoration: InputDecoration(labelText: 'MAC Address'),
@@ -106,10 +105,10 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                         width: 140,
                         child: TextField(
                           controller: TextEditingController(
-                            text: api.get(ntpServer.vlanAddress),
+                            text: ntp.vlanAddress,
                           ),
                           onSubmitted: (value) {
-                            api.update(ntpServer.vlanAddress, value);
+                            ntp.update(ntp.vlanAddressKey, value);
                           },
                           decoration: InputDecoration(
                             labelText: 'VLAN Address',
@@ -123,11 +122,11 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                           Text("VLAN Enable: "),
                           Checkbox(
                             //value: ntp.vlanStatus == 'enabled',
-                            value: api.get(ntpServer.vlanStatus) == 'enabled',
+                            value: ntp.vlanStatus == 'enabled',
                             onChanged: (bool? value) {
                               if (value != null) {
-                                api.update(
-                                  ntpServer.vlanStatus,
+                                ntp.update(
+                                  ntp.vlanStatusKey,
                                   value ? 'enabled' : 'disabled',
                                 );
                               }
@@ -145,9 +144,12 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                         width: 325,
                         child: TextField(
                           controller: TextEditingController(
-                            text: api.get(ntpServer.ipAddress),
+                            text: ntp.ipAddress,
+                            //text: ntp.get(ntp.ipAddress),
                           ),
-                          onSubmitted: (value) {},
+                          onSubmitted: (value) {
+                            ntp.update(ntp.ipAddressKey, value);
+                          },
                           decoration: InputDecoration(labelText: 'IP Address'),
                         ),
                       ),
@@ -161,11 +163,8 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                             border: OutlineInputBorder(),
                           ),
                           value:
-                              ([
-                                    'IPv4',
-                                    'IPv6',
-                                  ].contains(api.get(ntpServer.ipMode)))
-                                  ? api.get(ntpServer.ipMode)
+                              (['IPv4', 'IPv6'].contains(ntp.ipMode))
+                                  ? ntp.ipMode
                                   : null,
                           items: const [
                             DropdownMenuItem(
@@ -177,13 +176,361 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                               child: Text('IPv6'),
                             ),
                           ],
-                          onChanged: (String? newValue) {
+                          onChanged: (String? newValue) async {
                             if (newValue != null) {
                               //ntp.updateIpMode(newValue);
-                              api.update(ntpServer.ipMode, newValue);
+                              await ntp.update(ntp.ipModeKey, newValue);
+                              await ntp.get(ntp.ipAddressKey);
                             }
                           },
                         ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 12),
+                  Divider(height: 2, thickness: 2, color: Colors.black),
+                  SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Row(
+                        children: [
+                          Text("Unicast Mode: "),
+                          Checkbox(
+                            value: ntp.unicastMode == 'enabled',
+                            onChanged: (bool? value) {
+                              if (value != null) {
+                                ntp.update(
+                                  ntp.unicastModeKey,
+                                  value ? 'enabled' : 'disabled',
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: 12),
+                      Row(
+                        children: [
+                          Text("Multicast Mode: "),
+                          Checkbox(
+                            value: ntp.multicastMode == 'enabled',
+                            onChanged: (bool? value) {
+                              if (value != null) {
+                                ntp.update(
+                                  ntp.multicastModeKey,
+                                  value ? 'enabled' : 'disabled',
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: 12),
+
+                      Row(
+                        children: [
+                          Text("Broadcast Mode: "),
+                          Checkbox(
+                            value: ntp.broadcastMode == 'enabled',
+                            onChanged: (bool? value) {
+                              if (value != null) {
+                                ntp.update(
+                                  ntp.broadcastModeKey,
+                                  value ? 'enabled' : 'disabled',
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.stratumValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.update(ntp.stratumValueKey, value);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Stratum',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.pollIntervalValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.update(ntp.pollIntervalValueKey, value);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Poll Interval',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.precisionValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.update(ntp.precisionValueKey, value);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Precision',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          SizedBox(
+                            width: 140,
+                            child: DropdownButtonFormField<String>(
+                              decoration: const InputDecoration(
+                                labelText: 'Reference ID',
+                                border: OutlineInputBorder(),
+                              ),
+                              value:
+                                  (['GPS', 'NTP'].contains(ntp.referenceId))
+                                      ? ntp.referenceId
+                                      : null,
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'GPS',
+                                  child: Text('GPS'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'NTP',
+                                  child: Text('NTP'),
+                                ),
+                              ],
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  ntp.update(ntp.referenceIdKey, newValue);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                        children: [
+                          Row(
+                            children: [
+                              Text("Leap 59:"),
+                              SizedBox(width: 100),
+
+                              Checkbox(
+                                value: ntp.leap59Status == 'enabled',
+                                onChanged: (bool? value) {
+                                  if (value != null) {
+                                    ntp.update(
+                                      ntp.leap59StatusKey,
+                                      value ? 'enabled' : 'disabled',
+                                    );
+                                  }
+                                },
+                              ),
+                              Text("In Progress: "),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text("Leap 61:"),
+                              SizedBox(width: 100),
+                              Checkbox(
+                                value: ntp.leap61Status == 'enabled',
+                                onChanged: (bool? value) {
+                                  if (value != null) {
+                                    ntp.update(
+                                      ntp.leap61StatusKey,
+                                      value ? 'enabled' : 'disabled',
+                                    );
+                                  }
+                                },
+                              ),
+                              Text("In Progress: "),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text("UTC Smearing Enable:"),
+                              SizedBox(width: 12),
+
+                              Checkbox(
+                                value: ntp.smearingStatus == 'enabled',
+                                onChanged: (bool? value) {
+                                  if (value != null) {
+                                    ntp.update(
+                                      ntp.smearingStatusKey,
+                                      value ? 'enabled' : 'disabled',
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text("UTC Offset Enable:"),
+                              SizedBox(width: 33),
+                              Checkbox(
+                                value: ntp.utcOffsetStatus == 'enabled',
+                                onChanged: (bool? value) {
+                                  if (value != null) {
+                                    ntp.update(
+                                      ntp.utcOffsetStatusKey,
+                                      value ? 'enabled' : 'disabled',
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          SizedBox(
+                            width: 100,
+                            child: TextField(
+                              controller: TextEditingController(
+                                text: ntp.utcOffsetValue,
+                              ),
+                              onSubmitted: (value) {
+                                ntp.update(ntp.utcOffsetValueKey, value);
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'UTC Offset: ',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.requestsValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.get(ntp.requestsValueKey);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Requests',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.requestsDroppedValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.get(ntp.requestsDroppedValueKey);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Requests Dropped',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.responsesValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.get(ntp.responsesValueKey);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Responses',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                width: 140,
+                                child: TextField(
+                                  controller: TextEditingController(
+                                    text: ntp.broadcastsValue,
+                                  ),
+                                  onSubmitted: (value) {
+                                    ntp.get(ntp.broadcastsValueKey);
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Broadcasts',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -194,10 +541,13 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                       SizedBox(width: 10),
 
                       Checkbox(
-                        value: false, //ntp.vlanStatus == 'enabled',
+                        value: ntp.clearCountersStatus == 'enabled',
                         onChanged: (bool? value) {
                           if (value != null) {
-                            //ntp.updateVlanStatus(value ? 'enabled' : 'disabled');
+                            ntp.update(
+                              ntp.clearCountersStatusKey,
+                              value ? 'enabled' : 'disabled',
+                            );
                           }
                         },
                       ),

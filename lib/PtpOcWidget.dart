@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'CardInfo.dart';
-import 'ApiService.dart';
+import 'PtpOcApi.dart';
 
 class PtpOcWidget extends StatefulWidget {
   @override
@@ -65,11 +65,11 @@ class _PtpOcWidgetState extends State<PtpOcWidget> {
       title: 'Ptp Oc Configuration',
       content: Consumer<PtpOcApi>(
         builder:
-            (context, api, _) => Column(
+            (context, ptp, _) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-                Text('Core Version : ${api.get('version')}'),
+                Text('Core Version : ${ptp.version}'),
                 //Text('Instance Number: ${ntp.instance}'),
               ],
             ),

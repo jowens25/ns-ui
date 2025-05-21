@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/ApiService.dart';
-import 'package:ntsc_ui/NtpServerWidget.dart';
 import 'package:provider/provider.dart';
+
+import 'package:ntsc_ui/NtpServerApi.dart';
+import 'package:ntsc_ui/NtpServerWidget.dart';
+
+import 'package:ntsc_ui/PtpOcApi.dart';
 import 'package:ntsc_ui/PtpOcWidget.dart';
 
 class MyTabbedPage extends StatefulWidget {
