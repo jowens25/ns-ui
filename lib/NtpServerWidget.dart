@@ -13,34 +13,34 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
   void initState() {
     super.initState();
     final ntpApi = Provider.of<NtpServerApi>(context, listen: false);
-
-    ntpApi.getRequest(ntpApi.statusKey);
-    ntpApi.getRequest(ntpApi.instanceNumberKey);
-    ntpApi.getRequest(ntpApi.ipModeKey);
-    ntpApi.getRequest(ntpApi.ipAddressKey);
-    ntpApi.getRequest(ntpApi.macAddressKey);
-    ntpApi.getRequest(ntpApi.vlanStatusKey);
-    ntpApi.getRequest(ntpApi.vlanAddressKey);
-    ntpApi.getRequest(ntpApi.unicastModeKey);
-    ntpApi.getRequest(ntpApi.multicastModeKey);
-    ntpApi.getRequest(ntpApi.broadcastModeKey);
-    ntpApi.getRequest(ntpApi.precisionValueKey);
-    ntpApi.getRequest(ntpApi.pollIntervalValueKey);
-    ntpApi.getRequest(ntpApi.stratumValueKey);
-    ntpApi.getRequest(ntpApi.referenceIdKey);
-    ntpApi.getRequest(ntpApi.smearingStatusKey);
-    ntpApi.getRequest(ntpApi.leap61ProgressKey);
-    ntpApi.getRequest(ntpApi.leap59ProgressKey);
-    ntpApi.getRequest(ntpApi.leap61StatusKey);
-    ntpApi.getRequest(ntpApi.leap59StatusKey);
-    ntpApi.getRequest(ntpApi.utcOffsetStatusKey);
-    ntpApi.getRequest(ntpApi.utcOffsetValueKey);
-    ntpApi.getRequest(ntpApi.requestsValueKey);
-    ntpApi.getRequest(ntpApi.responsesValueKey);
-    ntpApi.getRequest(ntpApi.requestsDroppedValueKey);
-    ntpApi.getRequest(ntpApi.broadcastsValueKey);
-    ntpApi.getRequest(ntpApi.clearCountersStatusKey);
-    ntpApi.getRequest(ntpApi.versionKey);
+    ntpApi.poll();
+    //ntpApi.getRequest(ntpApi.statusKey);
+    //ntpApi.getRequest(ntpApi.instanceNumberKey);
+    //ntpApi.getRequest(ntpApi.ipModeKey);
+    //ntpApi.getRequest(ntpApi.ipAddressKey);
+    //ntpApi.getRequest(ntpApi.macAddressKey);
+    //ntpApi.getRequest(ntpApi.vlanStatusKey);
+    //ntpApi.getRequest(ntpApi.vlanAddressKey);
+    //ntpApi.getRequest(ntpApi.unicastModeKey);
+    //ntpApi.getRequest(ntpApi.multicastModeKey);
+    //ntpApi.getRequest(ntpApi.broadcastModeKey);
+    //ntpApi.getRequest(ntpApi.precisionValueKey);
+    //ntpApi.getRequest(ntpApi.pollIntervalValueKey);
+    //ntpApi.getRequest(ntpApi.stratumValueKey);
+    //ntpApi.getRequest(ntpApi.referenceIdKey);
+    //ntpApi.getRequest(ntpApi.smearingStatusKey);
+    //ntpApi.getRequest(ntpApi.leap61ProgressKey);
+    //ntpApi.getRequest(ntpApi.leap59ProgressKey);
+    //ntpApi.getRequest(ntpApi.leap61StatusKey);
+    //ntpApi.getRequest(ntpApi.leap59StatusKey);
+    //ntpApi.getRequest(ntpApi.utcOffsetStatusKey);
+    //ntpApi.getRequest(ntpApi.utcOffsetValueKey);
+    //ntpApi.getRequest(ntpApi.requestsValueKey);
+    //ntpApi.getRequest(ntpApi.responsesValueKey);
+    //ntpApi.getRequest(ntpApi.requestsDroppedValueKey);
+    //ntpApi.getRequest(ntpApi.broadcastsValueKey);
+    //ntpApi.getRequest(ntpApi.clearCountersStatusKey);
+    //ntpApi.getRequest(ntpApi.versionKey);
   }
 
   @override
@@ -70,7 +70,7 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                   _textFieldRow(
                     'MAC Address',
                     ntp.macAddress,
-                    (v) => ntp.update(ntp.macAddress, v),
+                    (v) => ntp.update(ntp.macAddressKey, v),
                   ),
                   _vlanRow(ntp),
                   _ipModeRow(ntp),
@@ -83,10 +83,16 @@ class _NtpServerWidgetState extends State<NtpServerWidget> {
                   _checkboxRow(
                     'Clear Counters',
                     ntp.clearCountersStatus == 'enabled',
-                    (v) => ntp.update(
-                      ntp.clearCountersStatusKey,
-                      v ? 'enabled' : 'disabled',
-                    ),
+                    (v) async {
+                      ntp.update(
+                        ntp.clearCountersStatusKey,
+                        v ? 'enabled' : 'disabled',
+                      );
+                      await ntp.get(ntp.requestsValueKey);
+                      await ntp.get(ntp.requestsDroppedValueKey);
+                      await ntp.get(ntp.responsesValueKey);
+                      await ntp.get(ntp.broadcastsValueKey);
+                    },
                   ),
                 ],
               ),

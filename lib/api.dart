@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -15,7 +17,7 @@ abstract class ApiService extends ChangeNotifier {
       final response = await http
           .get(url)
           .timeout(
-            const Duration(seconds: 2),
+            const Duration(seconds: 1),
             onTimeout: () => http.Response('{"error":"timeout"}', 408),
           );
       if (response.statusCode == 200) {
@@ -23,6 +25,10 @@ abstract class ApiService extends ChangeNotifier {
         properties[key] = json[key] ?? '';
         notifyListeners();
       } else {
+        print(url);
+
+        print(key);
+
         throw Exception('GET failed: ${response.statusCode}');
       }
     } catch (e) {
@@ -41,8 +47,12 @@ abstract class ApiService extends ChangeNotifier {
       final response = await http
           .post(url, headers: {'Content-Type': 'application/json'}, body: body)
           .timeout(
-            const Duration(seconds: 2),
-            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            const Duration(seconds: 1),
+            onTimeout: () {
+              http.Response('{"error":"timeout"}', 408);
+              print("time out");
+              throw Exception("time out");
+            },
           );
       if (response.statusCode == 200 || response.statusCode == 201) {
         final json = jsonDecode(response.body);
@@ -53,6 +63,8 @@ abstract class ApiService extends ChangeNotifier {
         throw Exception('POST failed: ${response.statusCode}');
       }
     } catch (e) {
+      print(url);
+
       throw Exception('POST error: $e');
     }
   }
@@ -63,9 +75,27 @@ abstract class ApiService extends ChangeNotifier {
   }
 
   Future<void> get(String key) async {
+    print("key: $key");
     print(properties[key]);
     await getRequest(key);
     print(properties[key]);
     notifyListeners();
+  }
+
+  void poll() {
+    for (var k in properties.keys) {
+      getRequest(k);
+    }
+    Timer.periodic(const Duration(milliseconds: 5000), (timer) {
+      print('Polling');
+
+      for (var k in properties.keys) {
+        getRequest(k);
+      }
+      //if (timer.tick == 5) {
+      //  // Cancel after 5 iterations
+      //  timer.cancel();
+      //}
+    });
   }
 }

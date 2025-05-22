@@ -31,7 +31,7 @@ class NtpServerApi extends ApiService {
   static const String _broadcastsValueKey = 'broadcasts';
   static const String _clearCountersStatusKey = 'clearcounters';
   static const String _versionKey = 'version';
-  static const String _rootKey = 'ntp-server';
+  //static const String _rootKey = '';
 
   final Map<String, String> ntpServer = {
     _statusKey: '',
@@ -61,7 +61,7 @@ class NtpServerApi extends ApiService {
     _broadcastsValueKey: '',
     _clearCountersStatusKey: '',
     _versionKey: '',
-    _rootKey: 'ntp-server',
+    //_rootKey: 'ntp-server',
   };
 
   String get status => ntpServer[_statusKey] ?? '';
@@ -91,7 +91,7 @@ class NtpServerApi extends ApiService {
   String get broadcastsValue => ntpServer[_broadcastsValueKey] ?? '';
   String get clearCountersStatus => ntpServer[_clearCountersStatusKey] ?? '';
   String get version => ntpServer[_versionKey] ?? '';
-  String get root => ntpServer[_rootKey] ?? '';
+  //String get root => ntpServer[_rootKey] ?? '';
 
   String get statusKey => _statusKey;
   String get instanceNumberKey => _instanceNumberKey;
@@ -120,7 +120,7 @@ class NtpServerApi extends ApiService {
   String get broadcastsValueKey => _broadcastsValueKey;
   String get clearCountersStatusKey => _clearCountersStatusKey;
   String get versionKey => _versionKey;
-  String get rootKey => _rootKey;
+  //String get rootKey => _rootKey;
 
   @override
   Map<String, String> get properties => ntpServer;
