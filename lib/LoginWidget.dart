@@ -3,15 +3,17 @@ import 'package:ntsc_ui/LoginApi.dart';
 import 'package:provider/provider.dart';
 
 class LoginWidget extends StatefulWidget {
+  const LoginWidget({super.key});
+
   @override
-  _LoginWidgetState createState() => _LoginWidgetState();
+  LoginWidgetState createState() => LoginWidgetState();
 }
 
-class _LoginWidgetState extends State<LoginWidget> {
+class LoginWidgetState extends State<LoginWidget> {
   @override
   void initState() {
     super.initState();
-    final loginApi = Provider.of<LoginApi>(context, listen: false);
+    //final loginApi = Provider.of<LoginApi>(context, listen: false);
   }
 
   final _formKey = GlobalKey<FormState>();
