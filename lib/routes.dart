@@ -246,10 +246,10 @@ class AppRoutes {
     return goRoutes;
   }
 
-  static List<ExplorerItem> generateExplorerItems(BuildContext context) {
-    final loginApi = Provider.of<LoginApi>(context, listen: false);
+  static List<ExplorerItem> generateExplorerItems(bool isLoggedIn) {
+    //inal loginApi = Provider.of<LoginApi>(context, listen: false);
     // Only return items if user is authenticated
-    if (!loginApi.isLoggedIn) {
+    if (!isLoggedIn) {
       return [];
     }
 

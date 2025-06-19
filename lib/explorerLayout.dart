@@ -22,8 +22,8 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   @override
   void initState() {
     super.initState();
-    //final loginApi = Provider.of<LoginApi>(context, listen: false);
-    //explorerItems = AppRoutes.generateExplorerItems(context);
+    final loginApi = Provider.of<LoginApi>(context, listen: false);
+    explorerItems = AppRoutes.generateExplorerItems(loginApi.isLoggedIn);
   }
 
   void _navigateToItem(ExplorerItem item) {
@@ -35,9 +35,11 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   }
 
   void _toggleExpansion(ExplorerItem item) {
-    setState(() {
-      item.isExpanded = !item.isExpanded;
-    });
+    print("Hello");
+    print("item: " + item.id);
+    //setState(() {
+    item.isExpanded = !item.isExpanded;
+    //});
   }
 
   void _showAccessDeniedDialog(String route) {
@@ -60,152 +62,150 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   @override
   Widget build(BuildContext context) {
     String currentRoute = GoRouterState.of(context).uri.path;
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
-        explorerItems = AppRoutes.generateExplorerItems(context);
-        return Scaffold(
-          body: Row(
-            children: [
-              // Explorer Panel
-              Container(
-                width: explorerWidth,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  border: Border(
-                    right: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Explorer Header
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Theme.of(context).dividerColor,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.explore, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'EXPLORER',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Explorer Items
-                    Expanded(
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children:
-                            explorerItems
-                                .map(
-                                  (item) =>
-                                      _buildExplorerItem(item, 0, currentRoute),
-                                )
-                                .toList(),
-                      ),
-                    ),
-                  ],
+    final loginApi = Provider.of<LoginApi>(context, listen: false);
+    explorerItems = AppRoutes.generateExplorerItems(loginApi.isLoggedIn);
+    //return Consumer<LoginApi>(
+    //  builder: (context, loginApi, _) {
+    //explorerItems = AppRoutes.generateExplorerItems(true);
+    return Scaffold(
+      body: Row(
+        children: [
+          // Explorer Panel
+          Container(
+            width: explorerWidth,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                right: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
                 ),
               ),
-              // Resizer
-              GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    explorerWidth = (explorerWidth + details.delta.dx).clamp(
-                      200.0,
-                      400.0,
-                    );
-                  });
-                },
-                child: Container(
-                  width: 4,
-                  color: Colors.transparent,
-                  child: Center(
-                    child: Container(
-                      width: 2,
-                      color: Theme.of(context).dividerColor,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Explorer Header
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                        width: 1,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              // Main Content Area
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.background,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      // Content Header
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Theme.of(context).dividerColor,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.description, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              currentRoute,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
-                            ),
-                            Spacer(),
-                            // Navigation buttons
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.arrow_back, size: 18),
-                                  onPressed:
-                                      context.canPop()
-                                          ? () => context.pop()
-                                          : null,
-                                  tooltip: 'Go Back',
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.refresh, size: 18),
-                                  onPressed: () => context.go(currentRoute),
-                                  tooltip: 'Refresh',
-                                ),
-                              ],
-                            ),
-                          ],
+                      Icon(Icons.explore, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'EXPLORER',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
                         ),
                       ),
-                      // Content Body
-                      Expanded(child: widget.child),
                     ],
                   ),
                 ),
-              ),
-            ],
+                // Explorer Items
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children:
+                        explorerItems
+                            .map(
+                              (item) =>
+                                  _buildExplorerItem(item, 0, currentRoute),
+                            )
+                            .toList(),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      },
+          // Resizer
+          GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                explorerWidth = (explorerWidth + details.delta.dx).clamp(
+                  200.0,
+                  400.0,
+                );
+              });
+            },
+            child: Container(
+              width: 4,
+              color: Colors.transparent,
+              child: Center(
+                child: Container(
+                  width: 2,
+                  color: Theme.of(context).dividerColor,
+                ),
+              ),
+            ),
+          ),
+          // Main Content Area
+          Expanded(
+            child: Container(
+              color: Theme.of(context).colorScheme.background,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Content Header
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Theme.of(context).dividerColor,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.description, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          currentRoute,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        Spacer(),
+                        // Navigation buttons
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.arrow_back, size: 18),
+                              onPressed:
+                                  context.canPop() ? () => context.pop() : null,
+                              tooltip: 'Go Back',
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.refresh, size: 18),
+                              onPressed: () => context.go(currentRoute),
+                              tooltip: 'Refresh',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Content Body
+                  Expanded(child: widget.child),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+    //},
+    //);
   }
 
   Widget _buildExplorerItem(ExplorerItem item, int depth, String currentRoute) {
