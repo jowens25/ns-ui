@@ -269,7 +269,8 @@ class AppRoutes {
     }
 
     for (var route in routes) {
-      if (route.isAllowed) {
+      // Exclude /login for logged-in users
+      if (route.isAllowed && route.path != '/login') {
         items.add(buildItem(route, ''));
       }
     }
