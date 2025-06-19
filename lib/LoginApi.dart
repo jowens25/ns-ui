@@ -4,6 +4,12 @@ import 'package:http/http.dart' as http;
 
 class LoginApi extends ChangeNotifier {
   final String baseUrl;
+  bool _loggedIn = false;
+  String? _token;
+
+  bool get isLoggedIn => _loggedIn;
+  String? get token => _token;
+
   LoginApi({required this.baseUrl});
 
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -13,8 +19,13 @@ class LoginApi extends ChangeNotifier {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'Username': username, 'Password': password}),
     );
+
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final body = json.decode(response.body);
+      _loggedIn = true;
+      _token = body['token']; // adjust to your API's key
+      notifyListeners();
+      return body;
     } else if (response.statusCode == 400) {
       throw Exception('Invalid request: ${response.body}');
     } else if (response.statusCode == 401) {
@@ -22,5 +33,11 @@ class LoginApi extends ChangeNotifier {
     } else {
       throw Exception('Failed to login: ${response.body}');
     }
+  }
+
+  void logout() {
+    _loggedIn = false;
+    _token = null;
+    notifyListeners();
   }
 }
