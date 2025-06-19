@@ -7,6 +7,7 @@ class RouteConfig {
   final Widget Function() pageBuilder;
   final List<RouteConfig> children;
   final bool isAllowed;
+  final bool requiresAuth;
 
   const RouteConfig({
     required this.path,
@@ -15,6 +16,7 @@ class RouteConfig {
     required this.pageBuilder,
     this.children = const [],
     this.isAllowed = true,
+    this.requiresAuth = true,
   });
 }
 

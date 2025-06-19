@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/basePage.dart';
+import 'package:ntsc_ui/pages/basePage.dart';
 
 class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BasePage(

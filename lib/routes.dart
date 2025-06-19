@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/LoginApi.dart';
-import 'package:ntsc_ui/analyticsPage.dart';
-import 'package:ntsc_ui/errorPage.dart';
+import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/pages/analyticsPage.dart';
+import 'package:ntsc_ui/pages/errorPage.dart';
 import 'package:ntsc_ui/explorerLayout.dart';
-import 'package:ntsc_ui/generalSettingsPage.dart';
-import 'package:ntsc_ui/loginPage.dart';
-import 'package:ntsc_ui/metricsPage.dart';
+import 'package:ntsc_ui/pages/generalSettingsPage.dart';
+import 'package:ntsc_ui/pages/loginPage.dart';
+import 'package:ntsc_ui/pages/logoutPage.dart';
+import 'package:ntsc_ui/pages/metricsPage.dart';
 import 'package:ntsc_ui/models.dart';
-import 'package:ntsc_ui/projectDetailsPage.dart';
-import 'package:ntsc_ui/projectFilesPage.dart';
-import 'package:ntsc_ui/projectsOverviewPage.dart';
-import 'package:ntsc_ui/dashboardPage.dart';
-import 'package:ntsc_ui/reportsPage.dart';
-import 'package:ntsc_ui/securitySettingsPage.dart';
-import 'package:ntsc_ui/settingsOverviewPage.dart';
-import 'package:ntsc_ui/usersPage.dart';
+import 'package:ntsc_ui/pages/projectDetailsPage.dart';
+import 'package:ntsc_ui/pages/projectFilesPage.dart';
+import 'package:ntsc_ui/pages/projectsOverviewPage.dart';
+import 'package:ntsc_ui/pages/dashboardPage.dart';
+import 'package:ntsc_ui/pages/reportsPage.dart';
+import 'package:ntsc_ui/pages/securitySettingsPage.dart';
+import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
+import 'package:ntsc_ui/pages/usersPage.dart';
 import 'package:provider/provider.dart';
 
 // Consolidated Route Configuration
@@ -25,6 +26,14 @@ final loginRoute = RouteConfig(
   name: "Login",
   icon: Icons.login,
   pageBuilder: () => LoginPage(),
+  isAllowed: true,
+);
+
+final logoutRoute = RouteConfig(
+  path: "/logout",
+  name: "Logout",
+  icon: Icons.logout,
+  pageBuilder: () => LogoutPage(),
 );
 
 final dashboardRoute = RouteConfig(
@@ -124,24 +133,49 @@ final usersRoute = RouteConfig(
   name: 'User Management',
   icon: Icons.people,
   pageBuilder: () => UsersPage(),
-  isAllowed: false, // Example of restricted route
+  isAllowed: false,
 );
 
+// ================================================================
 // Router Configuration
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: '/login',
     redirect: (context, state) {
       final loginApi = Provider.of<LoginApi>(context, listen: false);
       final loggedIn = loginApi.isLoggedIn;
-      final isLoginPage = state.uri.path == '/login';
 
-      if (!loggedIn) return '/login';
-      if (loggedIn && isLoginPage) return '/dashboard';
-      return null;
+      final isLoginRoute = state.uri.path == '/login';
+
+      // If not authenticated and trying to access protected route, redirect to login
+      if (!loggedIn && AppRoutes.requiresAuthentication(state.uri.path)) {
+        return '/login';
+      }
+
+      // If authenticated and on login page, redirect to dashboard
+      if (loggedIn && isLoginRoute) {
+        return '/dashboard';
+      }
+
+      // Check if route is allowed by server
+      if (!AppRoutes.isRouteAllowed(state.uri.path)) {
+        return loggedIn ? '/dashboard' : '/login';
+      }
+
+      return null; // Allow navigation
     },
     routes: [
-      GoRoute(path: '/', redirect: (context, state) => '/dashboard'),
+      GoRoute(
+        path: '/',
+        redirect: (BuildContext context, GoRouterState state) {
+          final loginApi = Provider.of<LoginApi>(context, listen: false);
+          return loginApi.isLoggedIn ? '/dashboard' : '/login';
+        },
+      ),
+      //GoRoute(
+      //  path: '/login',
+      //  pageBuilder: (context, state) => NoTransitionPage(child: LoginPage()),
+      //),
       ShellRoute(
         builder: (context, state, child) {
           return ExplorerLayout(child: child);
@@ -165,11 +199,12 @@ class AppRoutes {
     settingsRoute,
     analyticsRoute,
     usersRoute,
+    logoutRoute,
   ];
 
   // Utility methods to work with route configuration
   static List<String> getAllowedPaths() {
-    List<String> paths = ['/'];
+    List<String> paths = ['/', '/login'];
 
     void addPaths(List<RouteConfig> configs, String parentPath) {
       for (var config in configs) {
@@ -211,7 +246,13 @@ class AppRoutes {
     return goRoutes;
   }
 
-  static List<ExplorerItem> generateExplorerItems() {
+  static List<ExplorerItem> generateExplorerItems(BuildContext context) {
+    final loginApi = Provider.of<LoginApi>(context, listen: false);
+    // Only return items if user is authenticated
+    if (!loginApi.isLoggedIn) {
+      return [];
+    }
+
     List<ExplorerItem> items = [];
 
     ExplorerItem buildItem(RouteConfig config, String parentPath) {
@@ -228,7 +269,9 @@ class AppRoutes {
     }
 
     for (var route in routes) {
-      items.add(buildItem(route, ''));
+      if (route.isAllowed) {
+        items.add(buildItem(route, ''));
+      }
     }
 
     return items;
@@ -236,5 +279,11 @@ class AppRoutes {
 
   static bool isRouteAllowed(String route) {
     return getAllowedPaths().contains(route);
+  }
+
+  static bool requiresAuthentication(String route) {
+    // Public routes that don't require authentication
+    List<String> publicRoutes = ['/', '/login'];
+    return !publicRoutes.contains(route);
   }
 }

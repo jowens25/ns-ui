@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/LoginApi.dart';
-import 'package:ntsc_ui/basePage.dart';
+import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class LoginPage extends StatefulWidget {
+class LogoutPage extends StatefulWidget {
   @override
-  LoginPageState createState() => LoginPageState();
+  LogoutPageState createState() => LogoutPageState();
 }
 
 // Page Components - now much simpler since routes are auto-generated
-class LoginPageState extends State<LoginPage> {
+class LogoutPageState extends State<LogoutPage> {
   @override
   void initState() {
     super.initState();
@@ -18,14 +18,11 @@ class LoginPageState extends State<LoginPage> {
   }
 
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+
   String? _errorMessage;
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -48,52 +45,17 @@ class LoginPageState extends State<LoginPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            //                    Text(
-                            //                      'Active Projects',
-                            //                      style: TextStyle(fontWeight: FontWeight.bold),
-                            //                    ),
-                            //                    SizedBox(height: 8),
-                            //                    Text(
-                            //                      '4',
-                            //                      style: Theme.of(context).textTheme.headlineMedium,
-                            //                    ),
-                            TextFormField(
-                              controller: _usernameController,
-                              decoration: InputDecoration(
-                                labelText: 'Username',
-                              ),
-                              validator:
-                                  (value) => value!.isEmpty ? 'Required' : null,
-                            ),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              controller: _passwordController,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                              ),
-                              obscureText: true,
-                              validator:
-                                  (value) => value!.isEmpty ? 'Required' : null,
-                            ),
-                            SizedBox(height: 16),
-                            if (_errorMessage != null)
-                              Text(
-                                _errorMessage!,
-                                style: TextStyle(color: Colors.red),
-                              ),
+                            //
+                            //
+                            //
+                            //
                             ElevatedButton(
-                              onPressed: () async {
+                              onPressed: () {
                                 if (_formKey.currentState!.validate()) {
                                   try {
-                                    final response = await loginApi.login(
-                                      _usernameController.text,
-                                      _passwordController.text,
-                                    );
+                                    loginApi.logout();
                                     // Handle successful login (e.g., save token, navigate)
-                                    context.go('/dashboard');
-
-                                    _errorMessage =
-                                        'Login successful: $response';
+                                    context.go('/login');
                                   } catch (e) {
                                     setState(() {
                                       _errorMessage = e.toString();
@@ -101,7 +63,7 @@ class LoginPageState extends State<LoginPage> {
                                   }
                                 }
                               },
-                              child: Text('Sign In'),
+                              child: Text('Sign out'),
                             ),
                             //
                             //

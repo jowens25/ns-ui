@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/basePage.dart';
+import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
 
 class AnalyticsPage extends StatelessWidget {

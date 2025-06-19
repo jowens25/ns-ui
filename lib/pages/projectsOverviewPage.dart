@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/basePage.dart';
+import 'package:ntsc_ui/pages/basePage.dart';
 
 class ProjectsOverviewPage extends StatelessWidget {
   @override

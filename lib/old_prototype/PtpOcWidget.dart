@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'CardInfo.dart';
-import 'PtpOcApi.dart';
+import '../api/PtpOcApi.dart';
 
 class PtpOcWidget extends StatefulWidget {
   @override
