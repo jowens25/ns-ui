@@ -19,7 +19,7 @@ class LogoutPageState extends State<LogoutPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  String? _errorMessage;
+  String? errorMessage;
 
   @override
   void dispose() {
@@ -58,7 +58,7 @@ class LogoutPageState extends State<LogoutPage> {
                                     context.go('/login');
                                   } catch (e) {
                                     setState(() {
-                                      _errorMessage = e.toString();
+                                      errorMessage = e.toString();
                                     });
                                   }
                                 }

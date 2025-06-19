@@ -122,12 +122,12 @@ class LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Recent Activity',
+                            'Register',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           SizedBox(height: 8),
                           Text(
-                            '12 updates',
+                            '???',
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
                         ],
