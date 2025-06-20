@@ -134,7 +134,7 @@ final usersRoute = RouteConfig(
   name: 'User Management',
   icon: Icons.people,
   pageBuilder: () => UsersPage(),
-  isAllowed: false,
+  isAllowed: true,
 );
 
 final supportRoute = RouteConfig(

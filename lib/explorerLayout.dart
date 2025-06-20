@@ -237,7 +237,7 @@ class _ExplorerItemsState extends State<ExplorerItemsWidget> {
         Material(
           color:
               isSelected
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                  ? Theme.of(context).colorScheme.secondary
                   : Colors.transparent,
           child: InkWell(
             onTap: () => _navigateToItem(item),
