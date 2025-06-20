@@ -16,6 +16,7 @@ import 'package:ntsc_ui/pages/dashboardPage.dart';
 import 'package:ntsc_ui/pages/reportsPage.dart';
 import 'package:ntsc_ui/pages/securitySettingsPage.dart';
 import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
+import 'package:ntsc_ui/pages/supportPage.dart';
 import 'package:ntsc_ui/pages/usersPage.dart';
 import 'package:provider/provider.dart';
 
@@ -136,6 +137,14 @@ final usersRoute = RouteConfig(
   isAllowed: false,
 );
 
+final supportRoute = RouteConfig(
+  path: '/support',
+  name: 'Support',
+  icon: Icons.help,
+  pageBuilder: () => SupportPage(),
+  isAllowed: true,
+);
+
 // ================================================================
 // Router Configuration
 class AppRouter {
@@ -173,8 +182,12 @@ class AppRouter {
         },
       ),
       //GoRoute(
-      //  path: '/login',
-      //  pageBuilder: (context, state) => NoTransitionPage(child: LoginPage()),
+      //  path: '/support',
+      //  redirect: (BuildContext context, GoRouterState state) {
+      //    //final loginApi = Provider.of<LoginApi>(context, listen: false);
+      //    return NoTransitionPage(child: SupportPage());
+      //    //NoTransitionPage(child: SupportPage())
+      //  },
       //),
       ShellRoute(
         builder: (context, state, child) {
@@ -199,12 +212,13 @@ class AppRoutes {
     settingsRoute,
     analyticsRoute,
     usersRoute,
+    supportRoute,
     logoutRoute,
   ];
 
   // Utility methods to work with route configuration
   static List<String> getAllowedPaths() {
-    List<String> paths = ['/', '/login'];
+    List<String> paths = ['/', '/login', '/support'];
 
     void addPaths(List<RouteConfig> configs, String parentPath) {
       for (var config in configs) {
@@ -284,7 +298,7 @@ class AppRoutes {
 
   static bool requiresAuthentication(String route) {
     // Public routes that don't require authentication
-    List<String> publicRoutes = ['/', '/login'];
+    List<String> publicRoutes = ['/', '/login', '/support'];
     return !publicRoutes.contains(route);
   }
 }

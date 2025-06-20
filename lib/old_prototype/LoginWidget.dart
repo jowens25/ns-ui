@@ -85,7 +85,7 @@ class LoginWidgetState extends State<LoginWidget> {
                             }
                           }
                         },
-                        child: Text('Sign In'),
+                        child: Text('Login'),
                       ),
                     ],
                   ),

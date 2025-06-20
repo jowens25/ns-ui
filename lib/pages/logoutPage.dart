@@ -31,8 +31,8 @@ class LogoutPageState extends State<LogoutPage> {
     return Consumer<LoginApi>(
       builder: (context, loginApi, _) {
         return BasePage(
-          title: 'Login',
-          description: 'Please Login',
+          title: 'Logout',
+          description: 'Please Logout',
           children: [
             Row(
               children: [
@@ -63,7 +63,7 @@ class LogoutPageState extends State<LogoutPage> {
                                   }
                                 }
                               },
-                              child: Text('Sign out'),
+                              child: Text('Log out'),
                             ),
                             //
                             //
