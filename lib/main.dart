@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/UserApi.dart';
+
 import 'package:ntsc_ui/routes.dart';
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
+  final userApi = UserApi(baseUrl: "http://10.1.10.205:8080");
+
   final loginApi = LoginApi(baseUrl: "http://10.1.10.205:8080");
 
   runApp(
     MultiProvider(
       providers: [
         //ChangeNotifierProvider(create: (_) => ntpServerApi),
-        //ChangeNotifierProvider(create: (_) => ptpOcApi),
+        ChangeNotifierProvider(create: (_) => userApi),
         ChangeNotifierProvider(create: (_) => loginApi),
         // Add more providers here as needed
       ],
@@ -54,6 +58,10 @@ class MyApp extends StatelessWidget {
             backgroundColor: Colors.grey[800], // Matches primary
             foregroundColor: Colors.white, // Readable on dark
           ),
+        ),
+
+        iconTheme: IconThemeData(
+          size: 20.0, // Set your desired icon size
         ),
 
         textTheme: const TextTheme(

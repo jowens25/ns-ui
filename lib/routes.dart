@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
-import 'package:ntsc_ui/pages/analyticsPage.dart';
+import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
+import 'package:ntsc_ui/pages/snmp/snmpTraps.dart';
+import 'package:ntsc_ui/pages/snmp/snmpVersion12.dart';
+import 'package:ntsc_ui/pages/snmp/snmpVersion3.dart';
+import 'package:ntsc_ui/pages/unusedPages/analyticsPage.dart';
 import 'package:ntsc_ui/pages/errorPage.dart';
 import 'package:ntsc_ui/explorerLayout.dart';
 import 'package:ntsc_ui/pages/generalSettingsPage.dart';
 import 'package:ntsc_ui/pages/loginPage.dart';
 import 'package:ntsc_ui/pages/logoutPage.dart';
-import 'package:ntsc_ui/pages/metricsPage.dart';
+import 'package:ntsc_ui/pages/unusedPages/metricsPage.dart';
 import 'package:ntsc_ui/models.dart';
-import 'package:ntsc_ui/pages/projectDetailsPage.dart';
-import 'package:ntsc_ui/pages/projectFilesPage.dart';
-import 'package:ntsc_ui/pages/projectsOverviewPage.dart';
+import 'package:ntsc_ui/pages/projects/projectDetailsPage.dart';
+import 'package:ntsc_ui/pages/projects/projectFilesPage.dart';
+import 'package:ntsc_ui/pages/projects/projectsOverviewPage.dart';
 import 'package:ntsc_ui/pages/dashboardPage.dart';
-import 'package:ntsc_ui/pages/reportsPage.dart';
+import 'package:ntsc_ui/pages/unusedPages/reportsPage.dart';
 import 'package:ntsc_ui/pages/securitySettingsPage.dart';
 import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
+import 'package:ntsc_ui/pages/snmp/snmpOverviewPage.dart';
+import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
 import 'package:ntsc_ui/pages/supportPage.dart';
-import 'package:ntsc_ui/pages/usersPage.dart';
+import 'package:ntsc_ui/pages/users/usersPage.dart';
 import 'package:provider/provider.dart';
 
 // Consolidated Route Configuration
@@ -137,6 +143,46 @@ final usersRoute = RouteConfig(
   isAllowed: true,
 );
 
+final snmpRoute = RouteConfig(
+  path: '/snmp',
+  name: 'SNMP',
+  icon: Icons.alarm,
+  pageBuilder: () => SnmpOverviewPage(),
+
+  children: [
+    RouteConfig(
+      path: '/status',
+      name: 'Status',
+      icon: Icons.work,
+      pageBuilder: () => SnmpStatusPage(),
+    ),
+    RouteConfig(
+      path: '/actions',
+      name: 'Actions',
+      icon: Icons.work,
+      pageBuilder: () => SnmpActionsPage(),
+    ),
+    RouteConfig(
+      path: '/v1-v2',
+      name: 'V1/V2',
+      icon: Icons.work,
+      pageBuilder: () => SnmpVersion12Page(),
+    ),
+    RouteConfig(
+      path: '/v3',
+      name: 'V3',
+      icon: Icons.work,
+      pageBuilder: () => SnmpVersion3Page(),
+    ),
+    RouteConfig(
+      path: '/traps',
+      name: 'Traps',
+      icon: Icons.work,
+      pageBuilder: () => SnmpTrapsPage(),
+    ),
+  ],
+);
+
 final supportRoute = RouteConfig(
   path: '/support',
   name: 'Support',
@@ -208,10 +254,12 @@ class AppRoutes {
   static final List<RouteConfig> routes = [
     loginRoute,
     dashboardRoute,
-    projectsRoute,
-    settingsRoute,
-    analyticsRoute,
+    snmpRoute,
     usersRoute,
+
+    //projectsRoute,
+    //settingsRoute,
+    //analyticsRoute,
     supportRoute,
     logoutRoute,
   ];
