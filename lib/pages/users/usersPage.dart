@@ -53,6 +53,7 @@ class _UsersPageState extends State<UsersPage> {
                           'Actions',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+
                         SizedBox(height: 8),
                         SizedBox(height: 8),
                         SizedBox(
@@ -156,8 +157,9 @@ class _UsersPageState extends State<UsersPage> {
                     user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                   ),
                 ),
-                title: Text(user.name),
+                title: Text('${user.name} - ${user.role}'),
                 subtitle: Text(user.email),
+
                 trailing: PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'delete') {
@@ -198,6 +200,9 @@ class _UsersPageState extends State<UsersPage> {
       builder: (BuildContext context) {
         return Consumer<LoginApi>(
           builder: (context, loginApi, _) {
+            String selectedRole =
+                "viewer"; // Add this as a variable in your widget state
+
             return AlertDialog(
               title: Text('Add User'),
               content: Column(
@@ -211,6 +216,20 @@ class _UsersPageState extends State<UsersPage> {
                     controller: emailController,
                     decoration: InputDecoration(labelText: 'Email'),
                   ),
+                  SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedRole,
+                    decoration: InputDecoration(labelText: 'Role'),
+                    items: [
+                      DropdownMenuItem(value: "viewer", child: Text("Viewer")),
+                      DropdownMenuItem(value: "admin", child: Text("Admin")),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedRole = newValue!;
+                      });
+                    },
+                  ),
                 ],
               ),
               actions: [
@@ -223,6 +242,7 @@ class _UsersPageState extends State<UsersPage> {
                     if (nameController.text.isNotEmpty &&
                         emailController.text.isNotEmpty) {
                       await loginApi.addUser(
+                        selectedRole, // Use the selected role instead of hardcoded "viewer"
                         nameController.text,
                         emailController.text,
                       );

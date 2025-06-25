@@ -129,6 +129,16 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                               ?.copyWith(fontWeight: FontWeight.w500),
                         ),
                         Spacer(),
+                        Consumer<LoginApi>(
+                          builder: (context, loginApi, _) {
+                            return Text(
+                              loginApi.currentUser?.name != null
+                                  ? "Welcome, ${loginApi.currentUser!.name}"
+                                  : "Welcome",
+                            );
+                          },
+                        ),
+                        Spacer(),
                         // Navigation buttons
                         Row(
                           children: [

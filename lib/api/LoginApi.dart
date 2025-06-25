@@ -5,7 +5,7 @@ import 'package:web/web.dart';
 import 'dart:async';
 
 class LoginApi extends ChangeNotifier {
-  int calls = 0;
+  User? currentUser; // Add this line to track current user
   List<User> _users = [];
   List<User> _filteredUsers = [];
   final String baseUrl;
@@ -17,11 +17,11 @@ class LoginApi extends ChangeNotifier {
   List<User> get filteredUsers => _filteredUsers;
   String get token => _token;
   bool get isLoggedIn => _loggedIn;
-
   LoginApi({required this.baseUrl}) {
     getTokenCookie();
     if (_token.isNotEmpty && !isTokenExpired(_token)) {
       _loggedIn = true;
+      _getCurrentUserFromToken();
     }
     _startSessionTimer();
   }
@@ -33,7 +33,32 @@ class LoginApi extends ChangeNotifier {
     });
   }
 
-  Future<Map<String, dynamic>> login(String username, String password) async {
+  void _getCurrentUserFromToken() {
+    if (_token.isEmpty) return;
+
+    try {
+      final parts = _token.split('.');
+      if (parts.length != 3) return;
+
+      final payload = json.decode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+
+      currentUser = User(
+        id: payload['sub'] ?? payload['userId'] ?? payload['id'] ?? '',
+        name: payload['name'] ?? payload['username'] ?? '',
+        email: payload['email'] ?? '',
+        role: payload['role'] ?? '',
+      );
+
+      notifyListeners();
+    } catch (e) {
+      print('Could not decode user info from token: $e');
+      // Fallback: try API call if token decoding fails
+    }
+  }
+
+  Future<void> login(String username, String password) async {
     final url = Uri.parse('$baseUrl/login');
     final response = await http.post(
       url,
@@ -46,8 +71,8 @@ class LoginApi extends ChangeNotifier {
       _loggedIn = true;
       _token = body['token'];
       setTokenCookie(_token);
+      _getCurrentUserFromToken();
       notifyListeners();
-      return body;
     } else if (response.statusCode == 401) {
       throw Exception('Invalid username or password');
     } else {
@@ -60,6 +85,7 @@ class LoginApi extends ChangeNotifier {
     _token = '';
     _users.clear();
     _filteredUsers.clear();
+    currentUser = null;
     deleteTokenCookie();
     notifyListeners();
   }
@@ -115,10 +141,7 @@ class LoginApi extends ChangeNotifier {
     super.dispose();
   }
 
-  // User Management
   Future<void> getAllUsers() async {
-    //notifyListeners();
-
     try {
       final response = await http
           .get(
@@ -148,10 +171,8 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
-  Future<void> addUser(String name, String email) async {
-    notifyListeners();
-
-    final newUserData = {'username': name, 'email': email};
+  Future<void> addUser(String role, String name, String email) async {
+    final newUserData = {'role': role, 'username': name, 'email': email};
 
     try {
       final response = await http
@@ -168,28 +189,9 @@ class LoginApi extends ChangeNotifier {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
 
-        // If the API returns the created user, add it to the list
         if (decoded.containsKey('user')) {
           final createdUser = User.fromJson(decoded['user']);
           _users.add(createdUser);
-        } else if (decoded.containsKey('users')) {
-          // If the API returns all users, replace the entire list
-          _users =
-              (decoded['users'] as List)
-                  .map((userJson) => User.fromJson(userJson))
-                  .toList();
-        } else {
-          // If no user data is returned, create a temporary user
-          // You should refresh the user list after this
-          final tempUser = User(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            name: name,
-            email: email,
-          );
-          _users.add(tempUser);
-
-          // Optionally refresh the entire user list to get the actual data
-          // await getAllUsers();
         }
 
         _updateFiltered();
@@ -199,7 +201,7 @@ class LoginApi extends ChangeNotifier {
       } else if (response.statusCode == 400) {
         final errorBody = jsonDecode(response.body);
         throw Exception(
-          'Bad Request: ${errorBody['message'] ?? 'Invalid user data'}',
+          'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
         );
       } else {
         throw Exception('Failed to add user: ${response.statusCode}');
@@ -263,20 +265,27 @@ class LoginApi extends ChangeNotifier {
 
 class User {
   final String id;
+  final String role;
   final String name;
   final String email;
 
-  User({required this.id, required this.name, required this.email});
+  User({
+    required this.id,
+    required this.role,
+    required this.name,
+    required this.email,
+  });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'].toString(),
+      role: json['role'] ?? '',
       name: json['username'] ?? json['name'] ?? '',
       email: json['email'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'username': name, 'email': email};
+    return {'id': id, 'role': role, 'username': name, 'email': email};
   }
 }

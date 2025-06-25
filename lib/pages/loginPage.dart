@@ -82,14 +82,12 @@ class LoginCardState extends State<LoginCard> {
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
                               try {
-                                final response = await loginApi.login(
+                                await loginApi.login(
                                   _usernameController.text,
                                   _passwordController.text,
                                 );
-
                                 context.go('/dashboard');
 
-                                _errorMessage = 'Login successful: $response';
                                 print(_errorMessage);
                               } catch (e) {
                                 setState(() {
