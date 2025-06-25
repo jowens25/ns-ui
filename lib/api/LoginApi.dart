@@ -5,6 +5,7 @@ import 'package:web/web.dart';
 import 'dart:async';
 
 class LoginApi extends ChangeNotifier {
+  int calls = 0;
   List<User> _users = [];
   List<User> _filteredUsers = [];
   final String baseUrl;
@@ -116,7 +117,7 @@ class LoginApi extends ChangeNotifier {
 
   // User Management
   Future<void> getAllUsers() async {
-    notifyListeners();
+    //notifyListeners();
 
     try {
       final response = await http
@@ -215,8 +216,29 @@ class LoginApi extends ChangeNotifier {
   }
 
   Future<void> deleteUser(User user) async {
-    _users.removeWhere((u) => u.id == user.id);
-    _updateFiltered();
+    try {
+      final response = await http
+          .delete(
+            Uri.parse('$baseUrl/api/v1/users/${user.id}'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _users.removeWhere((u) => u.id == user.id);
+        _updateFiltered();
+        notifyListeners();
+      } else {
+        throw Exception('Failed to delete user');
+      }
+    } catch (e) {
+      throw Exception('Error deleting users: $e');
+    } finally {
+      notifyListeners();
+    }
   }
 
   void searchUsers(String query) {
