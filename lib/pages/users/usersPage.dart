@@ -194,6 +194,7 @@ class _UsersPageState extends State<UsersPage> {
   void _showAddUserDialog() {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
+    final passwordController = TextEditingController();
 
     showDialog(
       context: context,
@@ -212,9 +213,14 @@ class _UsersPageState extends State<UsersPage> {
                     controller: nameController,
                     decoration: InputDecoration(labelText: 'Name'),
                   ),
+
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  TextField(
+                    controller: passwordController,
+                    decoration: InputDecoration(labelText: 'Password'),
                   ),
                   SizedBox(height: 16),
                   DropdownButtonFormField<String>(
@@ -242,9 +248,10 @@ class _UsersPageState extends State<UsersPage> {
                     if (nameController.text.isNotEmpty &&
                         emailController.text.isNotEmpty) {
                       await loginApi.addUser(
-                        selectedRole, // Use the selected role instead of hardcoded "viewer"
+                        selectedRole,
                         nameController.text,
                         emailController.text,
+                        passwordController.text,
                       );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(

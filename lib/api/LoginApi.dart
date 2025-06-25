@@ -171,8 +171,18 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
-  Future<void> addUser(String role, String name, String email) async {
-    final newUserData = {'role': role, 'username': name, 'email': email};
+  Future<void> addUser(
+    String role,
+    String name,
+    String email,
+    String password,
+  ) async {
+    final newUserData = {
+      'role': role,
+      'username': name,
+      'email': email,
+      'password': password,
+    };
 
     try {
       final response = await http
@@ -188,6 +198,8 @@ class LoginApi extends ChangeNotifier {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
+
+        print(decoded);
 
         if (decoded.containsKey('user')) {
           final createdUser = User.fromJson(decoded['user']);
