@@ -3,17 +3,45 @@ import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
 import 'package:provider/provider.dart';
 
-class UsersPage extends StatefulWidget {
+class UsersManagementPage extends StatelessWidget {
   @override
-  _UsersPageState createState() => _UsersPageState();
+  Widget build(BuildContext context) {
+    return BasePage(
+      title: 'User Management',
+      description: 'Management:',
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Column: Actions
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [UsersManagementCard()],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
-class _UsersPageState extends State<UsersPage> {
-  final TextEditingController _searchController = TextEditingController();
+class UsersManagementCard extends StatefulWidget {
+  @override
+  _UsersManagementCardState createState() => _UsersManagementCardState();
+}
+
+class _UsersManagementCardState extends State<UsersManagementCard> {
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loginApi = context.read<LoginApi>();
       loginApi.getAllUsers();
@@ -21,6 +49,8 @@ class _UsersPageState extends State<UsersPage> {
         loginApi.searchUsers(_searchController.text);
       });
     });
+
+    _searchController.text = '';
   }
 
   @override
@@ -31,105 +61,46 @@ class _UsersPageState extends State<UsersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BasePage(
-      title: 'User Management',
-      description: 'Manage users and their permissions.',
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Actions Column
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Card(
-                  child: Container(
-                    height: 400,
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Actions',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-
-                        SizedBox(height: 8),
-                        SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => _showNotImplemented(),
-                            child: Text('LDAP Setup'),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => _showNotImplemented(),
-                            child: Text('RADIUS Setup'),
-                          ),
-                        ),
-                      ],
+    return Card(
+      child: Column(
+        children: [
+          // Header
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Users', style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(
+                  width: 300,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search users...',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 12,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            // Users Column
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(top: 16, right: 16, bottom: 16),
-                child: Card(
-                  child: Column(
-                    children: [
-                      // Header
-                      Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Users',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(
-                              width: 300,
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: 'Search users...',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => _showAddUserDialog(),
-                              icon: Icon(Icons.add),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Users List
-                      Container(
-                        height: 400,
-                        padding: EdgeInsets.all(16),
-                        child: _buildUsersList(),
-                      ),
-                    ],
-                  ),
+                IconButton(
+                  onPressed: () => _showAddUserDialog(),
+                  icon: Icon(Icons.add),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ],
+          ),
+          // Users List
+          Container(
+            height: 400,
+            padding: EdgeInsets.all(16),
+            child: _buildUsersList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -395,11 +366,5 @@ class _UsersPageState extends State<UsersPage> {
         );
       },
     );
-  }
-
-  void _showNotImplemented() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Not implemented yet')));
   }
 }

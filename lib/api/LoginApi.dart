@@ -11,6 +11,10 @@ class LoginApi extends ChangeNotifier {
   final String baseUrl;
   bool _loggedIn = false;
   String _token = '';
+
+  String _messageError = '';
+  String get messageError => _messageError;
+
   Timer? _sessionTimer;
 
   List<User> get users => _users;
@@ -49,6 +53,7 @@ class LoginApi extends ChangeNotifier {
         name: payload['name'] ?? payload['username'] ?? '',
         email: payload['email'] ?? '',
         role: payload['role'] ?? '',
+        password: '',
       );
 
       notifyListeners();
@@ -240,16 +245,75 @@ class LoginApi extends ChangeNotifier {
             },
           )
           .timeout(const Duration(seconds: 5));
-
+      //
       if (response.statusCode == 200 || response.statusCode == 201) {
         _users.removeWhere((u) => u.id == user.id);
         _updateFiltered();
+        notifyListeners();
+      } else if (response.statusCode == 422) {
+        _messageError = jsonDecode(response.body)['error'] ?? 'error';
+
         notifyListeners();
       } else {
         throw Exception('Failed to delete user');
       }
     } catch (e) {
       throw Exception('Error deleting users: $e');
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateUser(User user) async {
+    final newUserData = {
+      'role': user.role,
+      'username': user.name,
+      'email': user.email,
+      'password': user.password,
+    };
+
+    try {
+      final response = await http
+          .patch(
+            Uri.parse('$baseUrl/api/v1/users/${user.id}'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: json.encode(newUserData),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+
+        print("decoded: $decoded");
+
+        //if (decoded.containsKey('user')) {
+        // final createdUser = User.fromJson(decoded['user']);
+        //  _users.add(createdUser);
+        //}
+
+        _updateFiltered();
+        notifyListeners();
+      } else if (response.statusCode == 204) {
+        print("no new content???");
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again');
+      } else if (response.statusCode == 400) {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
+        );
+      } else {
+        throw Exception('Failed to add user: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is TimeoutException) {
+        throw Exception('Request timed out. Please try again.');
+      } else {
+        throw Exception('Error updating user: $e');
+      }
     } finally {
       notifyListeners();
     }
@@ -276,16 +340,18 @@ class LoginApi extends ChangeNotifier {
 }
 
 class User {
-  final String id;
-  final String role;
-  final String name;
-  final String email;
+  String id;
+  String role;
+  String name;
+  String email;
+  String password;
 
   User({
     required this.id,
     required this.role,
     required this.name,
     required this.email,
+    required this.password,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -294,6 +360,7 @@ class User {
       role: json['role'] ?? '',
       name: json['username'] ?? json['name'] ?? '',
       email: json['email'] ?? '',
+      password: '',
     );
   }
 

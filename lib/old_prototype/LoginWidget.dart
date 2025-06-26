@@ -77,7 +77,7 @@ class LoginWidgetState extends State<LoginWidget> {
                                 _passwordController.text,
                               );
                               // Handle successful login (e.g., save token, navigate)
-                              _errorMessage = 'Login successful: $response';
+                              //_errorMessage = 'Login successful: $response';
                             } catch (e) {
                               setState(() {
                                 _errorMessage = e.toString();

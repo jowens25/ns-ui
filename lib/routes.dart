@@ -5,13 +5,13 @@ import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
 import 'package:ntsc_ui/pages/snmp/snmpTraps.dart';
 import 'package:ntsc_ui/pages/snmp/snmpVersion12.dart';
 import 'package:ntsc_ui/pages/snmp/snmpVersion3.dart';
-import 'package:ntsc_ui/pages/unusedPages/analyticsPage.dart';
+//import 'package:ntsc_ui/pages/unusedPages/analyticsPage.dart';
 import 'package:ntsc_ui/pages/errorPage.dart';
 import 'package:ntsc_ui/explorerLayout.dart';
 import 'package:ntsc_ui/pages/generalSettingsPage.dart';
 import 'package:ntsc_ui/pages/loginPage.dart';
 import 'package:ntsc_ui/pages/logoutPage.dart';
-import 'package:ntsc_ui/pages/unusedPages/metricsPage.dart';
+//import 'package:ntsc_ui/pages/unusedPages/metricsPage.dart';
 import 'package:ntsc_ui/models.dart';
 import 'package:ntsc_ui/pages/projects/projectDetailsPage.dart';
 import 'package:ntsc_ui/pages/projects/projectFilesPage.dart';
@@ -23,6 +23,10 @@ import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
 import 'package:ntsc_ui/pages/snmp/snmpOverviewPage.dart';
 import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
 import 'package:ntsc_ui/pages/supportPage.dart';
+import 'package:ntsc_ui/pages/users/usersActions.dart';
+import 'package:ntsc_ui/pages/users/usersManagement.dart';
+import 'package:ntsc_ui/pages/users/usersOverviewPage.dart';
+
 import 'package:ntsc_ui/pages/users/usersPage.dart';
 import 'package:provider/provider.dart';
 
@@ -112,26 +116,26 @@ final settingsRoute = RouteConfig(
 
 // ================================================================
 // ================================================================
-final analyticsRoute = RouteConfig(
-  path: '/analytics',
-  name: 'Analytics',
-  icon: Icons.analytics,
-  pageBuilder: () => AnalyticsPage(),
-  children: [
-    RouteConfig(
-      path: '/reports',
-      name: 'Reports',
-      icon: Icons.assessment,
-      pageBuilder: () => ReportsPage(),
-    ),
-    RouteConfig(
-      path: '/metrics',
-      name: 'Metrics',
-      icon: Icons.speed,
-      pageBuilder: () => MetricsPage(),
-    ),
-  ],
-);
+//final analyticsRoute = RouteConfig(
+//  path: '/analytics',
+//  name: 'Analytics',
+//  icon: Icons.analytics,
+//  pageBuilder: () => AnalyticsPage(),
+//  children: [
+//    RouteConfig(
+//      path: '/reports',
+//      name: 'Reports',
+//      icon: Icons.assessment,
+//      pageBuilder: () => ReportsPage(),
+//    ),
+//    RouteConfig(
+//      path: '/metrics',
+//      name: 'Metrics',
+//      icon: Icons.speed,
+//      pageBuilder: () => MetricsPage(),
+//    ),
+//  ],
+//);
 
 // ================================================================
 // ================================================================
@@ -139,8 +143,22 @@ final usersRoute = RouteConfig(
   path: '/users',
   name: 'User Management',
   icon: Icons.people,
-  pageBuilder: () => UsersPage(),
+  pageBuilder: () => UsersOverviewPage(),
   isAllowed: true,
+  children: [
+    RouteConfig(
+      path: '/actions',
+      name: 'Actions',
+      icon: Icons.pending_actions,
+      pageBuilder: () => UsersActionsPage(),
+    ),
+    RouteConfig(
+      path: '/management',
+      name: 'Management',
+      icon: Icons.work,
+      pageBuilder: () => UsersManagementPage(),
+    ),
+  ],
 );
 
 final snmpRoute = RouteConfig(
