@@ -8,9 +8,9 @@ import 'package:ntsc_ui/routes.dart';
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
-  final userApi = UserApi(baseUrl: "http://10.1.10.205:8080");
+  final userApi = UserApi(baseUrl: "http://10.1.10.125:5000");
 
-  final loginApi = LoginApi(baseUrl: "http://10.1.10.205:8080");
+  final loginApi = LoginApi(baseUrl: "http://10.1.10.125:5000");
 
   runApp(
     MultiProvider(
