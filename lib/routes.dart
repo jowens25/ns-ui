@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
 import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
+import 'package:ntsc_ui/pages/ntp/ntpNetwork.dart';
+import 'package:ntsc_ui/pages/ntp/ntpOverviewPage.dart';
+import 'package:ntsc_ui/pages/ntp/ntpServerConfig.dart';
+import 'package:ntsc_ui/pages/ntp/ntpStatus.dart';
+import 'package:ntsc_ui/pages/ntp/ntpUtcConfig.dart';
+import 'package:ntsc_ui/pages/ntp/ntpVersion.dart';
+
 import 'package:ntsc_ui/pages/snmp/snmpTraps.dart';
 import 'package:ntsc_ui/pages/snmp/snmpVersion12.dart';
 import 'package:ntsc_ui/pages/snmp/snmpVersion3.dart';
@@ -17,7 +24,6 @@ import 'package:ntsc_ui/pages/projects/projectDetailsPage.dart';
 import 'package:ntsc_ui/pages/projects/projectFilesPage.dart';
 import 'package:ntsc_ui/pages/projects/projectsOverviewPage.dart';
 import 'package:ntsc_ui/pages/dashboardPage.dart';
-import 'package:ntsc_ui/pages/unusedPages/reportsPage.dart';
 import 'package:ntsc_ui/pages/securitySettingsPage.dart';
 import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
 import 'package:ntsc_ui/pages/snmp/snmpOverviewPage.dart';
@@ -27,7 +33,6 @@ import 'package:ntsc_ui/pages/users/usersActions.dart';
 import 'package:ntsc_ui/pages/users/usersManagement.dart';
 import 'package:ntsc_ui/pages/users/usersOverviewPage.dart';
 
-import 'package:ntsc_ui/pages/users/usersPage.dart';
 import 'package:provider/provider.dart';
 
 // Consolidated Route Configuration
@@ -201,6 +206,98 @@ final snmpRoute = RouteConfig(
   ],
 );
 
+final ntpRoute = RouteConfig(
+  path: '/ntp',
+  name: 'NTP',
+  icon: Icons.alarm,
+  pageBuilder: () => NtpOverviewPage(),
+
+  children: [
+    RouteConfig(
+      path: '/version',
+      name: 'Version',
+      icon: Icons.work,
+      pageBuilder: () => NtpVersionPage(),
+    ),
+    RouteConfig(
+      path: '/network',
+      name: 'Network',
+      icon: Icons.work,
+      pageBuilder: () => NtpNetworkPage(),
+    ),
+    RouteConfig(
+      path: '/config',
+      name: 'Server Config',
+      icon: Icons.work,
+      pageBuilder: () => NtpServerConfigPage(),
+    ),
+    RouteConfig(
+      path: '/utc',
+      name: 'UTC Config',
+      icon: Icons.work,
+      pageBuilder: () => NtpUtcConfigPage(),
+    ),
+    RouteConfig(
+      path: '/status',
+      name: 'Status',
+      icon: Icons.work,
+      pageBuilder: () => NtpStatusPage(),
+    ),
+  ],
+);
+
+final ptpOcRoute = RouteConfig(
+  path: '/ptpoc',
+  name: 'PTP OC',
+  icon: Icons.alarm,
+  pageBuilder: () => SnmpOverviewPage(),
+
+  children: [
+    RouteConfig(
+      path: '/version',
+      name: 'Version',
+      icon: Icons.work,
+      pageBuilder: () => SnmpStatusPage(),
+    ),
+    RouteConfig(
+      path: '/network',
+      name: 'Network',
+      icon: Icons.work,
+      pageBuilder: () => SnmpActionsPage(),
+    ),
+    RouteConfig(
+      path: '/default',
+      name: 'Default Dataset',
+      icon: Icons.work,
+      pageBuilder: () => SnmpVersion12Page(),
+    ),
+    RouteConfig(
+      path: '/port',
+      name: 'Port Dataset',
+      icon: Icons.work,
+      pageBuilder: () => SnmpVersion3Page(),
+    ),
+    RouteConfig(
+      path: '/current',
+      name: 'Current Dataset',
+      icon: Icons.work,
+      pageBuilder: () => SnmpTrapsPage(),
+    ),
+    RouteConfig(
+      path: '/parent',
+      name: 'Parent Dataset',
+      icon: Icons.work,
+      pageBuilder: () => SnmpTrapsPage(),
+    ),
+    RouteConfig(
+      path: '/timeproperties',
+      name: 'Time Properties Dataset',
+      icon: Icons.work,
+      pageBuilder: () => SnmpTrapsPage(),
+    ),
+  ],
+);
+
 final supportRoute = RouteConfig(
   path: '/support',
   name: 'Support',
@@ -273,6 +370,8 @@ class AppRoutes {
     loginRoute,
     dashboardRoute,
     snmpRoute,
+    ntpRoute,
+    ptpOcRoute,
     usersRoute,
 
     //projectsRoute,

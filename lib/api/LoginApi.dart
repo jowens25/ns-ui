@@ -337,6 +337,70 @@ class LoginApi extends ChangeNotifier {
     _filteredUsers = List.from(_users);
     notifyListeners();
   }
+
+  /// SNMP SSHSSSSSSIIIIUUUUFFFFFFFFFF
+  ///
+  ///
+  ///
+  ///
+  ///
+  Future<void> create(
+    String role,
+    String name,
+    String email,
+    String password,
+  ) async {
+    final newUserData = {
+      'role': role,
+      'username': name,
+      'email': email,
+      'password': password,
+    };
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/v1/users'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: json.encode(newUserData),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+
+        print(decoded);
+
+        if (decoded.containsKey('user')) {
+          final createdUser = User.fromJson(decoded['user']);
+          _users.add(createdUser);
+        }
+
+        _updateFiltered();
+        notifyListeners();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again');
+      } else if (response.statusCode == 400) {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
+        );
+      } else {
+        throw Exception('Failed to add user: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is TimeoutException) {
+        throw Exception('Request timed out. Please try again.');
+      } else {
+        throw Exception('Error adding user: $e');
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
 }
 
 class User {
@@ -366,5 +430,93 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {'id': id, 'role': role, 'username': name, 'email': email};
+  }
+}
+
+class SnmpV12User {
+  String id;
+  String version;
+  String groupName;
+  String community;
+  String ipVersion;
+  String ipAddress4;
+  String ipAddress6;
+
+  SnmpV12User({
+    required this.id,
+    required this.version,
+    required this.groupName,
+    required this.community,
+    required this.ipVersion,
+    required this.ipAddress4,
+    required this.ipAddress6,
+  });
+
+  factory SnmpV12User.fromJson(Map<String, dynamic> json) {
+    return SnmpV12User(
+      id: json['id'].toString(),
+      version: json['version'] ?? '',
+      groupName: json['group_name'] ?? '',
+      community: json['community'] ?? '',
+      ipVersion: json['ip_nersion'] ?? '',
+      ipAddress4: json['ip_address4'] ?? '',
+      ipAddress6: json['ip_address6'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'version': version,
+      'group_name': groupName,
+      'community': community,
+      'ip_nersion': ipVersion,
+      'ip_address4': ipAddress4,
+      'ip_address6': ipAddress6,
+    };
+  }
+}
+
+class SnmpV3User {
+  String id;
+  String userName;
+  String authType;
+  String authPassphrase;
+  String privType;
+  String privPassphrase;
+  String permissions;
+
+  SnmpV3User({
+    required this.id,
+    required this.userName,
+    required this.authType,
+    required this.authPassphrase,
+    required this.privType,
+    required this.privPassphrase,
+    required this.permissions,
+  });
+
+  factory SnmpV3User.fromJson(Map<String, dynamic> json) {
+    return SnmpV3User(
+      id: json['id'].toString(),
+      userName: json['user_name'] ?? '',
+      authType: json['auth_type'] ?? '',
+      authPassphrase: json['auth_passphrase'] ?? '',
+      privType: json['priv_type'] ?? '',
+      privPassphrase: json['priv_passphrase'] ?? '',
+      permissions: json['permissions'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_name': userName,
+      'auth_type': authType,
+      'auth_passphrase': authPassphrase,
+      'priv_type': privType,
+      'priv_passphrase': privPassphrase,
+      'permissions': permissions,
+    };
   }
 }
