@@ -29,16 +29,6 @@ class SnmpVersion12Page extends StatelessWidget {
   }
 }
 
-List<String> headerNames = [
-  'Version',
-  'Group Name',
-  'Community',
-  'IP Version',
-  'IP Address v4',
-  'IP Address v6',
-  'Edit',
-];
-
 class SnmpVersion12Card extends StatefulWidget {
   @override
   State<SnmpVersion12Card> createState() => _SnmpVersion12CardState();
@@ -74,7 +64,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                   children: [
                     Expanded(
                       child: Text(
-                        'SNMP Version 1 / Version 2c',
+                        'SNMP Version 1 - Version 2c',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -159,11 +149,45 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                       // Edit button
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () {
-                            // Add edit functionality here
+                        child: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              _showDeleteUserDialog(snmpUser);
+                            }
+                            if (value == 'edit') {
+                              _showEditUserDialog(snmpUser);
+                            }
                           },
+                          itemBuilder:
+                              (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 16),
+                                      SizedBox(width: 8),
+                                      Text('Edit'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete,
+                                        size: 16,
+                                        color: Colors.red,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                         ),
                       ),
                     ],
@@ -182,9 +206,9 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
     final ipv6AddressController = TextEditingController();
     final communityController = TextEditingController();
 
-    String selectedIpVersion = "ipv4_ipv6";
+    String selectedIpVersion = "ipv4";
     String selectedSnmpVersion = "v1";
-    String selectedPermissions = "read_only";
+    String selectedGroup = "read_only";
 
     showDialog(
       context: context,
@@ -202,10 +226,6 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     items: [
                       DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
                       DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
-                      DropdownMenuItem(
-                        value: "ipv4_ipv6",
-                        child: Text("IPv4/IPv6"),
-                      ),
                     ],
                     onChanged: (String? newValue) {
                       setDialogState(() {
@@ -226,7 +246,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     decoration: InputDecoration(labelText: 'Community'),
                   ),
                   DropdownButtonFormField<String>(
-                    value: selectedPermissions,
+                    value: selectedGroup,
                     decoration: InputDecoration(labelText: 'Permissions'),
                     items: [
                       DropdownMenuItem(
@@ -240,7 +260,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     ],
                     onChanged: (String? newValue) {
                       setDialogState(() {
-                        selectedPermissions = newValue!;
+                        selectedGroup = newValue!;
                       });
                     },
                   ),
@@ -269,13 +289,160 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     final loginApi = context.read<LoginApi>();
                     SnmpV12cUser snmpV1V2User = SnmpV12cUser.fromJson({
                       'version': selectedSnmpVersion,
-                      'group_name': selectedPermissions,
+                      'group_name': selectedGroup,
                       'community': communityController.text,
                       'ip_version': selectedIpVersion,
                       'ip4_address': ipv4AddressController.text,
                       'ip6_address': ipv6AddressController.text,
                     });
                     loginApi.addSnmpV1V2User(snmpV1V2User);
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                  },
+                  child: Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteUserDialog(SnmpV12cUser user) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<LoginApi>(
+          builder: (context, loginApi, _) {
+            return AlertDialog(
+              title: Text('Delete User'),
+              content: Text('Delete ${user.community}?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await loginApi.deleteSnmpV1V2cUser(user);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("deleted i think")));
+                  },
+                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditUserDialog(SnmpV12cUser user) {
+    final ipv4AddressController = TextEditingController();
+    final ipv6AddressController = TextEditingController();
+    final communityController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<LoginApi>(
+          builder: (context, loginApi, _) {
+            //
+            ipv4AddressController.text = user.ip4Address;
+            ipv6AddressController.text = user.ip6Address;
+            communityController.text = user.community;
+            String selectedIpVersion = user.ipVersion;
+            String selectedGroup = user.groupName;
+            String selectedSnmpVersion = user.version;
+
+            return AlertDialog(
+              title: Text('Edit SNMP User'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedIpVersion,
+                    decoration: InputDecoration(labelText: 'IP Version'),
+                    items: [
+                      DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
+                      DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedIpVersion = newValue!;
+                      });
+                    },
+                  ),
+                  TextField(
+                    controller: ipv4AddressController,
+                    decoration: InputDecoration(labelText: 'IPv4 Address'),
+                  ),
+                  TextField(
+                    controller: ipv6AddressController,
+                    decoration: InputDecoration(labelText: 'IPv6 Address'),
+                  ),
+                  TextField(
+                    controller: communityController,
+                    decoration: InputDecoration(labelText: 'Community'),
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: selectedGroup,
+                    decoration: InputDecoration(labelText: 'Permissions'),
+                    items: [
+                      DropdownMenuItem(
+                        value: "read_only",
+                        child: Text("Read Only"),
+                      ),
+                      DropdownMenuItem(
+                        value: "read_write",
+                        child: Text("Read/Write"),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedGroup = newValue!;
+                      });
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: selectedSnmpVersion,
+                    decoration: InputDecoration(labelText: 'Version'),
+                    items: [
+                      DropdownMenuItem(value: "v1", child: Text("v1")),
+                      DropdownMenuItem(value: "v2c", child: Text("v2c")),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedSnmpVersion = newValue!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final loginApi = context.read<LoginApi>();
+
+                    user.version = selectedSnmpVersion;
+                    user.groupName = selectedGroup;
+                    user.community = communityController.text;
+                    user.ipVersion = selectedIpVersion;
+                    user.ip4Address = ipv4AddressController.text;
+                    user.ip6Address = ipv6AddressController.text;
+
+                    loginApi.updateSnmpV1V2cUser(user);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(

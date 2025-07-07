@@ -281,35 +281,6 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
-  Future<void> getAllSnmpV1V2cUsers() async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/api/v1/snmp_v1v2c'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        _snmpV1V2cUsers =
-            (decoded['users'] as List)
-                .map((userJson) => SnmpV12cUser.fromJson(userJson))
-                .toList();
-        notifyListeners();
-      } else {
-        throw Exception('Failed to load users');
-      }
-    } catch (e) {
-      throw Exception('Error loading users: $e');
-    } finally {
-      notifyListeners();
-    }
-  }
-
   Future<User> getUser(int id) async {
     final response = await http
         .get(
@@ -482,7 +453,30 @@ class LoginApi extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<SnmpV12cUser> addSnmpV1V2User(SnmpV12cUser snmpV1V2cUser) async {
+  Future<void> getAllSnmpV1V2cUsers() async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/api/v1/snmp_v1v2c'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      _snmpV1V2cUsers =
+          (decoded['snmp_v1v2c_users'] as List)
+              .map((userJson) => SnmpV12cUser.fromJson(userJson))
+              .toList();
+      notifyListeners();
+    } else {
+      throw Exception('Failed to load users');
+    }
+  }
+
+  Future<void> addSnmpV1V2User(SnmpV12cUser snmpV1V2cUser) async {
     final response = await http
         .post(
           Uri.parse('$baseUrl/api/v1/snmp_v1v2c'), // Note: ID in URL path
@@ -500,15 +494,57 @@ class LoginApi extends ChangeNotifier {
         _snmpV1V2cUsers.add(SnmpV12cUser.fromJson(decoded['snmp_v1_v2c']));
       }
       notifyListeners();
+      //return SnmpV12cUser.fromJson(json.decode(response.body));
+    } else {
+      throw Exception(
+        'Failed to fetch addSnmpV1V2User: ${response.statusCode}',
+      );
+    }
+  }
 
-      return SnmpV12cUser.fromJson(
-        json.decode(response.body),
-      ); // Create User object here
+  Future<void> deleteSnmpV1V2cUser(SnmpV12cUser snmpV1V2cUser) async {
+    final response = await http
+        .delete(
+          Uri.parse(
+            '$baseUrl/api/v1/snmp_v1v2c/${snmpV1V2cUser.id}',
+          ), // Note: ID in URL path
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      _snmpV1V2cUsers.removeWhere((u) => u.id == snmpV1V2cUser.id);
+      notifyListeners();
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized access');
     } else {
       throw Exception(
-        'Failed to fetch addSnmpV1V2User: ${response.statusCode}',
+        'Failed to delete addSnmpV1V2User: ${response.statusCode}',
+      );
+    }
+  }
+
+  Future<void> updateSnmpV1V2cUser(SnmpV12cUser snmpV1V2cUser) async {
+    print(snmpV1V2cUser.toJson());
+    final response = await http
+        .patch(
+          Uri.parse('$baseUrl/api/v1/snmp_v1v2c/${snmpV1V2cUser.id}'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: json.encode(snmpV1V2cUser.toJson()),
+        )
+        .timeout(const Duration(seconds: 10));
+    print(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      notifyListeners();
+    } else {
+      throw Exception(
+        'Failed to update snmpv1v2c user: ${response.statusCode}',
       );
     }
   }
