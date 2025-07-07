@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
 import 'package:provider/provider.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -92,11 +91,5 @@ class _DashboardCard extends State<DashboardCard> {
         );
       },
     );
-  }
-
-  void _showNotImplemented() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Not implemented yet')));
   }
 }

@@ -3,34 +3,42 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart';
 import 'dart:async';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
 class LoginApi extends ChangeNotifier {
-  User? currentUser; // Add this line to track current user
+  // app users
+  User? currentUser;
   List<User> _users = [];
+  List<User> get users => _users;
   List<User> _filteredUsers = [];
+  List<User> get filteredUsers => _filteredUsers;
 
   // snmp users
   List<SnmpV12cUser> _snmpV1V2cUsers = [];
   List<SnmpV12cUser> get snmpV1V2cUsers => _snmpV1V2cUsers;
 
-  final String baseUrl;
+  // auth
   bool _loggedIn = false;
-  String _token = '';
+  bool get isLoggedIn => _loggedIn;
 
+  String _token = '';
+  String get token => _token;
+
+  // api
+  final String baseUrl;
+
+  // snmp
   bool _snmpStatus = false;
   bool get snmpStatus => _snmpStatus;
+
+  // error
   String _messageError = '';
   String get messageError => _messageError;
 
   Timer? _sessionTimer;
 
-  List<User> get users => _users;
-  List<User> get filteredUsers => _filteredUsers;
-  String get token => _token;
-  bool get isLoggedIn => _loggedIn;
-
   LoginApi({required this.baseUrl}) {
-    getTokenCookie();
+    getToken();
     if (_token.isNotEmpty && !isTokenExpired(_token)) {
       _loggedIn = true;
       getCurrentUserFromToken();
@@ -38,6 +46,18 @@ class LoginApi extends ChangeNotifier {
 
     //getSnmpStatus();
     _startSessionTimer();
+  }
+
+  void verifyJwt(String token, String secretOrPublicKey) {
+    try {
+      // For HMAC (HS256, shared secret)
+      final jwt = JWT.verify(token, SecretKey(secretOrPublicKey));
+      print('Payload: ${jwt.payload}');
+    } on JWTExpiredException {
+      print('JWT expired');
+    } on JWTException catch (ex) {
+      print('Signature invalid: ${ex.message}');
+    }
   }
 
   void _startSessionTimer() {
@@ -86,7 +106,7 @@ class LoginApi extends ChangeNotifier {
 
       _loggedIn = true;
       _token = body['token'];
-      setTokenCookie(_token);
+      setToken(_token);
       getCurrentUserFromToken();
       notifyListeners();
     } else if (response.statusCode == 401) {
@@ -102,13 +122,13 @@ class LoginApi extends ChangeNotifier {
     _users.clear();
     _filteredUsers.clear();
     currentUser = null;
-    deleteTokenCookie();
+    deleteToken();
     notifyListeners();
   }
 
   void _checkSessionValidity() {
     if (!_loggedIn) return;
-    getTokenCookie();
+    getToken();
     if (_token.isEmpty || isTokenExpired(_token)) {
       _loggedIn = false;
       _token = '';
@@ -131,11 +151,11 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
-  void setTokenCookie(String token) {
+  void setToken(String token) {
     document.cookie = 'token=$token; path=/; max-age=3600; samesite=lax';
   }
 
-  void getTokenCookie() {
+  void getToken() {
     final cookies = document.cookie.split(';');
     for (var cookie in cookies) {
       cookie = cookie.trim();
@@ -147,7 +167,7 @@ class LoginApi extends ChangeNotifier {
     _token = '';
   }
 
-  void deleteTokenCookie() {
+  void deleteToken() {
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 
