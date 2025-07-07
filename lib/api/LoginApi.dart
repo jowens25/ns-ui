@@ -12,6 +12,8 @@ class LoginApi extends ChangeNotifier {
   bool _loggedIn = false;
   String _token = '';
 
+  bool _snmpStatus = false;
+  bool get snmpStatus => _snmpStatus;
   String _messageError = '';
   String get messageError => _messageError;
 
@@ -21,12 +23,15 @@ class LoginApi extends ChangeNotifier {
   List<User> get filteredUsers => _filteredUsers;
   String get token => _token;
   bool get isLoggedIn => _loggedIn;
+
   LoginApi({required this.baseUrl}) {
     getTokenCookie();
     if (_token.isNotEmpty && !isTokenExpired(_token)) {
       _loggedIn = true;
       _getCurrentUserFromToken();
     }
+
+    //getSnmpStatus();
     _startSessionTimer();
   }
 
@@ -63,6 +68,25 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
+  //abstract class BaseModel {
+  //
+  //  String endpoint;
+  //
+  //  T model; //user model, others
+  //
+  //  BaseModel({required this.endpoint,
+  //  this.model})
+  //
+  //}
+  //
+  //Future<void> Create(Model model) {}
+  //
+  //Future<void> Read(Model model) {}
+  //
+  //Future<void> Update(Model model) {}
+  //
+  //Future<void> Delete(Model model) {}
+
   Future<void> login(String username, String password) async {
     final url = Uri.parse('$baseUrl/login');
     final response = await http.post(
@@ -73,6 +97,8 @@ class LoginApi extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
+
+      print(body);
       _loggedIn = true;
       _token = body['token'];
       setTokenCookie(_token);
@@ -146,6 +172,80 @@ class LoginApi extends ChangeNotifier {
     super.dispose();
   }
 
+  Future<void> setSnmpStatus(bool value) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/v1/snmp/status'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: json.encode({'status': value ? "start" : "stop"}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+
+        print(decoded['status']);
+        getSnmpStatus();
+        notifyListeners();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again');
+      } else if (response.statusCode == 400) {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(
+          'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
+        );
+      } else {
+        throw Exception('Failed to add user: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is TimeoutException) {
+        throw Exception('Request timed out. Please try again.');
+      } else {
+        throw Exception('Error adding user: $e');
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> getSnmpStatus() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/v1/snmp/status'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+
+        if (decoded['status'] == "active") {
+          _snmpStatus = true;
+        }
+
+        if (decoded['status'] == "inactive") {
+          _snmpStatus = false;
+        }
+
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load snmp status');
+      }
+    } catch (e) {
+      throw Exception('Error loading snmp status: $e');
+    } finally {
+      notifyListeners();
+    }
+  }
+
   Future<void> getAllUsers() async {
     try {
       final response = await http
@@ -173,6 +273,56 @@ class LoginApi extends ChangeNotifier {
       throw Exception('Error loading users: $e');
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<User> getUser(int id) async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/api/v1/users/$id'), // Note: ID in URL path
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> userData = json.decode(response.body);
+      print(json.decode(response.body));
+      return User.fromJson(userData); // Create User object here
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized access');
+    } else {
+      throw Exception('Failed to fetch user: ${response.statusCode}');
+    }
+  }
+
+  Future<void> postUser(User user) async {
+    final url = Uri.parse('$baseUrl/api/v1/users');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(user.toJson()),
+    );
+
+    //print(json.encode(user.toJson()));
+
+    if (response.statusCode == 200) {
+      //final body = json.decode(response.body);
+      //_loggedIn = true;
+      //_token = body['token'];
+      //setTokenCookie(_token);
+      //_getCurrentUserFromToken();
+      notifyListeners();
+    } else if (response.statusCode == 401) {
+      throw Exception('Invalid username or password');
+    } else {
+      print(json.decode(response.body));
+      throw Exception('post user failed');
     }
   }
 
@@ -404,14 +554,14 @@ class LoginApi extends ChangeNotifier {
 }
 
 class User {
-  String id;
+  String? id;
   String role;
   String name;
   String email;
   String password;
 
   User({
-    required this.id,
+    this.id,
     required this.role,
     required this.name,
     required this.email,

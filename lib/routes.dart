@@ -23,7 +23,7 @@ import 'package:ntsc_ui/models.dart';
 import 'package:ntsc_ui/pages/projects/projectDetailsPage.dart';
 import 'package:ntsc_ui/pages/projects/projectFilesPage.dart';
 import 'package:ntsc_ui/pages/projects/projectsOverviewPage.dart';
-import 'package:ntsc_ui/pages/dashboardPage.dart';
+import 'package:ntsc_ui/pages/dashboard/dashboardPage.dart';
 import 'package:ntsc_ui/pages/securitySettingsPage.dart';
 import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
 import 'package:ntsc_ui/pages/snmp/snmpOverviewPage.dart';

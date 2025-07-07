@@ -16,7 +16,8 @@ class _UsersPageState extends State<UsersPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loginApi = context.read<LoginApi>();
-      loginApi.getAllUsers();
+      //loginApi.getAllUsers();
+      loginApi.getSnmpStatus();
       _searchController.addListener(() {
         loginApi.searchUsers(_searchController.text);
       });
