@@ -1,259 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
-
-// Model classes
-class SnmpV12Item {
-  String version;
-  String groupName;
-  String community;
-  String ipVersion;
-  String ipAddress4;
-  String ipAddress6;
-  bool isEditing;
-
-  SnmpV12Item({
-    required this.version,
-    required this.groupName,
-    required this.community,
-    required this.ipVersion,
-    required this.ipAddress4,
-    required this.ipAddress6,
-    this.isEditing = true,
-  });
-}
-
-List<String> headerNames = [
-  'Version',
-  'Group Name',
-  'Community',
-  'IP Version',
-  'IP Address v4',
-  'IP Address v6',
-  'Edit',
-];
-
-class SnmpVersion12Card extends StatefulWidget {
-  const SnmpVersion12Card({super.key});
-
-  @override
-  State<SnmpVersion12Card> createState() => _SnmpVersion12CardState();
-}
-
-class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
-  List<SnmpV12Item> items = [];
-
-  void _addItem() {
-    setState(() {
-      items.add(
-        SnmpV12Item(
-          version: 'v1',
-          groupName: 'Read Only',
-          community: '',
-          ipVersion: 'IPv4',
-          ipAddress4: '',
-          ipAddress6: '',
-          isEditing: true,
-        ),
-      );
-    });
-  }
-
-  void _saveItem(int index) {
-    setState(() {
-      items[index].isEditing = false;
-    });
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Item saved successfully')));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top row: title and add button
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'SNMP Version 1/2',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _addItem,
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Add SNMP Configuration',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Horizontally scrollable table
-              Table(
-                defaultColumnWidth: IntrinsicColumnWidth(),
-                border: TableBorder.all(color: Colors.grey.shade300),
-                children: [
-                  // Header row
-                  TableRow(
-                    children:
-                        headerNames
-                            .map(
-                              (name) => Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                  ),
-                  // Data rows
-                  ...items.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    return TableRow(
-                      children: [
-                        // Version
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child:
-                              item.isEditing
-                                  ? DropdownButton<String>(
-                                    value: item.version,
-                                    onChanged: (val) {
-                                      setState(() => item.version = val!);
-                                    },
-                                    items:
-                                        ['v1', 'v2c']
-                                            .map(
-                                              (e) => DropdownMenuItem(
-                                                value: e,
-                                                child: Text(e),
-                                              ),
-                                            )
-                                            .toList(),
-                                  )
-                                  : Text(item.version),
-                        ),
-                        // Group Name
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child:
-                              item.isEditing
-                                  ? DropdownButton<String>(
-                                    value: item.groupName,
-                                    onChanged: (val) {
-                                      setState(() => item.groupName = val!);
-                                    },
-                                    items:
-                                        ['Read Only', 'Read/Write']
-                                            .map(
-                                              (e) => DropdownMenuItem(
-                                                value: e,
-                                                child: Text(e),
-                                              ),
-                                            )
-                                            .toList(),
-                                  )
-                                  : Text(item.groupName),
-                        ),
-                        // Community
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child:
-                              item.isEditing
-                                  ? TextFormField(
-                                    initialValue: item.community,
-                                    onChanged: (val) => item.community = val,
-                                  )
-                                  : Text(item.community),
-                        ),
-                        // IP Version
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child:
-                              item.isEditing
-                                  ? DropdownButton<String>(
-                                    value: item.ipVersion,
-                                    onChanged: (val) {
-                                      setState(() => item.ipVersion = val!);
-                                    },
-                                    items:
-                                        ['IPv4', 'IPv6']
-                                            .map(
-                                              (e) => DropdownMenuItem(
-                                                value: e,
-                                                child: Text(e),
-                                              ),
-                                            )
-                                            .toList(),
-                                  )
-                                  : Text(item.ipVersion),
-                        ),
-                        // IP Address v4
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child:
-                              item.isEditing
-                                  ? TextFormField(
-                                    initialValue: item.ipAddress4,
-                                    onChanged: (val) => item.ipAddress4 = val,
-                                  )
-                                  : Text(item.ipAddress4),
-                        ),
-                        // IP Address v6
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child:
-                              item.isEditing
-                                  ? TextFormField(
-                                    initialValue: item.ipAddress6,
-                                    onChanged: (val) => item.ipAddress6 = val,
-                                  )
-                                  : Text(item.ipAddress6),
-                        ),
-                        // Edit/Save button
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: IconButton(
-                            icon: Icon(
-                              item.isEditing ? Icons.check : Icons.edit,
-                            ),
-                            onPressed: () {
-                              if (item.isEditing) {
-                                _saveItem(index);
-                              } else {
-                                setState(() => item.isEditing = true);
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:provider/provider.dart';
 
 class SnmpVersion12Page extends StatelessWidget {
-  const SnmpVersion12Page({super.key});
-
   @override
   Widget build(BuildContext context) {
     return BasePage(
@@ -275,6 +25,270 @@ class SnmpVersion12Page extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+List<String> headerNames = [
+  'Version',
+  'Group Name',
+  'Community',
+  'IP Version',
+  'IP Address v4',
+  'IP Address v6',
+  'Edit',
+];
+
+class SnmpVersion12Card extends StatefulWidget {
+  @override
+  State<SnmpVersion12Card> createState() => _SnmpVersion12CardState();
+}
+
+class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loginApi = context.read<LoginApi>();
+      loginApi.getAllSnmpV1V2cUsers();
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'SNMP Version 1 / Version 2c',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => addSnmpV1V2UserDialog(),
+                      icon: const Icon(Icons.add),
+                      tooltip: 'Add SNMP Configuration',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 400,
+            padding: EdgeInsets.all(16),
+            child: buildSnmpV1V2UsersList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSnmpV1V2UsersList() {
+    return Consumer<LoginApi>(
+      builder: (context, loginApi, _) {
+        return SingleChildScrollView(
+          child: Card(
+            child: Table(
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  children:
+                      SnmpV12cUser.getHeader()
+                          .map(
+                            (name) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                ),
+                // Data rows
+                ...loginApi.snmpV1V2cUsers.map((snmpUser) {
+                  return TableRow(
+                    children: [
+                      // Version
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snmpUser.version),
+                      ),
+                      // Group Name
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snmpUser.groupName),
+                      ),
+                      // Community
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snmpUser.community),
+                      ),
+                      // IP Version
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snmpUser.ipVersion),
+                      ),
+                      // IP Address v4
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snmpUser.ip4Address),
+                      ),
+                      // IP Address v6
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(snmpUser.ip6Address),
+                      ),
+                      // Edit button
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            // Add edit functionality here
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void addSnmpV1V2UserDialog() {
+    final ipv4AddressController = TextEditingController();
+    final ipv6AddressController = TextEditingController();
+    final communityController = TextEditingController();
+
+    String selectedIpVersion = "ipv4_ipv6";
+    String selectedSnmpVersion = "v1";
+    String selectedPermissions = "read_only";
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Add SNMP User'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedIpVersion,
+                    decoration: InputDecoration(labelText: 'IP Version'),
+                    items: [
+                      DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
+                      DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
+                      DropdownMenuItem(
+                        value: "ipv4_ipv6",
+                        child: Text("IPv4/IPv6"),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      setDialogState(() {
+                        selectedIpVersion = newValue!;
+                      });
+                    },
+                  ),
+                  TextField(
+                    controller: ipv4AddressController,
+                    decoration: InputDecoration(labelText: 'IPv4 Address'),
+                  ),
+                  TextField(
+                    controller: ipv6AddressController,
+                    decoration: InputDecoration(labelText: 'IPv6 Address'),
+                  ),
+                  TextField(
+                    controller: communityController,
+                    decoration: InputDecoration(labelText: 'Community'),
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: selectedPermissions,
+                    decoration: InputDecoration(labelText: 'Permissions'),
+                    items: [
+                      DropdownMenuItem(
+                        value: "read_only",
+                        child: Text("Read Only"),
+                      ),
+                      DropdownMenuItem(
+                        value: "read_write",
+                        child: Text("Read/Write"),
+                      ),
+                    ],
+                    onChanged: (String? newValue) {
+                      setDialogState(() {
+                        selectedPermissions = newValue!;
+                      });
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: selectedSnmpVersion,
+                    decoration: InputDecoration(labelText: 'Version'),
+                    items: [
+                      DropdownMenuItem(value: "v1", child: Text("v1")),
+                      DropdownMenuItem(value: "v2c", child: Text("v2c")),
+                    ],
+                    onChanged: (String? newValue) {
+                      setDialogState(() {
+                        selectedSnmpVersion = newValue!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final loginApi = context.read<LoginApi>();
+                    SnmpV12cUser snmpV1V2User = SnmpV12cUser.fromJson({
+                      'version': selectedSnmpVersion,
+                      'group_name': selectedPermissions,
+                      'community': communityController.text,
+                      'ip_version': selectedIpVersion,
+                      'ip4_address': ipv4AddressController.text,
+                      'ip6_address': ipv6AddressController.text,
+                    });
+                    loginApi.addSnmpV1V2User(snmpV1V2User);
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                  },
+                  child: Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

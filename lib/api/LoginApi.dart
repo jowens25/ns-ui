@@ -8,6 +8,11 @@ class LoginApi extends ChangeNotifier {
   User? currentUser; // Add this line to track current user
   List<User> _users = [];
   List<User> _filteredUsers = [];
+
+  // snmp users
+  List<SnmpV12cUser> _snmpV1V2cUsers = [];
+  List<SnmpV12cUser> get snmpV1V2cUsers => _snmpV1V2cUsers;
+
   final String baseUrl;
   bool _loggedIn = false;
   String _token = '';
@@ -28,7 +33,7 @@ class LoginApi extends ChangeNotifier {
     getTokenCookie();
     if (_token.isNotEmpty && !isTokenExpired(_token)) {
       _loggedIn = true;
-      _getCurrentUserFromToken();
+      getCurrentUserFromToken();
     }
 
     //getSnmpStatus();
@@ -42,7 +47,7 @@ class LoginApi extends ChangeNotifier {
     });
   }
 
-  void _getCurrentUserFromToken() {
+  void getCurrentUserFromToken() {
     if (_token.isEmpty) return;
 
     try {
@@ -68,25 +73,6 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
-  //abstract class BaseModel {
-  //
-  //  String endpoint;
-  //
-  //  T model; //user model, others
-  //
-  //  BaseModel({required this.endpoint,
-  //  this.model})
-  //
-  //}
-  //
-  //Future<void> Create(Model model) {}
-  //
-  //Future<void> Read(Model model) {}
-  //
-  //Future<void> Update(Model model) {}
-  //
-  //Future<void> Delete(Model model) {}
-
   Future<void> login(String username, String password) async {
     final url = Uri.parse('$baseUrl/login');
     final response = await http.post(
@@ -98,11 +84,10 @@ class LoginApi extends ChangeNotifier {
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
 
-      print(body);
       _loggedIn = true;
       _token = body['token'];
       setTokenCookie(_token);
-      _getCurrentUserFromToken();
+      getCurrentUserFromToken();
       notifyListeners();
     } else if (response.statusCode == 401) {
       throw Exception('Invalid username or password');
@@ -276,6 +261,35 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
+  Future<void> getAllSnmpV1V2cUsers() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/v1/snmp_v1v2c'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        _snmpV1V2cUsers =
+            (decoded['users'] as List)
+                .map((userJson) => SnmpV12cUser.fromJson(userJson))
+                .toList();
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load users');
+      }
+    } catch (e) {
+      throw Exception('Error loading users: $e');
+    } finally {
+      notifyListeners();
+    }
+  }
+
   Future<User> getUser(int id) async {
     final response = await http
         .get(
@@ -298,47 +312,7 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
-  Future<void> postUser(User user) async {
-    final url = Uri.parse('$baseUrl/api/v1/users');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: json.encode(user.toJson()),
-    );
-
-    //print(json.encode(user.toJson()));
-
-    if (response.statusCode == 200) {
-      //final body = json.decode(response.body);
-      //_loggedIn = true;
-      //_token = body['token'];
-      //setTokenCookie(_token);
-      //_getCurrentUserFromToken();
-      notifyListeners();
-    } else if (response.statusCode == 401) {
-      throw Exception('Invalid username or password');
-    } else {
-      print(json.decode(response.body));
-      throw Exception('post user failed');
-    }
-  }
-
-  Future<void> addUser(
-    String role,
-    String name,
-    String email,
-    String password,
-  ) async {
-    final newUserData = {
-      'role': role,
-      'username': name,
-      'email': email,
-      'password': password,
-    };
-
+  Future<void> addUser(User user) async {
     try {
       final response = await http
           .post(
@@ -347,7 +321,7 @@ class LoginApi extends ChangeNotifier {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
             },
-            body: json.encode(newUserData),
+            body: json.encode(user.toJson()),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -488,73 +462,40 @@ class LoginApi extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// SNMP SSHSSSSSSIIIIUUUUFFFFFFFFFF
-  ///
-  ///
-  ///
-  ///
-  ///
-  Future<void> create(
-    String role,
-    String name,
-    String email,
-    String password,
-  ) async {
-    final newUserData = {
-      'role': role,
-      'username': name,
-      'email': email,
-      'password': password,
-    };
+  Future<SnmpV12cUser> addSnmpV1V2User(SnmpV12cUser snmpV1V2cUser) async {
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/api/v1/snmp_v1v2c'), // Note: ID in URL path
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: json.encode(snmpV1V2cUser.toJson()),
+        )
+        .timeout(const Duration(seconds: 5));
 
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl/api/v1/users'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode(newUserData),
-          )
-          .timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final decoded = jsonDecode(response.body);
-
-        print(decoded);
-
-        if (decoded.containsKey('user')) {
-          final createdUser = User.fromJson(decoded['user']);
-          _users.add(createdUser);
-        }
-
-        _updateFiltered();
-        notifyListeners();
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized: Please log in again');
-      } else if (response.statusCode == 400) {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-          'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
-        );
-      } else {
-        throw Exception('Failed to add user: ${response.statusCode}');
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final decoded = json.decode(response.body);
+      if (decoded.containsKey('snmp_v1_v2c')) {
+        _snmpV1V2cUsers.add(SnmpV12cUser.fromJson(decoded['snmp_v1_v2c']));
       }
-    } catch (e) {
-      if (e is TimeoutException) {
-        throw Exception('Request timed out. Please try again.');
-      } else {
-        throw Exception('Error adding user: $e');
-      }
-    } finally {
       notifyListeners();
+
+      return SnmpV12cUser.fromJson(
+        json.decode(response.body),
+      ); // Create User object here
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized access');
+    } else {
+      throw Exception(
+        'Failed to fetch addSnmpV1V2User: ${response.statusCode}',
+      );
     }
   }
 }
 
 class User {
-  String? id;
+  int? id;
   String role;
   String name;
   String email;
@@ -570,11 +511,11 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'].toString(),
+      id: json['id'],
       role: json['role'] ?? '',
       name: json['username'] ?? json['name'] ?? '',
       email: json['email'] ?? '',
-      password: '',
+      password: json['password'] ?? '',
     );
   }
 
@@ -583,34 +524,34 @@ class User {
   }
 }
 
-class SnmpV12User {
-  String id;
+class SnmpV12cUser {
+  int? id;
   String version;
   String groupName;
   String community;
   String ipVersion;
-  String ipAddress4;
-  String ipAddress6;
+  String ip4Address;
+  String ip6Address;
 
-  SnmpV12User({
-    required this.id,
+  SnmpV12cUser({
+    this.id,
     required this.version,
     required this.groupName,
     required this.community,
     required this.ipVersion,
-    required this.ipAddress4,
-    required this.ipAddress6,
+    required this.ip4Address,
+    required this.ip6Address,
   });
 
-  factory SnmpV12User.fromJson(Map<String, dynamic> json) {
-    return SnmpV12User(
-      id: json['id'].toString(),
+  factory SnmpV12cUser.fromJson(Map<String, dynamic> json) {
+    return SnmpV12cUser(
+      id: json['id'],
       version: json['version'] ?? '',
       groupName: json['group_name'] ?? '',
       community: json['community'] ?? '',
-      ipVersion: json['ip_nersion'] ?? '',
-      ipAddress4: json['ip_address4'] ?? '',
-      ipAddress6: json['ip_address6'] ?? '',
+      ipVersion: json['ip_version'] ?? '',
+      ip4Address: json['ip4_address'] ?? '',
+      ip6Address: json['ip6_address'] ?? '',
     );
   }
 
@@ -620,10 +561,22 @@ class SnmpV12User {
       'version': version,
       'group_name': groupName,
       'community': community,
-      'ip_nersion': ipVersion,
-      'ip_address4': ipAddress4,
-      'ip_address6': ipAddress6,
+      'ip_version': ipVersion,
+      'ip4_address': ip4Address,
+      'ip6_address': ip6Address,
     };
+  }
+
+  static List<String> getHeader() {
+    return [
+      'Version',
+      'Group Name',
+      'Community',
+      'IP Version',
+      'IPv4 Address',
+      'IPv6 Address',
+      'Edit',
+    ];
   }
 }
 
@@ -631,18 +584,18 @@ class SnmpV3User {
   String id;
   String userName;
   String authType;
-  String authPassphrase;
+  String authPassphase;
   String privType;
-  String privPassphrase;
+  String privPassphase;
   String permissions;
 
   SnmpV3User({
     required this.id,
     required this.userName,
     required this.authType,
-    required this.authPassphrase,
+    required this.authPassphase,
     required this.privType,
-    required this.privPassphrase,
+    required this.privPassphase,
     required this.permissions,
   });
 
@@ -651,9 +604,9 @@ class SnmpV3User {
       id: json['id'].toString(),
       userName: json['user_name'] ?? '',
       authType: json['auth_type'] ?? '',
-      authPassphrase: json['auth_passphrase'] ?? '',
+      authPassphase: json['auth_passphase'] ?? '',
       privType: json['priv_type'] ?? '',
-      privPassphrase: json['priv_passphrase'] ?? '',
+      privPassphase: json['priv_passphase'] ?? '',
       permissions: json['permissions'] ?? '',
     );
   }
@@ -663,9 +616,9 @@ class SnmpV3User {
       'id': id,
       'user_name': userName,
       'auth_type': authType,
-      'auth_passphrase': authPassphrase,
+      'auth_passphase': authPassphase,
       'priv_type': privType,
-      'priv_passphrase': privPassphrase,
+      'priv_passphase': privPassphase,
       'permissions': permissions,
     };
   }

@@ -13,7 +13,6 @@ class UsersManagementPage extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Column: Actions
             Expanded(
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -89,6 +88,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                 IconButton(
                   onPressed: () => _showAddUserDialog(),
                   icon: Icon(Icons.add),
+                  tooltip: 'Add User',
                 ),
               ],
             ),
@@ -229,15 +229,16 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                   child: Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
+                  onPressed: () {
                     if (nameController.text.isNotEmpty &&
                         emailController.text.isNotEmpty) {
-                      await loginApi.addUser(
-                        selectedRole,
-                        nameController.text,
-                        emailController.text,
-                        passwordController.text,
-                      );
+                      User user = User.fromJson({
+                        'username': nameController.text,
+                        'email': emailController.text,
+                        'password': passwordController.text,
+                        'role': selectedRole,
+                      });
+                      loginApi.addUser(user);
                       Navigator.pop(context);
                       ScaffoldMessenger.of(
                         context,

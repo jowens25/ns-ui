@@ -96,15 +96,14 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
 
                   Text(loginApi.snmpStatus ? "active" : "inactive"),
 
-                  SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () => {},
-                    child: Text('SNMP ON/OFF'),
-                  ),
-                  SizedBox(height: 4),
-                  ElevatedButton(
-                    onPressed: () => {},
-                    child: Text('SNMP Authentication Error Trap'),
+                  LabeledSwitch(
+                    label: "Authentication Error Trap",
+                    value: loginApi.snmpStatus,
+                    onChanged: (bool value) {
+                      setState(() {
+                        loginApi.setSnmpStatus(value);
+                      });
+                    },
                   ),
                   SizedBox(height: 4),
                   ElevatedButton(onPressed: () => {}, child: Text('SysObjID')),
