@@ -98,7 +98,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
               children: [
                 TableRow(
                   children:
-                      SnmpV12cUser.getHeader()
+                      SnmpV1V2cUser.getHeader()
                           .map(
                             (name) => Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -287,7 +287,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                 ElevatedButton(
                   onPressed: () async {
                     final loginApi = context.read<LoginApi>();
-                    SnmpV12cUser snmpV1V2User = SnmpV12cUser.fromJson({
+                    SnmpV1V2cUser snmpV1V2User = SnmpV1V2cUser.fromJson({
                       'version': selectedSnmpVersion,
                       'group_name': selectedGroup,
                       'community': communityController.text,
@@ -312,7 +312,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
     );
   }
 
-  void _showDeleteUserDialog(SnmpV12cUser user) {
+  void _showDeleteUserDialog(SnmpV1V2cUser user) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -344,7 +344,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
     );
   }
 
-  void _showEditUserDialog(SnmpV12cUser user) {
+  void _showEditUserDialog(SnmpV1V2cUser user) {
     final ipv4AddressController = TextEditingController();
     final ipv6AddressController = TextEditingController();
     final communityController = TextEditingController();
