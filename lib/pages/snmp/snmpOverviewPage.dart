@@ -11,7 +11,7 @@ class SnmpOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'SNMP',
-      description: 'View SNMP Status and Manage SNMP V1/V2, V3 and Traps',
+      description: 'View SNMP Status and Manage SNMP V1/V2c, V3 and Traps',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),

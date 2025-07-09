@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
 import 'package:web/web.dart';
 import 'dart:async';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
@@ -34,6 +35,15 @@ class LoginApi extends ChangeNotifier {
   // snmp
   bool _snmpStatus = false;
   bool get snmpStatus => _snmpStatus;
+
+  String _snmpSysObjId = "myid";
+  String get snmpSysObjId => _snmpSysObjId;
+  String _snmpContact = "contact";
+  String get snmpContact => _snmpContact;
+  String _snmpLocation = "location";
+  String get snmpLocation => _snmpLocation;
+  String _snmpDescription = "description";
+  String get snmpDescription => _snmpDescription;
 
   // error
   String _messageError = '';

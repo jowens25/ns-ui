@@ -64,7 +64,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                   children: [
                     Expanded(
                       child: Text(
-                        'SNMP Version 1 - Version 2c',
+                        'SNMP V1/V2c Users',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -79,7 +79,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
             ),
           ),
           Container(
-            height: 400,
+            height: 200,
             padding: EdgeInsets.all(16),
             child: buildSnmpV1V2UsersList(),
           ),
@@ -101,7 +101,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                       SnmpV1V2cUser.getHeader()
                           .map(
                             (name) => Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(4.0),
                               child: Text(
                                 name,
                                 style: const TextStyle(
@@ -118,76 +118,82 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     children: [
                       // Version
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(2.0),
                         child: Text(snmpUser.version),
                       ),
                       // Group Name
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(2.0),
                         child: Text(snmpUser.groupName),
                       ),
                       // Community
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(2.0),
                         child: Text(snmpUser.community),
                       ),
                       // IP Version
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(2.0),
                         child: Text(snmpUser.ipVersion),
                       ),
                       // IP Address v4
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(2.0),
                         child: Text(snmpUser.ip4Address),
                       ),
                       // IP Address v6
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(2.0),
                         child: Text(snmpUser.ip6Address),
                       ),
                       // Edit button
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'delete') {
-                              _showDeleteUserDialog(snmpUser);
-                            }
-                            if (value == 'edit') {
-                              _showEditUserDialog(snmpUser);
-                            }
-                          },
-                          itemBuilder:
-                              (context) => [
-                                PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 16),
-                                      SizedBox(width: 8),
-                                      Text('Edit'),
-                                    ],
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+
+                        child: SizedBox(
+                          height: 36,
+                          child: PopupMenuButton<String>(
+                            icon: Icon(Icons.settings, size: 18),
+
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _showDeleteUserDialog(snmpUser);
+                              }
+                              if (value == 'edit') {
+                                _showEditUserDialog(snmpUser);
+                              }
+                            },
+                            itemBuilder:
+                                (context) => [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 16),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete,
-                                        size: 16,
-                                        color: Colors.red,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ],
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete,
+                                          size: 16,
+                                          color: Colors.red,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Delete',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                          ),
                         ),
                       ),
                     ],

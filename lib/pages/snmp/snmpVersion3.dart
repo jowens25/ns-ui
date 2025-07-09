@@ -79,7 +79,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
             ),
           ),
           Container(
-            height: 400,
+            height: 200,
             padding: EdgeInsets.all(16),
             child: buildSnmpV3UsersList(),
           ),
@@ -136,50 +136,56 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                         padding: const EdgeInsets.all(8.0),
                         child: Text(snmpUser.groupName),
                       ),
-                      // IP Address v4
 
-                      // Edit button
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'delete') {
-                              _showDeleteUserDialog(snmpUser);
-                            }
-                            if (value == 'edit') {
-                              _showEditUserDialog(snmpUser);
-                            }
-                          },
-                          itemBuilder:
-                              (context) => [
-                                PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 16),
-                                      SizedBox(width: 4),
-                                      Text('Edit'),
-                                    ],
+                      // IP Address v4
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+
+                        child: SizedBox(
+                          height: 36,
+
+                          child: PopupMenuButton<String>(
+                            icon: Icon(Icons.settings, size: 18),
+
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _showDeleteUserDialog(snmpUser);
+                              }
+                              if (value == 'edit') {
+                                _showEditUserDialog(snmpUser);
+                              }
+                            },
+                            itemBuilder:
+                                (context) => [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 16),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete,
-                                        size: 16,
-                                        color: Colors.red,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ],
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete,
+                                          size: 16,
+                                          color: Colors.red,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Delete',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                          ),
                         ),
                       ),
                     ],

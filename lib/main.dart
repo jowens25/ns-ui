@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
 import 'package:ntsc_ui/api/UserApi.dart';
@@ -64,11 +65,8 @@ class MyApp extends StatelessWidget {
           size: 20.0, // Set your desired icon size
         ),
 
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black),
-          bodyMedium: TextStyle(color: Colors.black87),
-          labelLarge: TextStyle(color: Colors.black),
-        ),
+        textTheme: GoogleFonts.robotoMonoTextTheme(Theme.of(context).textTheme),
+
         cardTheme: CardTheme(
           color: Colors.grey[200], // Slightly lighter than surface
           elevation: 4, // Higher to make it pop
