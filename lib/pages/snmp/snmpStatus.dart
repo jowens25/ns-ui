@@ -83,45 +83,73 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
 
-                  LabeledSwitch(
-                    label: "SNMP Status",
-                    value: loginApi.snmpStatus,
-                    onChanged: (bool value) {
-                      setState(() {
-                        //loginApi.snmpStatus = value;
-                        loginApi.setSnmpStatus(value);
-                      });
-                    },
-                  ),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SNMP: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'SysObjID: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Contact: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Location: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Description: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [SizedBox(width: 32)],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
 
-                  Text(loginApi.snmpStatus ? "active" : "inactive"),
-
-                  LabeledSwitch(
-                    label: "Authentication Error Trap",
-                    value: loginApi.snmpStatus,
-                    onChanged: (bool value) {
-                      setState(() {
-                        loginApi.setSnmpStatus(value);
-                      });
-                    },
+                        children: [
+                          Transform.scale(
+                            scale: 0.60,
+                            child: Switch(
+                              value: loginApi.snmpStatus,
+                              onChanged: (bool value) {
+                                setState(() {
+                                  //loginApi.snmpStatus = value;
+                                  loginApi.setSnmpStatus(value);
+                                });
+                              },
+                            ),
+                          ),
+                          Text(
+                            'SysObjID: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Contact: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Location: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Description: ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 4),
-                  ElevatedButton(onPressed: () => {}, child: Text('SysObjID')),
-                  SizedBox(height: 4),
-                  ElevatedButton(onPressed: () => {}, child: Text('Contact')),
-                  SizedBox(height: 4),
-                  ElevatedButton(onPressed: () => {}, child: Text('Location')),
-                  SizedBox(height: 4),
-                  ElevatedButton(
-                    onPressed: () => {},
-                    child: Text('Description'),
-                  ),
-                  SizedBox(height: 4),
-                  ElevatedButton(
-                    onPressed: () => {print("hello")},
-                    child: Text('Updated card feature'),
-                  ),
-                  SizedBox(height: 4),
                 ],
               ),
             ),
@@ -153,6 +181,25 @@ class LabeledSwitch extends StatelessWidget {
           scale: 0.60,
           child: Switch(value: value, onChanged: onChanged),
         ),
+      ],
+    );
+  }
+}
+
+class LabeledText extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const LabeledText({Key? key, required this.label, required this.value})
+    : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+        SizedBox(width: 32),
+        Text('$value', style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
     );
   }

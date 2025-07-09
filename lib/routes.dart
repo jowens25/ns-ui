@@ -370,8 +370,8 @@ class AppRoutes {
     loginRoute,
     dashboardRoute,
     snmpRoute,
-    ntpRoute,
-    ptpOcRoute,
+    //ntpRoute,
+    //ptpOcRoute,
     usersRoute,
 
     //projectsRoute,
