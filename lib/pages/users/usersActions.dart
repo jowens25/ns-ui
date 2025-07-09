@@ -60,7 +60,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   Widget build(BuildContext context) {
     return Card(
       child: Container(
-        height: 400,
+        //height: 400,
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,30 +76,30 @@ class _UsersActionsCard extends State<UsersActionsCard> {
               ),
             ),
             SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _showNotImplemented(),
-                child: Text('LDAP Setup'),
-              ),
-            ),
-            SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _showNotImplemented(),
-                child: Text('RADIUS Setup'),
-              ),
-            ),
-            SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _showNotImplemented(),
-                child: Text('TACACS+ Setup'),
-              ),
-            ),
-            SizedBox(height: 8),
+            //SizedBox(
+            //  width: double.infinity,
+            //  child: ElevatedButton(
+            //    onPressed: () => _showNotImplemented(),
+            //    child: Text('LDAP Setup'),
+            //  ),
+            //),
+            //SizedBox(height: 8),
+            //SizedBox(
+            //  width: double.infinity,
+            //  child: ElevatedButton(
+            //    onPressed: () => _showNotImplemented(),
+            //    child: Text('RADIUS Setup'),
+            //  ),
+            //),
+            //SizedBox(height: 8),
+            //SizedBox(
+            //  width: double.infinity,
+            //  child: ElevatedButton(
+            //    onPressed: () => _showNotImplemented(),
+            //    child: Text('TACACS+ Setup'),
+            //  ),
+            //),
+            //SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

@@ -156,12 +156,20 @@ class LabeledText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(width: 32),
-        Text('$value', style: const TextStyle(fontWeight: FontWeight.bold)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            softWrap: true,
+            overflow: TextOverflow.visible,
+          ),
+        ],
+      ),
     );
   }
 }

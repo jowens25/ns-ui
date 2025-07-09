@@ -36,13 +36,13 @@ class LoginApi extends ChangeNotifier {
   bool _snmpStatus = false;
   bool get snmpStatus => _snmpStatus;
 
-  String _snmpSysObjId = "myid";
+  String _snmpSysObjId = "";
   String get snmpSysObjId => _snmpSysObjId;
-  String _snmpContact = "contact";
+  String _snmpContact = "";
   String get snmpContact => _snmpContact;
-  String _snmpLocation = "location";
+  String _snmpLocation = "";
   String get snmpLocation => _snmpLocation;
-  String _snmpDescription = "description";
+  String _snmpDescription = "";
   String get snmpDescription => _snmpDescription;
 
   // error
@@ -60,7 +60,7 @@ class LoginApi extends ChangeNotifier {
 
     //getSnmpStatus();
     _startSessionTimer();
-
+    getSnmpSysDetails();
     //verifyJwt(_token);
   }
 
@@ -490,6 +490,30 @@ class LoginApi extends ChangeNotifier {
       notifyListeners();
     } else {
       throw Exception('Failed to load users');
+    }
+  }
+
+  Future<void> getSnmpSysDetails() async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/api/v1/snmp/details'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      print(decoded);
+      _snmpSysObjId = decoded['snmp_sys_details']['sys_obj_id'];
+      _snmpContact = decoded['snmp_sys_details']['sys_contact'];
+      _snmpLocation = decoded['snmp_sys_details']['sys_location'];
+      _snmpDescription = decoded['snmp_sys_details']['sys_description'];
+      notifyListeners();
+    } else {
+      throw Exception('Failed to load details');
     }
   }
 
