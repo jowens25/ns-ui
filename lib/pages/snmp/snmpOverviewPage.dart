@@ -21,7 +21,7 @@ class SnmpOverviewPage extends StatelessWidget {
             alignment: WrapAlignment.start,
             children: [
               SizedBox(
-                width: 400,
+                width: 450,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

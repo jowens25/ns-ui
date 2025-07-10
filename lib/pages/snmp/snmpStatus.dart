@@ -153,23 +153,25 @@ class LabeledText extends StatelessWidget {
 
   const LabeledText({Key? key, required this.label, required this.value})
     : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            softWrap: true,
-            overflow: TextOverflow.visible,
+    var controller = TextEditingController(text: value);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+
+        Expanded(
+          child: TextField(
+            controller: controller,
+            onSubmitted: (value) {},
+            decoration: InputDecoration(
+              isDense: true, // Reduces vertical space
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
