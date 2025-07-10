@@ -22,6 +22,9 @@ class LoginApi extends ChangeNotifier {
   List<SnmpV3User> _snmpV3Users = [];
   List<SnmpV3User> get snmpV3Users => _snmpV3Users;
 
+  //SnmpSysDetails _snmpSysDetails;
+  //SnmpSysDetails get snmpSysDetails => _snmpSysDetails;
+  //
   // auth
   bool _loggedIn = false;
   bool get isLoggedIn => _loggedIn;
@@ -36,14 +39,13 @@ class LoginApi extends ChangeNotifier {
   bool _snmpStatus = false;
   bool get snmpStatus => _snmpStatus;
 
-  String _snmpSysObjId = "";
-  String get snmpSysObjId => _snmpSysObjId;
-  String _snmpContact = "";
-  String get snmpContact => _snmpContact;
-  String _snmpLocation = "";
-  String get snmpLocation => _snmpLocation;
-  String _snmpDescription = "";
-  String get snmpDescription => _snmpDescription;
+  SnmpSysDetails _snmpSysDetails = SnmpSysDetails(
+    SysObjId: '',
+    SysContact: '',
+    SysDescription: '',
+    SysLocation: '',
+  );
+  SnmpSysDetails get snmpSysDetails => _snmpSysDetails;
 
   // error
   String _messageError = '';
@@ -236,6 +238,26 @@ class LoginApi extends ChangeNotifier {
     }
   }
 
+  Future<void> resetSnmpConfig() async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/api/v1/snmp/reset_config'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // final decoded = jsonDecode(response.body);
+
+      notifyListeners();
+    } else {
+      throw Exception('Failed to reset snmp conf ${response.statusCode}');
+    }
+  }
+
   Future<void> getSnmpStatus() async {
     try {
       final response = await http
@@ -251,11 +273,11 @@ class LoginApi extends ChangeNotifier {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
 
-        if (decoded['status'] == "active") {
+        if (decoded['snmp_status'] == "active") {
           _snmpStatus = true;
         }
 
-        if (decoded['status'] == "inactive") {
+        if (decoded['snmp_status'] == "inactive") {
           _snmpStatus = false;
         }
 
@@ -506,14 +528,42 @@ class LoginApi extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-      print(decoded);
-      _snmpSysObjId = decoded['snmp_sys_details']['sys_obj_id'];
-      _snmpContact = decoded['snmp_sys_details']['sys_contact'];
-      _snmpLocation = decoded['snmp_sys_details']['sys_location'];
-      _snmpDescription = decoded['snmp_sys_details']['sys_description'];
+
+      _snmpSysDetails = SnmpSysDetails.fromJson(decoded['snmp_sys_details']);
+      //print(decoded['snmp_sys_details']);
       notifyListeners();
     } else {
       throw Exception('Failed to load details');
+    }
+  }
+
+  Future<void> updateSnmpSysDetails(SnmpSysDetails details) async {
+    print(details.toJson());
+    final response = await http
+        .patch(
+          Uri.parse('$baseUrl/api/v1/snmp/details'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: json.encode(details.toJson()),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      getSnmpSysDetails();
+      notifyListeners();
+    } else if (response.statusCode == 204) {
+      print("no new content???");
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized: Please log in again');
+    } else if (response.statusCode == 400) {
+      final errorBody = jsonDecode(response.body);
+      throw Exception(
+        'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
+      );
+    } else {
+      throw Exception('Failed to add user: ${response.statusCode}');
     }
   }
 
@@ -819,5 +869,42 @@ class SnmpV3User {
   static List<SnmpV3User> fromJsonList(dynamic json) {
     if (json is! List) return [];
     return json.map((userJson) => SnmpV3User.fromJson(userJson)).toList();
+  }
+}
+
+class SnmpSysDetails {
+  String SysObjId;
+  String SysDescription;
+  String SysLocation;
+  String SysContact;
+
+  SnmpSysDetails({
+    required this.SysObjId,
+    required this.SysDescription,
+    required this.SysLocation,
+    required this.SysContact,
+  });
+
+  factory SnmpSysDetails.fromJson(Map<String, dynamic> json) {
+    return SnmpSysDetails(
+      SysObjId: json['sys_obj_id'] ?? '',
+      SysDescription: json['sys_description'] ?? '',
+      SysLocation: json['sys_location'] ?? '',
+      SysContact: json['sys_contact'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sys_obj_id': SysObjId,
+      'sys_description': SysDescription,
+      'sys_location': SysLocation,
+      'sys_contact': SysContact,
+    };
+  }
+
+  static List<SnmpSysDetails> fromJsonList(dynamic json) {
+    if (json is! List) return [];
+    return json.map((userJson) => SnmpSysDetails.fromJson(userJson)).toList();
   }
 }

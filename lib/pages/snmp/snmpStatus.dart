@@ -10,16 +10,6 @@ class SnmpStatusPage extends StatefulWidget {
 
 class SnmpStatusPageState extends State<SnmpStatusPage> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return BasePage(
       title: 'SNMP',
@@ -28,7 +18,6 @@ class SnmpStatusPageState extends State<SnmpStatusPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Column: Actions
             Expanded(
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -51,25 +40,37 @@ class SnmpStatusCard extends StatefulWidget {
 }
 
 class SnmpStatusCardState extends State<SnmpStatusCard> {
-  bool light0 = false;
-
+  final sysObjIdController = TextEditingController();
+  final contactController = TextEditingController();
+  final locationController = TextEditingController();
+  final descriptionController = TextEditingController();
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final loginApi = context.read<LoginApi>();
-      loginApi.getSnmpStatus();
-      //_searchController.addListener(() {
-      //  loginApi.searchUsers(_searchController.text);
-      //});
+      context.read<LoginApi>().getSnmpStatus();
+      context.read<LoginApi>().getSnmpSysDetails();
     });
+  }
+
+  @override
+  void dispose() {
+    sysObjIdController.dispose();
+    contactController.dispose();
+    locationController.dispose();
+    descriptionController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<LoginApi>(
       builder: (context, loginApi, _) {
+        var details = loginApi.snmpSysDetails;
+        sysObjIdController.text = details.SysObjId;
+        contactController.text = details.SysContact;
+        locationController.text = details.SysLocation;
+        descriptionController.text = details.SysDescription;
         return Card(
           child: SizedBox(
             width: double.infinity,
@@ -79,36 +80,107 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'SNMP Status Card: ',
+                    'SNMP Status Card:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-
+                  SizedBox(height: 12),
                   LabeledSwitch(
                     label: "SNMP",
                     value: loginApi.snmpStatus,
                     onChanged: (bool value) {
                       setState(() {
-                        //loginApi.snmpStatus = value;
                         loginApi.setSnmpStatus(value);
                       });
                     },
                   ),
-
-                  LabeledText(
-                    label: "SysObjID:   ",
-                    value: loginApi.snmpSysObjId,
+                  SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          "SysObjectID",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          onSubmitted: (value) {
+                            details.SysObjId = value;
+                            loginApi.updateSnmpSysDetails(details);
+                          },
+                          controller: sysObjIdController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
                   ),
-                  LabeledText(
-                    label: "Contact:    ",
-                    value: loginApi.snmpContact,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          "Contact",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          onSubmitted: (value) {
+                            details.SysContact = value;
+                            loginApi.updateSnmpSysDetails(details);
+                          },
+                          controller: contactController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
                   ),
-                  LabeledText(
-                    label: "Location:   ",
-                    value: loginApi.snmpLocation,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          "Location",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          onSubmitted: (value) {
+                            details.SysLocation = value;
+                            loginApi.updateSnmpSysDetails(details);
+                          },
+                          controller: locationController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
                   ),
-                  LabeledText(
-                    label: "Description:",
-                    value: loginApi.snmpDescription,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          "Description",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          onSubmitted: (value) {
+                            details.SysDescription = value;
+                            loginApi.updateSnmpSysDetails(details);
+                          },
+                          controller: descriptionController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -136,7 +208,7 @@ class LabeledSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(width: 70),
         Transform.scale(
           scale: 0.60,
@@ -149,29 +221,39 @@ class LabeledSwitch extends StatelessWidget {
 
 class LabeledText extends StatelessWidget {
   final String label;
-  final String value;
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
 
-  const LabeledText({Key? key, required this.label, required this.value})
-    : super(key: key);
+  const LabeledText({
+    Key? key,
+    required this.label,
+    required this.controller,
+    required this.onSubmitted,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    var controller = TextEditingController(text: value);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-
-        Expanded(
-          child: TextField(
-            controller: controller,
-            onSubmitted: (value) {},
-            decoration: InputDecoration(
-              isDense: true, // Reduces vertical space
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-        ),
-      ],
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onSubmitted: onSubmitted,
+              decoration: InputDecoration(isDense: true),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
