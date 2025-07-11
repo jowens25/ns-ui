@@ -380,7 +380,7 @@ class LoginApi extends ChangeNotifier {
   }
 
   Future<http.Response> getRequest(String endpoint) async {
-    return await http
+    final response = await http
         .get(
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
@@ -389,13 +389,19 @@ class LoginApi extends ChangeNotifier {
           },
         )
         .timeout(const Duration(seconds: 1));
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Failed to get $baseUrl/$endpoint: ${response.statusCode}',
+      );
+    }
+    return response;
   }
 
   Future<http.Response> patchRequest(
     String endpoint,
     Map<String, dynamic> body,
   ) async {
-    return await http
+    final response = await http
         .patch(
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
@@ -405,6 +411,13 @@ class LoginApi extends ChangeNotifier {
           body: json.encode(body),
         )
         .timeout(const Duration(seconds: 1));
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Failed to patch $body to $endpoint: ${response.statusCode}',
+      );
+    }
+    return response;
   }
 
   Future<http.Response> postRequest(
@@ -412,7 +425,7 @@ class LoginApi extends ChangeNotifier {
     Map<String, dynamic> body,
   ) async {
     print('Token: $_token');
-    return await http
+    final response = await http
         .post(
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
@@ -422,6 +435,12 @@ class LoginApi extends ChangeNotifier {
           body: json.encode(body),
         )
         .timeout(const Duration(seconds: 1));
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Failed to post $body to $endpoint: ${response.statusCode}',
+      );
+    }
+    return response;
   }
 }
 

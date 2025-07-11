@@ -27,16 +27,24 @@ class SnmpApi extends LoginApi {
   } //
 
   //v1v2c users
-  Future<void> getAllV1V2cUsers() async {
-    final response = await getRequest("v1v2c_user");
+  ///Future<void> getAllV1V2cUsers() async {
+  ///  final response = await getRequest("v1v2c_user");
+  ///
+  ///  final decoded = jsonDecode(response.body);
+  ///  print(decoded);
+  ///  _v1v2cUsers = V1v2cUser.fromJsonList(decoded['v1v2c_users']);
+  ///
+  ///  notifyListeners();
+  ///}
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('failed get v1v2c users: ${response.statusCode}');
-    }
+  Future<void> getAllUsers() async {
+    final response = await getRequest("users");
 
     final decoded = jsonDecode(response.body);
     print(decoded);
     _v1v2cUsers = V1v2cUser.fromJsonList(decoded['v1v2c_users']);
+
+    _v3Users = V3User.fromJsonList(decoded['v3_users']);
 
     notifyListeners();
   }
@@ -59,10 +67,6 @@ class SnmpApi extends LoginApi {
   Future<void> updateSysDetails(SysDetails details) async {
     final response = await patchRequest("details", details.toJson());
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to update sys details: ${response.statusCode}');
-    }
-
     getSysDetails();
     notifyListeners();
   }
@@ -71,14 +75,21 @@ class SnmpApi extends LoginApi {
     print(user.toJson());
 
     final response = await postRequest("v1v2c_user", user.toJson());
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to add V1V2c User: ${response.statusCode}');
-    }
-
     final decoded = json.decode(response.body);
     _v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
 
+    notifyListeners();
+  }
+
+  Future<void> addV3User(V3User user) async {
+    print(user.toJson());
+    final response = await postRequest("v3_user", user.toJson());
+    final decoded = json.decode(response.body);
+    try {
+      _v3Users.add(V3User.fromJson(decoded['v3_user']));
+    } catch (e) {
+      print("you stupid: $e");
+    }
     notifyListeners();
   }
 
@@ -231,7 +242,7 @@ class SnmpApi extends LoginApi {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('failed to reset snmp config: ${response.statusCode}');
     }
-    getAllV1V2cUsers();
+    getAllUsers();
     notifyListeners();
   }
 }
@@ -302,6 +313,7 @@ class V1v2cUser {
 
 class V3User {
   int? id;
+  String version;
   String userName;
   String authType;
   String authPassphase;
@@ -311,6 +323,7 @@ class V3User {
 
   V3User({
     this.id,
+    required this.version,
     required this.userName,
     required this.authType,
     required this.authPassphase,
@@ -322,6 +335,7 @@ class V3User {
   factory V3User.fromJson(Map<String, dynamic> json) {
     return V3User(
       id: json['id'],
+      version: json['version'] ?? '',
       userName: json['user_name'] ?? '',
       authType: json['auth_type'] ?? '',
       authPassphase: json['auth_passphrase'] ?? '',
@@ -334,6 +348,7 @@ class V3User {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'version': version,
       'user_name': userName,
       'auth_type': authType,
       'auth_passphrase': authPassphase,

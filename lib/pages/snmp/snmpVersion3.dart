@@ -206,7 +206,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
 
     String selectedAuthType = "MD5";
     String selectedPrivType = "AES";
-    String selectedGroup = "read_only";
+    String selectedGroup = "roprivgroup";
 
     showDialog(
       context: context,
@@ -261,11 +261,11 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     decoration: InputDecoration(labelText: 'Permissions'),
                     items: [
                       DropdownMenuItem(
-                        value: "read_only",
+                        value: "roprivgroup",
                         child: Text("Read Only"),
                       ),
                       DropdownMenuItem(
-                        value: "read_write",
+                        value: "rwprivgroup",
                         child: Text("Read/Write"),
                       ),
                     ],
@@ -293,7 +293,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                       'priv_passphrase': privPassphraseController.text,
                       'group_name': selectedGroup,
                     });
-                    //snmpApi.addV3User(snmpV3User);
+                    snmpApi.addV3User(snmpV3User);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
@@ -408,11 +408,11 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     decoration: InputDecoration(labelText: 'Permissions'),
                     items: [
                       DropdownMenuItem(
-                        value: "read_only",
+                        value: "roprivgroup",
                         child: Text("Read Only"),
                       ),
                       DropdownMenuItem(
-                        value: "read_write",
+                        value: "rwprivgroup",
                         child: Text("Read/Write"),
                       ),
                     ],

@@ -42,7 +42,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final snmpApi = context.read<SnmpApi>();
-      snmpApi.getAllV1V2cUsers();
+      snmpApi.getAllUsers();
     });
   }
 
