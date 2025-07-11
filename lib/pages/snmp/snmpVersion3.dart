@@ -64,7 +64,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   children: [
                     Expanded(
                       child: Text(
-                        'SNMP Version 3',
+                        'SNMP V3 Users',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

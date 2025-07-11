@@ -11,7 +11,7 @@ class SnmpOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'SNMP',
-      description: 'View SNMP Status and Manage SNMP V1/V2c, V3 and Traps',
+      description: 'Configuration Overview',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -32,7 +32,7 @@ class SnmpOverviewPage extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 850,
+                width: 750,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

@@ -63,15 +63,21 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.explore, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'EXPLORER',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
+                      //Icon(Icons.explore, size: 20),
+                      //SizedBox(width: 8)
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 217, // Adjust width as needed
+                        height: 30, // Adjust height as needed
+                        fit: BoxFit.contain,
                       ),
+                      //Text(
+                      //  'NOVUS',
+                      //  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      //    fontWeight: FontWeight.bold,
+                      //    letterSpacing: 1,
+                      //  ),
+                      //),
                     ],
                   ),
                 ),
@@ -109,7 +115,7 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                 children: [
                   // Content Header
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(11),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       border: Border(

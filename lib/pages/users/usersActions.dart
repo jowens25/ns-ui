@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
 import 'package:provider/provider.dart';
 
 class UsersActionsPage extends StatelessWidget {
@@ -71,7 +72,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _showNotImplemented(),
+                onPressed: () => _showPasswordSecuityDialog(),
                 child: Text('Security Policy'),
               ),
             ),
@@ -382,4 +383,181 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //      },
   //    );
   //  }
+
+  void _showPasswordSecuityDialog() {
+    final lengthController = TextEditingController(text: "12");
+    final minimumPasswordAgeController = TextEditingController(text: "0");
+    final maximumPasswordAgeController = TextEditingController(text: "9999");
+    final expirationWarningController = TextEditingController(text: "14");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<LoginApi>(
+          builder: (context, loginApi, _) {
+            //
+            //ipv4AddressController.text = user.ip4Address;
+            //ipv6AddressController.text = user.ip6Address;
+            //communityController.text = user.community;
+            //String selectedIpVersion = user.ipVersion;
+            //String selectedGroup = user.groupName;
+            //String selectedSnmpVersion = user.version;
+
+            return AlertDialog(
+              title: Text('Password Security'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 300,
+                        child: Text(
+                          "Minimum Length",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(width: 24),
+                      Expanded(
+                        child: TextField(
+                          //onSubmitted: (value) {
+                          //  details.SysContact = value;
+                          //  loginApi.updateSnmpSysDetails(details);
+                          //},
+                          controller: lengthController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  LabeledSwitch(
+                    label: "Require Uppercase Character:  ",
+                    value: true,
+                    onChanged: (value) {},
+                  ),
+                  LabeledSwitch(
+                    label: "Require Lowercase Character:  ",
+                    value: true,
+                    onChanged: (value) {},
+                  ),
+                  LabeledSwitch(
+                    label: "Require at least one numeral: ",
+                    value: false,
+                    onChanged: (value) {},
+                  ),
+                  LabeledSwitch(
+                    label: "Require Special Character:    ",
+                    value: true,
+                    onChanged: (value) {},
+                  ),
+                  LabeledSwitch(
+                    label: "Doesn't Match Username:       ",
+                    value: false,
+                    onChanged: (value) {},
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 300,
+                        child: Text(
+                          "Minimum Password Age (days)",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(width: 24),
+                      Expanded(
+                        child: TextField(
+                          //onSubmitted: (value) {
+                          //  details.SysContact = value;
+                          //  loginApi.updateSnmpSysDetails(details);
+                          //},
+                          controller: minimumPasswordAgeController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 300,
+                        child: Text(
+                          "Maximum Password Age (days)",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(width: 24),
+                      Expanded(
+                        child: TextField(
+                          //onSubmitted: (value) {
+                          //  details.SysContact = value;
+                          //  loginApi.updateSnmpSysDetails(details);
+                          //},
+                          controller: maximumPasswordAgeController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 300,
+                        child: Text(
+                          "Expiration Warning (days)",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      SizedBox(width: 24),
+                      Expanded(
+                        child: TextField(
+                          //onSubmitted: (value) {
+                          //  details.SysContact = value;
+                          //  loginApi.updateSnmpSysDetails(details);
+                          //},
+                          controller: expirationWarningController,
+                          decoration: InputDecoration(isDense: true),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final loginApi = context.read<LoginApi>();
+
+                    //user.version = selectedSnmpVersion;
+                    //user.groupName = selectedGroup;
+                    //user.community = communityController.text;
+                    //user.ipVersion = selectedIpVersion;
+                    //user.ip4Address = ipv4AddressController.text;
+                    //user.ip6Address = ipv6AddressController.text;
+
+                    //loginApi.updateSnmpV1V2cUser(user);
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                  },
+                  child: Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }

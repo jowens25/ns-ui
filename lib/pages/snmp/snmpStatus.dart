@@ -13,7 +13,7 @@ class SnmpStatusPageState extends State<SnmpStatusPage> {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'SNMP',
-      description: 'SNMP Status:',
+      description: 'Status:',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,12 +80,12 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'SNMP Status Card:',
+                    'Status:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 12),
                   LabeledSwitch(
-                    label: "SNMP",
+                    label: "SNMP Enabled",
                     value: loginApi.snmpStatus,
                     onChanged: (bool value) {
                       setState(() {
@@ -94,6 +94,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                     },
                   ),
                   SizedBox(height: 12),
+
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -104,6 +105,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
+                      SizedBox(width: 24),
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
@@ -126,6 +128,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
+                      SizedBox(width: 24),
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
@@ -148,6 +151,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
+                      SizedBox(width: 24),
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
@@ -170,6 +174,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
+                      SizedBox(width: 24),
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
@@ -208,7 +213,7 @@ class LabeledSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text('$label', style: const TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(width: 70),
         Transform.scale(
           scale: 0.60,

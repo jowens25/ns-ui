@@ -17,10 +17,7 @@ class SnmpActionsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'SNMP ACTIONS Card: ',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text('Actions', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () => {context.read<LoginApi>().resetSnmpConfig()},
