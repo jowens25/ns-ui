@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
 import 'package:web/web.dart';
 import 'dart:async';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
@@ -13,14 +12,6 @@ class LoginApi extends ChangeNotifier {
   List<User> get users => _users;
   List<User> _filteredUsers = [];
   List<User> get filteredUsers => _filteredUsers;
-
-  // snmp users
-  List<SnmpV1V2cUser> _snmpV1V2cUsers = [];
-  List<SnmpV1V2cUser> get snmpV1V2cUsers => _snmpV1V2cUsers;
-
-  // snmp users
-  List<SnmpV3User> _snmpV3Users = [];
-  List<SnmpV3User> get snmpV3Users => _snmpV3Users;
 
   //SnmpSysDetails _snmpSysDetails;
   //SnmpSysDetails get snmpSysDetails => _snmpSysDetails;
@@ -34,18 +25,6 @@ class LoginApi extends ChangeNotifier {
 
   // api
   final String baseUrl;
-
-  // snmp
-  bool _snmpStatus = false;
-  bool get snmpStatus => _snmpStatus;
-
-  SnmpSysDetails _snmpSysDetails = SnmpSysDetails(
-    SysObjId: '',
-    SysContact: '',
-    SysDescription: '',
-    SysLocation: '',
-  );
-  SnmpSysDetails get snmpSysDetails => _snmpSysDetails;
 
   // error
   String _messageError = '';
@@ -62,7 +41,7 @@ class LoginApi extends ChangeNotifier {
 
     //getSnmpStatus();
     _startSessionTimer();
-    getSnmpSysDetails();
+
     //verifyJwt(_token);
   }
 
@@ -196,100 +175,6 @@ class LoginApi extends ChangeNotifier {
   void dispose() {
     _sessionTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> setSnmpStatus(bool value) async {
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl/api/v1/snmp/status'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode({'status': value ? "start" : "stop"}),
-          )
-          .timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final decoded = jsonDecode(response.body);
-
-        //print(decoded['status']);
-        getSnmpStatus();
-        notifyListeners();
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized: Please log in again');
-      } else if (response.statusCode == 400) {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-          'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
-        );
-      } else {
-        throw Exception('Failed to add user: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (e is TimeoutException) {
-        throw Exception('Request timed out. Please try again.');
-      } else {
-        throw Exception('Error adding user: $e');
-      }
-    } finally {
-      notifyListeners();
-    }
-  }
-
-  Future<void> resetSnmpConfig() async {
-    final response = await http
-        .get(
-          Uri.parse('$baseUrl/api/v1/snmp/reset_config'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 10));
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      // final decoded = jsonDecode(response.body);
-
-      notifyListeners();
-    } else {
-      throw Exception('Failed to reset snmp conf ${response.statusCode}');
-    }
-  }
-
-  Future<void> getSnmpStatus() async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/api/v1/snmp/status'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-
-        if (decoded['snmp_status'] == "active") {
-          _snmpStatus = true;
-        }
-
-        if (decoded['snmp_status'] == "inactive") {
-          _snmpStatus = false;
-        }
-
-        notifyListeners();
-      } else {
-        throw Exception('Failed to load snmp status');
-      }
-    } catch (e) {
-      throw Exception('Error loading snmp status: $e');
-    } finally {
-      notifyListeners();
-    }
   }
 
   Future<void> getAllUsers() async {
@@ -494,238 +379,50 @@ class LoginApi extends ChangeNotifier {
     notifyListeners();
   }
 
-  // =============== SNMP V1 V2c USERS ==============================================
-  Future<void> getAllSnmpV1V2cUsers() async {
-    final response = await http
+  Future<http.Response> getRequest(String endpoint) async {
+    return await http
         .get(
-          Uri.parse('$baseUrl/api/v1/snmp_v1v2c'),
+          Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $_token',
           },
         )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      _snmpV1V2cUsers = SnmpV1V2cUser.fromJsonList(decoded['snmp_v1v2c_users']);
-      notifyListeners();
-    } else {
-      throw Exception('Failed to load users');
-    }
+        .timeout(const Duration(seconds: 1));
   }
 
-  Future<void> getSnmpSysDetails() async {
-    final response = await http
-        .get(
-          Uri.parse('$baseUrl/api/v1/snmp/details'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-
-      _snmpSysDetails = SnmpSysDetails.fromJson(decoded['snmp_sys_details']);
-      //print(decoded['snmp_sys_details']);
-      notifyListeners();
-    } else {
-      throw Exception('Failed to load details');
-    }
-  }
-
-  Future<void> updateSnmpSysDetails(SnmpSysDetails details) async {
-    print(details.toJson());
-    final response = await http
+  Future<http.Response> patchRequest(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    return await http
         .patch(
-          Uri.parse('$baseUrl/api/v1/snmp/details'),
+          Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $_token',
           },
-          body: json.encode(details.toJson()),
+          body: json.encode(body),
         )
-        .timeout(const Duration(seconds: 10));
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      getSnmpSysDetails();
-      notifyListeners();
-    } else if (response.statusCode == 204) {
-      print("no new content???");
-    } else if (response.statusCode == 401) {
-      throw Exception('Unauthorized: Please log in again');
-    } else if (response.statusCode == 400) {
-      final errorBody = jsonDecode(response.body);
-      throw Exception(
-        'Bad Request: ${errorBody['error'] ?? 'Invalid user data'}',
-      );
-    } else {
-      throw Exception('Failed to add user: ${response.statusCode}');
-    }
+        .timeout(const Duration(seconds: 1));
   }
 
-  Future<void> addSnmpV1V2User(SnmpV1V2cUser snmpV1V2cUser) async {
-    final response = await http
+  Future<http.Response> postRequest(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    print('Token: $_token');
+    return await http
         .post(
-          Uri.parse('$baseUrl/api/v1/snmp_v1v2c'), // Note: ID in URL path
+          Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $_token',
           },
-          body: json.encode(snmpV1V2cUser.toJson()),
+          body: json.encode(body),
         )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final decoded = json.decode(response.body);
-      if (decoded.containsKey('snmp_v1_v2c')) {
-        _snmpV1V2cUsers.add(SnmpV1V2cUser.fromJson(decoded['snmp_v1_v2c']));
-      }
-      notifyListeners();
-      //return SnmpV12cUser.fromJson(json.decode(response.body));
-    } else {
-      throw Exception(
-        'Failed to fetch addSnmpV1V2User: ${response.statusCode}',
-      );
-    }
+        .timeout(const Duration(seconds: 1));
   }
-
-  Future<void> updateSnmpV1V2cUser(SnmpV1V2cUser snmpV1V2cUser) async {
-    final response = await http
-        .patch(
-          Uri.parse('$baseUrl/api/v1/snmp_v1v2c/${snmpV1V2cUser.id}'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: json.encode(snmpV1V2cUser.toJson()),
-        )
-        .timeout(const Duration(seconds: 5));
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      notifyListeners();
-    } else {
-      throw Exception(
-        'Failed to update snmpv1v2c user: ${response.statusCode}',
-      );
-    }
-  }
-
-  Future<void> deleteSnmpV1V2cUser(SnmpV1V2cUser snmpV1V2cUser) async {
-    final response = await http
-        .delete(
-          Uri.parse(
-            '$baseUrl/api/v1/snmp_v1v2c/${snmpV1V2cUser.id}',
-          ), // Note: ID in URL path
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      _snmpV1V2cUsers.removeWhere((u) => u.id == snmpV1V2cUser.id);
-      notifyListeners();
-    } else if (response.statusCode == 401) {
-      throw Exception('Unauthorized access');
-    } else {
-      throw Exception(
-        'Failed to delete addSnmpV1V2User: ${response.statusCode}',
-      );
-    }
-  }
-  // =============== END SNMP V1 V2c USERS ==============================================
-  // =============== SNMP V3 USERS ==============================================
-
-  Future<void> getAllSnmpV3Users() async {
-    final response = await http
-        .get(
-          Uri.parse('$baseUrl/api/v1/snmp_v3'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      _snmpV3Users = SnmpV3User.fromJsonList(decoded['snmp_v3_users']);
-      notifyListeners();
-    } else {
-      throw Exception('Failed to load users');
-    }
-  }
-
-  Future<void> addSnmpV3User(SnmpV3User snmpV3User) async {
-    final response = await http
-        .post(
-          Uri.parse('$baseUrl/api/v1/snmp_v3'), // Note: ID in URL path
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: json.encode(snmpV3User.toJson()),
-        )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final decoded = json.decode(response.body);
-      if (decoded.containsKey('snmp_v3_user')) {
-        _snmpV3Users.add(SnmpV3User.fromJson(decoded['snmp_v3_user']));
-      }
-      notifyListeners();
-    } else {
-      throw Exception('Failed to fetch add snmp_v3: ${response.statusCode}');
-    }
-  }
-
-  Future<void> updateSnmpV3User(SnmpV3User snmpV3User) async {
-    final response = await http
-        .patch(
-          Uri.parse('$baseUrl/api/v1/snmp_v3/${snmpV3User.id}'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: json.encode(snmpV3User.toJson()),
-        )
-        .timeout(const Duration(seconds: 5));
-    print(response.body);
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      notifyListeners();
-    } else {
-      throw Exception('Failed to update snmp_v3 user: ${response.statusCode}');
-    }
-  }
-
-  Future<void> deleteSnmpV3User(SnmpV3User snmpV3User) async {
-    final response = await http
-        .delete(
-          Uri.parse(
-            '$baseUrl/api/v1/snmp_v3/${snmpV3User.id}',
-          ), // Note: ID in URL path
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        )
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      _snmpV3Users.removeWhere((u) => u.id == snmpV3User.id);
-      notifyListeners();
-    } else if (response.statusCode == 401) {
-      throw Exception('Unauthorized access');
-    } else {
-      throw Exception('Failed to delete snmp_v3: ${response.statusCode}');
-    }
-  }
-
-  // =============== END SNMP V3 USERS ==============================================
 }
 
 class User {
@@ -755,156 +452,5 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {'id': id, 'role': role, 'username': name, 'email': email};
-  }
-}
-
-class SnmpV1V2cUser {
-  int? id;
-  String version;
-  String groupName;
-  String community;
-  String ipVersion;
-  String ip4Address;
-  String ip6Address;
-
-  SnmpV1V2cUser({
-    this.id,
-    required this.version,
-    required this.groupName,
-    required this.community,
-    required this.ipVersion,
-    required this.ip4Address,
-    required this.ip6Address,
-  });
-
-  factory SnmpV1V2cUser.fromJson(Map<String, dynamic> json) {
-    return SnmpV1V2cUser(
-      id: json['id'],
-      version: json['version'] ?? '',
-      groupName: json['group_name'] ?? '',
-      community: json['community'] ?? '',
-      ipVersion: json['ip_version'] ?? '',
-      ip4Address: json['ip4_address'] ?? '',
-      ip6Address: json['ip6_address'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'version': version,
-      'group_name': groupName,
-      'community': community,
-      'ip_version': ipVersion,
-      'ip4_address': ip4Address,
-      'ip6_address': ip6Address,
-    };
-  }
-
-  static List<String> getHeader() {
-    return [
-      'Version',
-      'Group Name',
-      'Community',
-      'IP Version',
-      'IPv4 Address',
-      'IPv6 Address',
-      'Edit',
-    ];
-  }
-
-  static List<SnmpV1V2cUser> fromJsonList(dynamic json) {
-    if (json is! List) return [];
-    return json.map((userJson) => SnmpV1V2cUser.fromJson(userJson)).toList();
-  }
-}
-
-class SnmpV3User {
-  int? id;
-  String userName;
-  String authType;
-  String authPassphase;
-  String privType;
-  String privPassphase;
-  String groupName;
-
-  SnmpV3User({
-    this.id,
-    required this.userName,
-    required this.authType,
-    required this.authPassphase,
-    required this.privType,
-    required this.privPassphase,
-    required this.groupName,
-  });
-
-  factory SnmpV3User.fromJson(Map<String, dynamic> json) {
-    return SnmpV3User(
-      id: json['id'],
-      userName: json['user_name'] ?? '',
-      authType: json['auth_type'] ?? '',
-      authPassphase: json['auth_passphrase'] ?? '',
-      privType: json['priv_type'] ?? '',
-      privPassphase: json['priv_passphrase'] ?? '',
-      groupName: json['group_name'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_name': userName,
-      'auth_type': authType,
-      'auth_passphrase': authPassphase,
-      'priv_type': privType,
-      'priv_passphrase': privPassphase,
-      'group_name': groupName,
-    };
-  }
-
-  static List<String> getHeader() {
-    return ['User Name', 'Auth Type', 'Priv Type', 'Group Name', 'Edit'];
-  }
-
-  static List<SnmpV3User> fromJsonList(dynamic json) {
-    if (json is! List) return [];
-    return json.map((userJson) => SnmpV3User.fromJson(userJson)).toList();
-  }
-}
-
-class SnmpSysDetails {
-  String SysObjId;
-  String SysDescription;
-  String SysLocation;
-  String SysContact;
-
-  SnmpSysDetails({
-    required this.SysObjId,
-    required this.SysDescription,
-    required this.SysLocation,
-    required this.SysContact,
-  });
-
-  factory SnmpSysDetails.fromJson(Map<String, dynamic> json) {
-    return SnmpSysDetails(
-      SysObjId: json['sys_obj_id'] ?? '',
-      SysDescription: json['sys_description'] ?? '',
-      SysLocation: json['sys_location'] ?? '',
-      SysContact: json['sys_contact'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'sys_obj_id': SysObjId,
-      'sys_description': SysDescription,
-      'sys_location': SysLocation,
-      'sys_contact': SysContact,
-    };
-  }
-
-  static List<SnmpSysDetails> fromJsonList(dynamic json) {
-    if (json is! List) return [];
-    return json.map((userJson) => SnmpSysDetails.fromJson(userJson)).toList();
   }
 }

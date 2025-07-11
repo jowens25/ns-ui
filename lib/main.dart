@@ -2,22 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:ntsc_ui/api/LoginApi.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
+//import 'package:ntsc_ui/api/UserApi.dart';
+import 'package:ntsc_ui/api/SnmpApi.dart';
 
 import 'package:ntsc_ui/routes.dart';
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
-  final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
+  //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
   final loginApi = LoginApi(baseUrl: "http://100.127.98.7:5000");
+
+  final snmpApi = SnmpApi(baseUrl: "http://100.127.98.7:5000");
 
   runApp(
     MultiProvider(
       providers: [
         //ChangeNotifierProvider(create: (_) => ntpServerApi),
-        ChangeNotifierProvider(create: (_) => userApi),
+        ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => loginApi),
         // Add more providers here as needed
       ],

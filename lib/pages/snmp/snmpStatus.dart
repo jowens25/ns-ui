@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/SnmpApi.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:provider/provider.dart';
 
@@ -47,9 +47,11 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
   @override
   void initState() {
     super.initState();
+    context.read<SnmpApi>().getSysDetails();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LoginApi>().getSnmpStatus();
-      context.read<LoginApi>().getSnmpSysDetails();
+      //context.read<SnmpApi>().getStatus();
+      //context.read<SnmpApi>().getSysDetails();
     });
   }
 
@@ -64,9 +66,10 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
-        var details = loginApi.snmpSysDetails;
+    return Consumer<SnmpApi>(
+      builder: (context, snmpApi, _) {
+        var details = snmpApi.sysDetails;
+
         sysObjIdController.text = details.SysObjId;
         contactController.text = details.SysContact;
         locationController.text = details.SysLocation;
@@ -86,10 +89,11 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                   SizedBox(height: 12),
                   LabeledSwitch(
                     label: "SNMP Enabled",
-                    value: loginApi.snmpStatus,
+                    value: details.Status == "active",
                     onChanged: (bool value) {
                       setState(() {
-                        loginApi.setSnmpStatus(value);
+                        details.Action = value ? "start" : "stop";
+                        snmpApi.updateSysDetails(details);
                       });
                     },
                   ),
@@ -110,7 +114,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysObjId = value;
-                            loginApi.updateSnmpSysDetails(details);
+                            snmpApi.updateSysDetails(details);
                           },
                           controller: sysObjIdController,
                           decoration: InputDecoration(isDense: true),
@@ -133,7 +137,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysContact = value;
-                            loginApi.updateSnmpSysDetails(details);
+                            snmpApi.updateSysDetails(details);
                           },
                           controller: contactController,
                           decoration: InputDecoration(isDense: true),
@@ -156,7 +160,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysLocation = value;
-                            loginApi.updateSnmpSysDetails(details);
+                            snmpApi.updateSysDetails(details);
                           },
                           controller: locationController,
                           decoration: InputDecoration(isDense: true),
@@ -179,7 +183,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysDescription = value;
-                            loginApi.updateSnmpSysDetails(details);
+                            snmpApi.updateSysDetails(details);
                           },
                           controller: descriptionController,
                           decoration: InputDecoration(isDense: true),

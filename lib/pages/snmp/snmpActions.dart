@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/SnmpApi.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
 
 import 'package:provider/provider.dart';
@@ -20,7 +20,7 @@ class SnmpActionsCard extends StatelessWidget {
               Text('Actions', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () => {context.read<LoginApi>().resetSnmpConfig()},
+                onPressed: () => {context.read<SnmpApi>().resetSnmpConfig()},
                 child: Text('RESTORE DEFAULT SNMP CONFIGURATION'),
               ),
             ],

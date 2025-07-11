@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/SnmpApi.dart';
 import 'package:provider/provider.dart';
 
 class SnmpVersion3Page extends StatelessWidget {
@@ -40,8 +40,8 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final loginApi = context.read<LoginApi>();
-      loginApi.getAllSnmpV3Users();
+      final snmpApi = context.read<SnmpApi>();
+      //snmpApi.getAllSnmpV3Users();
     });
   }
 
@@ -89,8 +89,8 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
   }
 
   Widget buildSnmpV3UsersList() {
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
+    return Consumer<SnmpApi>(
+      builder: (context, snmpApi, _) {
         return SingleChildScrollView(
           child: Card(
             child: Table(
@@ -98,7 +98,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
               children: [
                 TableRow(
                   children:
-                      SnmpV3User.getHeader()
+                      V3User.getHeader()
                           .map(
                             (name) => Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -113,7 +113,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                           .toList(),
                 ),
                 // Data rows
-                ...loginApi.snmpV3Users.map((snmpUser) {
+                ...snmpApi.v3Users.map((snmpUser) {
                   return TableRow(
                     children: [
                       // Version
@@ -284,8 +284,8 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final loginApi = context.read<LoginApi>();
-                    SnmpV3User snmpV3User = SnmpV3User.fromJson({
+                    final snmpApi = context.read<SnmpApi>();
+                    V3User snmpV3User = V3User.fromJson({
                       'user_name': userNameController.text,
                       'auth_type': selectedAuthType,
                       'auth_passphrase': authPassphraseController.text,
@@ -293,7 +293,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                       'priv_passphrase': privPassphraseController.text,
                       'group_name': selectedGroup,
                     });
-                    loginApi.addSnmpV3User(snmpV3User);
+                    //snmpApi.addV3User(snmpV3User);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
@@ -310,12 +310,12 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     );
   }
 
-  void _showDeleteUserDialog(SnmpV3User user) {
+  void _showDeleteUserDialog(V3User user) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<LoginApi>(
-          builder: (context, loginApi, _) {
+        return Consumer<SnmpApi>(
+          builder: (context, snmpApi, _) {
             return AlertDialog(
               title: Text('Delete User'),
               content: Text('Delete ${user.userName}?'),
@@ -326,7 +326,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    await loginApi.deleteSnmpV3User(user);
+                    //await snmpApi.deleteV3User(user);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
@@ -342,7 +342,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     );
   }
 
-  void _showEditUserDialog(SnmpV3User user) {
+  void _showEditUserDialog(V3User user) {
     final userNameController = TextEditingController();
     final authPassphraseController = TextEditingController();
     final privPassphraseController = TextEditingController();
@@ -350,8 +350,8 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<LoginApi>(
-          builder: (context, loginApi, _) {
+        return Consumer<SnmpApi>(
+          builder: (context, snmpApi, _) {
             //
             userNameController.text = user.userName;
             String selectedAuthType = user.authType;
@@ -431,7 +431,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final loginApi = context.read<LoginApi>();
+                    final snmpApi = context.read<SnmpApi>();
 
                     //user.version = selectedSnmpVersion;
                     //user.groupName = selectedGroup;
@@ -446,7 +446,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     user.privType = selectedPrivType;
                     user.privPassphase = privPassphraseController.text;
                     user.groupName = selectedGroup;
-                    loginApi.updateSnmpV3User(user);
+                    //snmpApi.updateSnmpV3User(user);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
