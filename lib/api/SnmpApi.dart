@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'dart:async';
 
+import 'package:flutter/rendering.dart';
+import 'package:http/http.dart';
+
 import 'LoginApi.dart';
 
 class SnmpApi extends LoginApi {
@@ -21,75 +24,107 @@ class SnmpApi extends LoginApi {
   );
   SysDetails get sysDetails => _sysDetails;
 
-  SnmpApi({required String baseUrl}) : super(baseUrl: '$baseUrl/api/v1/snmp') {
-    //getSysDetails();
-    //getAllV1V2cUsers();
-  } //
+  @override
+  String get baseUrl => 'http://$serverHost:$serverPort/api/v1/snmp';
 
-  //v1v2c users
-  ///Future<void> getAllV1V2cUsers() async {
-  ///  final response = await getRequest("v1v2c_user");
-  ///
-  ///  final decoded = jsonDecode(response.body);
-  ///  print(decoded);
-  ///  _v1v2cUsers = V1v2cUser.fromJsonList(decoded['v1v2c_users']);
-  ///
-  ///  notifyListeners();
-  ///}
+  SnmpApi({required super.serverHost, required super.serverPort});
 
-  Future<void> getAllUsers() async {
-    final response = await getRequest("users");
-
-    final decoded = jsonDecode(response.body);
-    print(decoded);
-    _v1v2cUsers = V1v2cUser.fromJsonList(decoded['v1v2c_users']);
-
-    _v3Users = V3User.fromJsonList(decoded['v3_users']);
-
-    notifyListeners();
-  }
-
-  // details
-  Future<void> getSysDetails() async {
-    final response = await getRequest("details");
+  Future<void> readSnmpInfo() async {
+    final response = await getRequest("info");
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
 
-      _sysDetails = SysDetails.fromJson(decoded['sys_details']);
-      //print(decoded['snmp_sys_details']);
+      _sysDetails = SysDetails.fromJson(decoded['info']);
       notifyListeners();
     } else {
-      throw Exception('Failed to load details');
+      throw Exception('Failed to load info');
     }
   }
 
-  Future<void> updateSysDetails(SysDetails details) async {
-    final response = await patchRequest("details", details.toJson());
+  Future<void> editSnmpInfo(SysDetails details) async {
+    final response = await patchRequest("info", details.toJson());
 
-    getSysDetails();
+    readSnmpInfo();
     notifyListeners();
   }
 
-  Future<void> addV1v2cUser(V1v2cUser user) async {
-    print(user.toJson());
+  Future<void> readV1v2cUsers() async {
+    final response = await getRequest("v1v2c_user");
+    final decoded = jsonDecode(response.body);
+    print(decoded);
+    _v1v2cUsers = V1v2cUser.fromJsonList(decoded['v1v2c_users']);
+    notifyListeners();
+  }
 
+  Future<void> writeV1v2cUser(V1v2cUser user) async {
     final response = await postRequest("v1v2c_user", user.toJson());
     final decoded = json.decode(response.body);
-    _v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
+    //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
+    readV1v2cUsers();
+    notifyListeners();
+  }
+
+  Future<void> deleteV1v2cUser(V1v2cUser user) async {
+    print(user.toJson());
+
+    final response = await deleteRequest(
+      "v1v2c_user/${user.id}",
+      user.toJson(),
+    );
+    final decoded = json.decode(response.body);
+    //_v1v2cUsers.remove(user);
+    readV1v2cUsers();
 
     notifyListeners();
   }
 
-  Future<void> addV3User(V3User user) async {
+  Future<void> editV1v2cUser(V1v2cUser user) async {
+    print(user.toJson());
+    final response = await patchRequest("v1v2c_user/${user.id}", user.toJson());
+    final decoded = json.decode(response.body);
+
+    notifyListeners();
+  }
+
+  // v3 users
+
+  Future<void> readV3Users() async {
+    final response = await getRequest("v3_user");
+    final decoded = jsonDecode(response.body);
+    _v3Users = V3User.fromJsonList(decoded['v3_users']);
+    notifyListeners();
+  }
+
+  Future<void> writeV3User(V3User user) async {
     print(user.toJson());
     final response = await postRequest("v3_user", user.toJson());
     final decoded = json.decode(response.body);
+    print(decoded['v3_user']);
     try {
       _v3Users.add(V3User.fromJson(decoded['v3_user']));
     } catch (e) {
       print("you stupid: $e");
     }
+    notifyListeners();
+  }
+
+  Future<void> deleteV3User(V3User user) async {
+    print(user.toJson());
+
+    final response = await deleteRequest("v3_user/${user.id}", user.toJson());
+    final decoded = json.decode(response.body);
+
+    _v3Users.remove(user);
+
+    notifyListeners();
+  }
+
+  Future<void> editV3User(V3User user) async {
+    print(user.toJson());
+    final response = await patchRequest("v3_user/${user.id}", user.toJson());
+    final decoded = json.decode(response.body);
+
     notifyListeners();
   }
 
@@ -113,30 +148,7 @@ class SnmpApi extends LoginApi {
   //  // }
   //}
   //
-  //Future<void> deleteSnmpV1V2cUser(V1v2cUser snmpV1V2cUser) async {
-  //  //final response = await http
-  //  //    .delete(
-  //  //      Uri.parse(
-  //  //        '$baseUrl/api/v1/v1v2c_user/${snmpV1V2cUser.id}',
-  //  //      ), // Note: ID in URL path
-  //  //      headers: {
-  //  //        'Content-Type': 'application/json',
-  //  //        'Authorization': 'Bearer  ${LoginApi.token}',
-  //  //      },
-  //  //    )
-  //  //    .timeout(const Duration(seconds: 5));
-  //  //
-  //  //if (response.statusCode == 200 || response.statusCode == 201) {
-  //  //  //_snmpV1V2cUsers.removeWhere((u) => u.id == snmpV1V2cUser.id);
-  //  //  notifyListeners();
-  //  //} else if (response.statusCode == 401) {
-  //  //  throw Exception('Unauthorized access');
-  //  //} else {
-  //  //  throw Exception(
-  //  //    'Failed to delete addSnmpV1V2User: ${response.statusCode}',
-  //  //  );
-  //  //}
-  //}
+
   // =============== END SNMP V1 V2c USERS ==============================================
   // =============== SNMP V3 USERS ==============================================
 
@@ -183,24 +195,7 @@ class SnmpApi extends LoginApi {
   //  }
   //}
   //
-  //Future<void> updateV3User(SnmpV3User snmpV3User) async {
-  //  final response = await http
-  //      .patch(
-  //        Uri.parse('$baseUrl/api/v1/v3_user/${snmpV3User.id}'),
-  //        headers: {
-  //          'Content-Type': 'application/json',
-  //          'Authorization': 'Bearer  ${LoginApi.token}',
-  //        },
-  //        body: json.encode(snmpV3User.toJson()),
-  //      )
-  //      .timeout(const Duration(seconds: 5));
-  //  print(response.body);
-  //  if (response.statusCode == 200 || response.statusCode == 201) {
-  //    notifyListeners();
-  //  } else {
-  //    throw Exception('Failed to update v3_user user: ${response.statusCode}');
-  //  }
-  //}
+
   //
   //Future<void> deleteV3User(SnmpV3User snmpV3User) async {
   //  final response = await http
@@ -229,26 +224,15 @@ class SnmpApi extends LoginApi {
 
   Future<void> resetSnmpConfig() async {
     final response = await getRequest("reset_config");
-    //final response = await http
-    //    .get(
-    //      Uri.parse('$baseUrl/reset_config'),
-    //      headers: {
-    //        'Content-Type': 'application/json',
-    //        'Authorization': 'Bearer  ${LoginApi.token}',
-    //      },
-    //    )
-    //    .timeout(const Duration(seconds: 5));
-    //
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('failed to reset snmp config: ${response.statusCode}');
-    }
-    getAllUsers();
+
+    readV1v2cUsers();
+    readV3Users();
     notifyListeners();
   }
 }
 
 class V1v2cUser {
-  //int? id;
+  int id;
   String version;
   String groupName;
   String community;
@@ -258,7 +242,7 @@ class V1v2cUser {
   //String ip6Address;
 
   V1v2cUser({
-    //this.id,
+    required this.id,
     required this.version,
     required this.groupName,
     required this.community,
@@ -270,7 +254,7 @@ class V1v2cUser {
 
   factory V1v2cUser.fromJson(Map<String, dynamic> json) {
     return V1v2cUser(
-      // id: json['id'],
+      id: json['ID'],
       version: json['version'] ?? '',
       groupName: json['group_name'] ?? '',
       community: json['community'] ?? '',
@@ -282,7 +266,7 @@ class V1v2cUser {
 
   Map<String, dynamic> toJson() {
     return {
-      // 'id': id,
+      'ID': id,
       'version': version,
       'group_name': groupName,
       'community': community,
@@ -312,7 +296,7 @@ class V1v2cUser {
 }
 
 class V3User {
-  int? id;
+  int id;
   String version;
   String userName;
   String authType;
@@ -322,7 +306,7 @@ class V3User {
   String groupName;
 
   V3User({
-    this.id,
+    required this.id,
     required this.version,
     required this.userName,
     required this.authType,
@@ -334,7 +318,7 @@ class V3User {
 
   factory V3User.fromJson(Map<String, dynamic> json) {
     return V3User(
-      id: json['id'],
+      id: json['ID'],
       version: json['version'] ?? '',
       userName: json['user_name'] ?? '',
       authType: json['auth_type'] ?? '',
@@ -347,7 +331,7 @@ class V3User {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'ID': id,
       'version': version,
       'user_name': userName,
       'auth_type': authType,

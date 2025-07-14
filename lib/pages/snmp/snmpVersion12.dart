@@ -42,7 +42,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final snmpApi = context.read<SnmpApi>();
-      snmpApi.getAllUsers();
+      snmpApi.readV1v2cUsers();
     });
   }
 
@@ -295,6 +295,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                   onPressed: () async {
                     final snmpApi = context.read<SnmpApi>();
                     V1v2cUser snmpV1V2User = V1v2cUser.fromJson({
+                      'ID': 0,
                       'version': selectedSnmpVersion,
                       'group_name': selectedGroup,
                       'community': communityController.text,
@@ -302,7 +303,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                       'source': ipv4AddressController.text,
                       //'ip6_address': ipv6AddressController.text,
                     });
-                    snmpApi.addV1v2cUser(snmpV1V2User);
+                    snmpApi.writeV1v2cUser(snmpV1V2User);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
@@ -335,7 +336,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    //await snmpApi.deleteV1v2cUser(user);
+                    await snmpApi.deleteV1v2cUser(user);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
@@ -449,7 +450,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     user.source = ipv4AddressController.text;
                     //user.ip6Address = ipv6AddressController.text;
 
-                    //                    snmpApi.updateV1V2cUser(user);
+                    snmpApi.editV1v2cUser(user);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(

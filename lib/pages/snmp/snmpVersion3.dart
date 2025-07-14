@@ -42,6 +42,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final snmpApi = context.read<SnmpApi>();
       //snmpApi.getAllSnmpV3Users();
+      snmpApi.readV3Users();
     });
   }
 
@@ -286,6 +287,8 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   onPressed: () async {
                     final snmpApi = context.read<SnmpApi>();
                     V3User snmpV3User = V3User.fromJson({
+                      'ID': 0,
+                      'version': 'usm',
                       'user_name': userNameController.text,
                       'auth_type': selectedAuthType,
                       'auth_passphrase': authPassphraseController.text,
@@ -293,7 +296,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                       'priv_passphrase': privPassphraseController.text,
                       'group_name': selectedGroup,
                     });
-                    snmpApi.addV3User(snmpV3User);
+                    snmpApi.writeV3User(snmpV3User);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
@@ -327,6 +330,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 TextButton(
                   onPressed: () async {
                     //await snmpApi.deleteV3User(user);
+                    await snmpApi.deleteV3User(user);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
@@ -361,7 +365,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
             String selectedGroup = user.groupName;
 
             return AlertDialog(
-              title: Text('Add SNMP User'),
+              title: Text('Edit SNMP User'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -446,14 +450,15 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     user.privType = selectedPrivType;
                     user.privPassphase = privPassphraseController.text;
                     user.groupName = selectedGroup;
-                    //snmpApi.updateSnmpV3User(user);
 
+                    snmpApi.editV3User(user);
+                    //snmpApi.readV3Users();
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('SNMP User added')));
                   },
-                  child: Text('Add'),
+                  child: Text('Submit Edits'),
                 ),
               ],
             );

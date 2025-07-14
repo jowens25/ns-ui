@@ -24,7 +24,10 @@ class LoginApi extends ChangeNotifier {
   String get token => _token;
 
   // api
-  final String baseUrl;
+  final String serverHost;
+  final String serverPort;
+
+  String get baseUrl => 'http://$serverHost:$serverPort'; // base implementation
 
   // error
   String _messageError = '';
@@ -32,7 +35,7 @@ class LoginApi extends ChangeNotifier {
 
   Timer? _sessionTimer;
 
-  LoginApi({required this.baseUrl}) {
+  LoginApi({required this.serverHost, required this.serverPort}) {
     getToken();
     if (_token.isNotEmpty && !isTokenExpired(_token)) {
       _loggedIn = true;
@@ -179,27 +182,15 @@ class LoginApi extends ChangeNotifier {
 
   Future<void> getAllUsers() async {
     try {
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/api/v1/users'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
+      final response = await getRequest("users");
 
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        _users =
-            (decoded['users'] as List)
-                .map((userJson) => User.fromJson(userJson))
-                .toList();
-        _filteredUsers = List.from(_users);
-        notifyListeners();
-      } else {
-        throw Exception('Failed to load users');
-      }
+      final decoded = jsonDecode(response.body);
+      _users =
+          (decoded['users'] as List)
+              .map((userJson) => User.fromJson(userJson))
+              .toList();
+      _filteredUsers = List.from(_users);
+      notifyListeners();
     } catch (e) {
       throw Exception('Error loading users: $e');
     } finally {
@@ -210,7 +201,7 @@ class LoginApi extends ChangeNotifier {
   Future<User> getUser(int id) async {
     final response = await http
         .get(
-          Uri.parse('$baseUrl/api/v1/users/$id'), // Note: ID in URL path
+          Uri.parse('$baseUrl/users/$id'), // Note: ID in URL path
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -233,7 +224,7 @@ class LoginApi extends ChangeNotifier {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/api/v1/users'),
+            Uri.parse('$baseUrl/users'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
@@ -438,6 +429,29 @@ class LoginApi extends ChangeNotifier {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
         'Failed to post $body to $endpoint: ${response.statusCode}',
+      );
+    }
+    return response;
+  }
+
+  Future<http.Response> deleteRequest(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    print('Token: $_token');
+    final response = await http
+        .delete(
+          Uri.parse('$baseUrl/$endpoint'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_token',
+          },
+          body: json.encode(body),
+        )
+        .timeout(const Duration(seconds: 1));
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Failed to delete $body from $endpoint: ${response.statusCode}',
       );
     }
     return response;

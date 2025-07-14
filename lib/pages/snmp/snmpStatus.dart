@@ -47,7 +47,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
   @override
   void initState() {
     super.initState();
-    context.read<SnmpApi>().getSysDetails();
+    context.read<SnmpApi>().readSnmpInfo();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //context.read<SnmpApi>().getStatus();
@@ -93,7 +93,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                     onChanged: (bool value) {
                       setState(() {
                         details.Action = value ? "start" : "stop";
-                        snmpApi.updateSysDetails(details);
+                        snmpApi.editSnmpInfo(details);
                       });
                     },
                   ),
@@ -114,7 +114,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysObjId = value;
-                            snmpApi.updateSysDetails(details);
+                            snmpApi.editSnmpInfo(details);
                           },
                           controller: sysObjIdController,
                           decoration: InputDecoration(isDense: true),
@@ -137,7 +137,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysContact = value;
-                            snmpApi.updateSysDetails(details);
+                            snmpApi.editSnmpInfo(details);
                           },
                           controller: contactController,
                           decoration: InputDecoration(isDense: true),
@@ -160,7 +160,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysLocation = value;
-                            snmpApi.updateSysDetails(details);
+                            snmpApi.editSnmpInfo(details);
                           },
                           controller: locationController,
                           decoration: InputDecoration(isDense: true),
@@ -183,7 +183,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                         child: TextField(
                           onSubmitted: (value) {
                             details.SysDescription = value;
-                            snmpApi.updateSysDetails(details);
+                            snmpApi.editSnmpInfo(details);
                           },
                           controller: descriptionController,
                           decoration: InputDecoration(isDense: true),

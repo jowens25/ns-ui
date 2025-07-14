@@ -12,9 +12,9 @@ void main() {
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final loginApi = LoginApi(baseUrl: "http://100.127.98.7:5000");
+  final loginApi = LoginApi(serverHost: "100.127.98.7", serverPort: "5000");
 
-  final snmpApi = SnmpApi(baseUrl: "http://100.127.98.7:5000");
+  final snmpApi = SnmpApi(serverHost: "100.127.98.7", serverPort: "5000");
 
   runApp(
     MultiProvider(
