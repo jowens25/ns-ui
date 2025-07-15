@@ -83,6 +83,7 @@ class SnmpApi extends LoginApi {
     print(user.toJson());
     final response = await patchRequest("v1v2c_user/${user.id}", user.toJson());
     final decoded = json.decode(response.body);
+    readV1v2cUsers();
 
     notifyListeners();
   }
