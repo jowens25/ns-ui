@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/UserApi.dart';
 import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
 import 'package:provider/provider.dart';
 
@@ -43,10 +43,10 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final loginApi = context.read<LoginApi>();
-      loginApi.getAllUsers();
+      final userApi = context.read<UserApi>();
+      userApi.readUsers();
       _searchController.addListener(() {
-        loginApi.searchUsers(_searchController.text);
+        userApi.searchUsers(_searchController.text);
       });
     });
   }
@@ -121,9 +121,9 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   }
 
   //  Widget _buildUsersList() {
-  //    return Consumer<LoginApi>(
-  //      builder: (context, loginApi, _) {
-  //        if (loginApi.filteredUsers.isEmpty) {
+  //    return Consumer<UserApi>(
+  //      builder: (context, userApi, _) {
+  //        if (userApi.filteredUsers.isEmpty) {
   //          return Center(
   //            child: Text(
   //              'No users found',
@@ -133,9 +133,9 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //        }
   //
   //        return ListView.builder(
-  //          itemCount: loginApi.filteredUsers.length,
+  //          itemCount: userApi.filteredUsers.length,
   //          itemBuilder: (context, index) {
-  //            final user = loginApi.filteredUsers[index];
+  //            final user = userApi.filteredUsers[index];
   //            return Card(
   //              margin: EdgeInsets.only(bottom: 8),
   //              child: ListTile(
@@ -199,8 +199,8 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //    showDialog(
   //      context: context,
   //      builder: (BuildContext context) {
-  //        return Consumer<LoginApi>(
-  //          builder: (context, loginApi, _) {
+  //        return Consumer<UserApi>(
+  //          builder: (context, userApi, _) {
   //            String selectedRole =
   //                "viewer"; // Add this as a variable in your widget state
   //
@@ -248,7 +248,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //                  onPressed: () async {
   //                    if (nameController.text.isNotEmpty &&
   //                        emailController.text.isNotEmpty) {
-  //                      await loginApi.addUser(
+  //                      await userApi.addUser(
   //                        selectedRole,
   //                        nameController.text,
   //                        emailController.text,
@@ -274,8 +274,8 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //    showDialog(
   //      context: context,
   //      builder: (BuildContext context) {
-  //        return Consumer<LoginApi>(
-  //          builder: (context, loginApi, _) {
+  //        return Consumer<UserApi>(
+  //          builder: (context, userApi, _) {
   //            return AlertDialog(
   //              title: Text('Delete User'),
   //              content: Text('Delete ${user.name}?'),
@@ -286,10 +286,10 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //                ),
   //                TextButton(
   //                  onPressed: () async {
-  //                    await loginApi.deleteUser(user);
+  //                    await userApi.deleteUser(user);
   //                    Navigator.pop(context);
   //                    ScaffoldMessenger.of(context).showSnackBar(
-  //                      SnackBar(content: Text(loginApi.messageError)),
+  //                      SnackBar(content: Text(userApi.messageError)),
   //                    );
   //                  },
   //                  child: Text('Delete', style: TextStyle(color: Colors.red)),
@@ -310,8 +310,8 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //    showDialog(
   //      context: context,
   //      builder: (BuildContext context) {
-  //        return Consumer<LoginApi>(
-  //          builder: (context, loginApi, _) {
+  //        return Consumer<UserApi>(
+  //          builder: (context, userApi, _) {
   //            //
   //            nameController.text = user.name;
   //            emailController.text = user.email;
@@ -367,7 +367,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
   //                      user.email = emailController.text;
   //                      user.password = passwordController.text;
   //                      user.role = selectedRole;
-  //                      await loginApi.updateUser(user);
+  //                      await userApi.updateUser(user);
   //                      Navigator.pop(context);
   //                      ScaffoldMessenger.of(
   //                        context,
@@ -393,8 +393,8 @@ class _UsersActionsCard extends State<UsersActionsCard> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<LoginApi>(
-          builder: (context, loginApi, _) {
+        return Consumer<UserApi>(
+          builder: (context, userApi, _) {
             //
             //ipv4AddressController.text = user.ip4Address;
             //ipv6AddressController.text = user.ip6Address;
@@ -423,7 +423,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                         child: TextField(
                           //onSubmitted: (value) {
                           //  details.SysContact = value;
-                          //  loginApi.updateSnmpSysDetails(details);
+                          //  userApi.updateSnmpSysDetails(details);
                           //},
                           controller: lengthController,
                           decoration: InputDecoration(isDense: true),
@@ -472,7 +472,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                         child: TextField(
                           //onSubmitted: (value) {
                           //  details.SysContact = value;
-                          //  loginApi.updateSnmpSysDetails(details);
+                          //  userApi.updateSnmpSysDetails(details);
                           //},
                           controller: minimumPasswordAgeController,
                           decoration: InputDecoration(isDense: true),
@@ -495,7 +495,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                         child: TextField(
                           //onSubmitted: (value) {
                           //  details.SysContact = value;
-                          //  loginApi.updateSnmpSysDetails(details);
+                          //  userApi.updateSnmpSysDetails(details);
                           //},
                           controller: maximumPasswordAgeController,
                           decoration: InputDecoration(isDense: true),
@@ -518,7 +518,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                         child: TextField(
                           //onSubmitted: (value) {
                           //  details.SysContact = value;
-                          //  loginApi.updateSnmpSysDetails(details);
+                          //  userApi.updateSnmpSysDetails(details);
                           //},
                           controller: expirationWarningController,
                           decoration: InputDecoration(isDense: true),
@@ -535,7 +535,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final loginApi = context.read<LoginApi>();
+                    //final userApi = context.read<UserApi>();
 
                     //user.version = selectedSnmpVersion;
                     //user.groupName = selectedGroup;
@@ -544,7 +544,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     //user.ip4Address = ipv4AddressController.text;
                     //user.ip6Address = ipv6AddressController.text;
 
-                    //loginApi.updateSnmpV1V2cUser(user);
+                    //userApi.updateSnmpV1V2cUser(user);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(

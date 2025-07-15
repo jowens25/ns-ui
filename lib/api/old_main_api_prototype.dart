@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/old_prototype/LoginWidget.dart';
 import 'package:provider/provider.dart';
-
-import 'package:ntsc_ui/api/LoginApi.dart';
-
 import 'package:ntsc_ui/api/NtpServerApi.dart';
 import 'package:ntsc_ui/old_prototype/NtpServerWidget.dart';
-
 import 'package:ntsc_ui/api/PtpOcApi.dart';
 import 'package:ntsc_ui/old_prototype/PtpOcWidget.dart';
 
@@ -82,14 +78,14 @@ class _MyTabbedPageState extends State<MyTabbedPage>
 void main() {
   final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
-  final loginApi = LoginApi(baseUrl: "http://10.1.10.205:8080");
+  // final loginApi = LoginApi(baseUrl: "http://10.1.10.205:8080");
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ntpServerApi),
         ChangeNotifierProvider(create: (_) => ptpOcApi),
-        ChangeNotifierProvider(create: (_) => loginApi),
+        //ChangeNotifierProvider(create: (_) => loginApi),
         // Add more providers here as needed
       ],
       child: MyApp(),

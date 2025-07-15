@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/AuthApi.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:provider/provider.dart';
 
@@ -63,8 +63,8 @@ class _DashboardCard extends State<DashboardCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
+    return Consumer<AuthApi>(
+      builder: (context, authApi, _) {
         return Card(
           child: Container(
             height: 400,
@@ -79,8 +79,8 @@ class _DashboardCard extends State<DashboardCard> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      loginApi.getUser(1);
-                      // print(user)
+                      //loginApi.readUsers();
+                      print("DOES NOTHING");
                     },
                     child: Text('Post User'),
                   ),

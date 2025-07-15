@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/AuthApi.dart';
 import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
 import 'package:ntsc_ui/pages/ntp/ntpNetwork.dart';
 import 'package:ntsc_ui/pages/ntp/ntpOverviewPage.dart';
@@ -312,8 +312,8 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
-      final loginApi = Provider.of<LoginApi>(context, listen: false);
-      final loggedIn = loginApi.isLoggedIn;
+      final authApi = Provider.of<AuthApi>(context, listen: false);
+      final loggedIn = authApi.isLoggedIn;
 
       final isLoginRoute = state.uri.path == '/login';
 
@@ -338,8 +338,8 @@ class AppRouter {
       GoRoute(
         path: '/',
         redirect: (BuildContext context, GoRouterState state) {
-          final loginApi = Provider.of<LoginApi>(context, listen: false);
-          return loginApi.isLoggedIn ? '/dashboard' : '/login';
+          final authApi = Provider.of<AuthApi>(context, listen: false);
+          return authApi.isLoggedIn ? '/dashboard' : '/login';
         },
       ),
       //GoRoute(

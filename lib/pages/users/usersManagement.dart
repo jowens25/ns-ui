@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/UserApi.dart';
 import 'package:provider/provider.dart';
 
 class UsersManagementPage extends StatelessWidget {
@@ -42,10 +42,10 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final loginApi = context.read<LoginApi>();
-      loginApi.getAllUsers();
+      final userApi = context.read<UserApi>();
+      userApi.readUsers();
       _searchController.addListener(() {
-        loginApi.searchUsers(_searchController.text);
+        userApi.searchUsers(_searchController.text);
       });
     });
 
@@ -105,9 +105,9 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
   }
 
   Widget _buildUsersList() {
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
-        if (loginApi.filteredUsers.isEmpty) {
+    return Consumer<UserApi>(
+      builder: (context, userApi, _) {
+        if (userApi.filteredUsers.isEmpty) {
           return Center(
             child: Text(
               'No users found',
@@ -117,9 +117,9 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
         }
 
         return ListView.builder(
-          itemCount: loginApi.filteredUsers.length,
+          itemCount: userApi.filteredUsers.length,
           itemBuilder: (context, index) {
-            final user = loginApi.filteredUsers[index];
+            final user = userApi.filteredUsers[index];
             return Card(
               margin: EdgeInsets.only(bottom: 8),
               child: ListTile(
@@ -183,8 +183,8 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<LoginApi>(
-          builder: (context, loginApi, _) {
+        return Consumer<UserApi>(
+          builder: (context, userApi, _) {
             String selectedRole =
                 "viewer"; // Add this as a variable in your widget state
 
@@ -238,7 +238,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                         'password': passwordController.text,
                         'role': selectedRole,
                       });
-                      loginApi.addUser(user);
+                      userApi.writeUser(user);
                       Navigator.pop(context);
                       ScaffoldMessenger.of(
                         context,
@@ -259,8 +259,8 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<LoginApi>(
-          builder: (context, loginApi, _) {
+        return Consumer<UserApi>(
+          builder: (context, userApi, _) {
             return AlertDialog(
               title: Text('Delete User'),
               content: Text('Delete ${user.name}?'),
@@ -271,11 +271,11 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    await loginApi.deleteUser(user);
+                    await userApi.deleteUser(user);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(loginApi.messageError)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("User Deleted??")));
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
@@ -295,8 +295,8 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<LoginApi>(
-          builder: (context, loginApi, _) {
+        return Consumer<UserApi>(
+          builder: (context, userApi, _) {
             //
             nameController.text = user.name;
             emailController.text = user.email;
@@ -352,7 +352,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       user.email = emailController.text;
                       user.password = passwordController.text;
                       user.role = selectedRole;
-                      await loginApi.updateUser(user);
+                      await userApi.editUser(user);
                       Navigator.pop(context);
                       ScaffoldMessenger.of(
                         context,

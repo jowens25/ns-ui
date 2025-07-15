@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/AuthApi.dart';
+import 'package:ntsc_ui/api/UserApi.dart';
 import 'package:ntsc_ui/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -41,8 +42,8 @@ class LoginCardState extends State<LoginCard> {
   }
 
   Widget build(BuildContext context) {
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
+    return Consumer<AuthApi>(
+      builder: (context, authApi, _) {
         return Row(
           children: [
             Expanded(
@@ -82,13 +83,21 @@ class LoginCardState extends State<LoginCard> {
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
                               try {
-                                await loginApi.login(
-                                  _usernameController.text,
-                                  _passwordController.text,
-                                );
+                                User user = User.fromJson({
+                                  'username': _usernameController.text,
+                                  'password': _passwordController.text,
+                                });
+                                await authApi.login(user);
+
+                                //await authApi.login(
+                                //  _usernameController.text,
+                                //  _passwordController.text,
+                                //);
                                 context.go('/dashboard');
 
-                                print(_errorMessage);
+                                print("error: $_errorMessage");
+                                print("is logged in???? ${authApi.isLoggedIn}");
+                                // print("token: ${authApi.getToken()}");
                               } catch (e) {
                                 setState(() {
                                   _errorMessage = e.toString();

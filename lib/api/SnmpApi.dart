@@ -1,13 +1,8 @@
 import 'dart:convert';
-
 import 'dart:async';
+import 'BaseApi.dart';
 
-import 'package:flutter/rendering.dart';
-import 'package:http/http.dart';
-
-import 'LoginApi.dart';
-
-class SnmpApi extends LoginApi {
+class SnmpApi extends BaseApi {
   List<V1v2cUser> _v1v2cUsers = [];
   List<V1v2cUser> get v1v2cUsers => _v1v2cUsers;
 
@@ -44,7 +39,7 @@ class SnmpApi extends LoginApi {
 
   Future<void> editSnmpInfo(SysDetails details) async {
     final response = await patchRequest("info", details.toJson());
-
+    print(response.body);
     readSnmpInfo();
     notifyListeners();
   }
@@ -61,6 +56,8 @@ class SnmpApi extends LoginApi {
     final response = await postRequest("v1v2c_user", user.toJson());
     final decoded = json.decode(response.body);
     //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
+    print(decoded);
+
     readV1v2cUsers();
     notifyListeners();
   }
@@ -73,6 +70,7 @@ class SnmpApi extends LoginApi {
       user.toJson(),
     );
     final decoded = json.decode(response.body);
+    print(decoded);
     //_v1v2cUsers.remove(user);
     readV1v2cUsers();
 
@@ -83,6 +81,7 @@ class SnmpApi extends LoginApi {
     print(user.toJson());
     final response = await patchRequest("v1v2c_user/${user.id}", user.toJson());
     final decoded = json.decode(response.body);
+    print(decoded);
     readV1v2cUsers();
 
     notifyListeners();
@@ -115,7 +114,7 @@ class SnmpApi extends LoginApi {
 
     final response = await deleteRequest("v3_user/${user.id}", user.toJson());
     final decoded = json.decode(response.body);
-
+    print(decoded);
     _v3Users.remove(user);
 
     notifyListeners();
@@ -125,107 +124,13 @@ class SnmpApi extends LoginApi {
     print(user.toJson());
     final response = await patchRequest("v3_user/${user.id}", user.toJson());
     final decoded = json.decode(response.body);
-
+    print(decoded);
     notifyListeners();
   }
 
-  //Future<void> updateSnmpV1V2cUser(V1v2cUser snmpV1V2cUser) async {
-  //  // final response = await http
-  //  //     .patch(
-  //  //       Uri.parse('$baseUrl/api/v1/v1v2c_user/${snmpV1V2cUser.id}'),
-  //  //       headers: {
-  //  //         'Content-Type': 'application/json',
-  //  //         'Authorization': 'Bearer  ${LoginApi.token}',
-  //  //       },
-  //  //       body: json.encode(snmpV1V2cUser.toJson()),
-  //  //     )
-  //  //     .timeout(const Duration(seconds: 5));
-  //  // if (response.statusCode == 200 || response.statusCode == 201) {
-  //  //   notifyListeners();
-  //  // } else {
-  //  //   throw Exception(
-  //  //     'Failed to update snmpv1v2c user: ${response.statusCode}',
-  //  //   );
-  //  // }
-  //}
-  //
-
-  // =============== END SNMP V1 V2c USERS ==============================================
-  // =============== SNMP V3 USERS ==============================================
-
-  //Future<void> getAllV3Users() async {
-  //  final response = await http
-  //      .get(
-  //        Uri.parse('$baseUrl/api/v1/v3_user'),
-  //        headers: {
-  //          'Content-Type': 'application/json',
-  //          'Authorization': 'Bearer  ${LoginApi.token}',
-  //        },
-  //      )
-  //      .timeout(const Duration(seconds: 5));
-  //
-  //  if (response.statusCode == 200) {
-  //    final decoded = jsonDecode(response.body);
-  //    _snmpV3Users = SnmpV3User.fromJsonList(decoded['v3_users']);
-  //    notifyListeners();
-  //  } else {
-  //    throw Exception('Failed to load users');
-  //  }
-  //}
-  //
-  //Future<void> addV3User(SnmpV3User snmpV3User) async {
-  //  final response = await http
-  //      .post(
-  //        Uri.parse('$baseUrl/api/v1/v3_user'), // Note: ID in URL path
-  //        headers: {
-  //          'Content-Type': 'application/json',
-  //          'Authorization': 'Bearer  ${LoginApi.token}',
-  //        },
-  //        body: json.encode(snmpV3User.toJson()),
-  //      )
-  //      .timeout(const Duration(seconds: 5));
-  //
-  //  if (response.statusCode == 200 || response.statusCode == 201) {
-  //    final decoded = json.decode(response.body);
-  //    if (decoded.containsKey('v3_user_user')) {
-  //      _snmpV3Users.add(SnmpV3User.fromJson(decoded['v3_user_user']));
-  //    }
-  //    notifyListeners();
-  //  } else {
-  //    throw Exception('Failed to fetch add v3_user: ${response.statusCode}');
-  //  }
-  //}
-  //
-
-  //
-  //Future<void> deleteV3User(SnmpV3User snmpV3User) async {
-  //  final response = await http
-  //      .delete(
-  //        Uri.parse(
-  //          '$baseUrl/api/v1/v3_user/${snmpV3User.id}',
-  //        ), // Note: ID in URL path
-  //        headers: {
-  //          'Content-Type': 'application/json',
-  //          'Authorization': 'Bearer  ${LoginApi.token}',
-  //        },
-  //      )
-  //      .timeout(const Duration(seconds: 5));
-  //
-  //  if (response.statusCode == 200 || response.statusCode == 201) {
-  //    _snmpV3Users.removeWhere((u) => u.id == snmpV3User.id);
-  //    notifyListeners();
-  //  } else if (response.statusCode == 401) {
-  //    throw Exception('Unauthorized access');
-  //  } else {
-  //    throw Exception('Failed to delete v3_user: ${response.statusCode}');
-  //  }
-  //}
-
-  // =============== END SNMP V3 USERS ==============================================
-
   Future<void> resetSnmpConfig() async {
     final response = await getRequest("reset_config");
-
+    print(response.body);
     readV1v2cUsers();
     readV3Users();
     notifyListeners();

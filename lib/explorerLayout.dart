@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/AuthApi.dart';
+import 'package:ntsc_ui/api/UserApi.dart';
 import 'package:ntsc_ui/models.dart';
 import 'package:ntsc_ui/routes.dart';
 import 'package:provider/provider.dart';
@@ -22,15 +23,15 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   @override
   void initState() {
     super.initState();
-    final loginApi = Provider.of<LoginApi>(context, listen: false);
-    explorerItems = AppRoutes.generateExplorerItems(loginApi.isLoggedIn);
+    final authApi = Provider.of<AuthApi>(context, listen: false);
+    explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
   }
 
   @override
   Widget build(BuildContext context) {
     String currentRoute = GoRouterState.of(context).uri.path;
-    final loginApi = Provider.of<LoginApi>(context, listen: false);
-    explorerItems = AppRoutes.generateExplorerItems(loginApi.isLoggedIn);
+    final authApi = Provider.of<AuthApi>(context, listen: false);
+    explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
 
     return Scaffold(
       body: Row(
@@ -135,11 +136,11 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                               ?.copyWith(fontWeight: FontWeight.w500),
                         ),
                         Spacer(),
-                        Consumer<LoginApi>(
-                          builder: (context, loginApi, _) {
+                        Consumer<UserApi>(
+                          builder: (context, userApi, _) {
                             return Text(
-                              loginApi.currentUser?.name != null
-                                  ? "Welcome, ${loginApi.currentUser!.name}"
+                              userApi.currentUser?.name != null
+                                  ? "Welcome, ${userApi.currentUser!.name}"
                                   : "Welcome",
                             );
                           },

@@ -41,8 +41,8 @@ abstract class ApiService extends ChangeNotifier {
     final url = Uri.parse('$baseUrl$key');
     final body = jsonEncode({key: value});
 
-    print(key);
-    print(value);
+    print("key: $key");
+    print("value: $value");
     try {
       final response = await http
           .post(url, headers: {'Content-Type': 'application/json'}, body: body)

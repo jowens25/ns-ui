@@ -210,10 +210,10 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
 
   void addSnmpV1V2UserDialog() {
     final ipv4AddressController = TextEditingController();
-    final ipv6AddressController = TextEditingController();
+    //final ipv6AddressController = TextEditingController();
     final communityController = TextEditingController();
 
-    String selectedIpVersion = "ipv4";
+    // String selectedIpVersion = "ipv4";
     String selectedSnmpVersion = "v1";
     String selectedGroup = "ronoauthgroup";
 

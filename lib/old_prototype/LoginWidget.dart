@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:ntsc_ui/api/AuthApi.dart';
+import 'package:ntsc_ui/api/UserApi.dart';
 import 'package:provider/provider.dart';
 
 class LoginWidget extends StatefulWidget {
@@ -29,8 +30,8 @@ class LoginWidgetState extends State<LoginWidget> {
   }
 
   Widget build(BuildContext context) {
-    return Consumer<LoginApi>(
-      builder: (context, loginApi, _) {
+    return Consumer<AuthApi>(
+      builder: (context, authApi, _) {
         return Card(
           elevation: 4,
           margin: EdgeInsets.all(12),
@@ -72,10 +73,11 @@ class LoginWidgetState extends State<LoginWidget> {
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             try {
-                              final response = await loginApi.login(
-                                _usernameController.text,
-                                _passwordController.text,
-                              );
+                              //  User user.fromJson({})
+                              // await authApi.login(
+                              //    _usernameController.text,
+                              //    _passwordController.text,
+                              //  );
                               // Handle successful login (e.g., save token, navigate)
                               //_errorMessage = 'Login successful: $response';
                             } catch (e) {
