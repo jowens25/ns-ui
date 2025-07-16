@@ -21,7 +21,7 @@ class BaseApi extends ChangeNotifier {
             'Authorization': 'Bearer ${AuthApi.getToken()}',
           },
         )
-        .timeout(const Duration(seconds: 1));
+        .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
         'Failed to get $baseUrl/$endpoint: ${response.statusCode}',
@@ -43,7 +43,7 @@ class BaseApi extends ChangeNotifier {
           },
           body: json.encode(body),
         )
-        .timeout(const Duration(seconds: 1));
+        .timeout(const Duration(seconds: 5));
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
@@ -66,7 +66,7 @@ class BaseApi extends ChangeNotifier {
           },
           body: json.encode(body),
         )
-        .timeout(const Duration(seconds: 1));
+        .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
         'Failed to post $body to $endpoint: ${response.statusCode}',
@@ -88,7 +88,7 @@ class BaseApi extends ChangeNotifier {
           },
           body: json.encode(body),
         )
-        .timeout(const Duration(seconds: 1));
+        .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
         'Failed to delete $body from $endpoint: ${response.statusCode}',
