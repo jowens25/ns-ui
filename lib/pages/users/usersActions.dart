@@ -433,6 +433,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                   ),
 
                   LabeledSwitch(
+                    myGap: 70,
                     label: "Require Uppercase Character:  ",
                     value: true,
                     onChanged: (value) {},
@@ -441,21 +442,25 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     label: "Require Lowercase Character:  ",
                     value: true,
                     onChanged: (value) {},
+                    myGap: 70,
                   ),
                   LabeledSwitch(
                     label: "Require at least one numeral: ",
                     value: false,
                     onChanged: (value) {},
+                    myGap: 70,
                   ),
                   LabeledSwitch(
                     label: "Require Special Character:    ",
                     value: true,
                     onChanged: (value) {},
+                    myGap: 70,
                   ),
                   LabeledSwitch(
                     label: "Doesn't Match Username:       ",
                     value: false,
                     onChanged: (value) {},
+                    myGap: 70,
                   ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,

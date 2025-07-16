@@ -214,34 +214,34 @@ final ntpRoute = RouteConfig(
 
   children: [
     RouteConfig(
+      path: '/status',
+      name: 'Status',
+      icon: Icons.toggle_off,
+      pageBuilder: () => NtpStatusPage(),
+    ),
+    RouteConfig(
       path: '/version',
       name: 'Version',
-      icon: Icons.work,
+      icon: Icons.info,
       pageBuilder: () => NtpVersionPage(),
     ),
     RouteConfig(
       path: '/network',
       name: 'Network',
-      icon: Icons.work,
+      icon: Icons.network_cell,
       pageBuilder: () => NtpNetworkPage(),
     ),
     RouteConfig(
       path: '/config',
       name: 'Server Config',
-      icon: Icons.work,
+      icon: Icons.dns,
       pageBuilder: () => NtpServerConfigPage(),
     ),
     RouteConfig(
       path: '/utc',
       name: 'UTC Config',
-      icon: Icons.work,
+      icon: Icons.storage,
       pageBuilder: () => NtpUtcConfigPage(),
-    ),
-    RouteConfig(
-      path: '/status',
-      name: 'Status',
-      icon: Icons.work,
-      pageBuilder: () => NtpStatusPage(),
     ),
   ],
 );
@@ -370,7 +370,7 @@ class AppRoutes {
     loginRoute,
     dashboardRoute,
     snmpRoute,
-    //ntpRoute,
+    ntpRoute,
     //ptpOcRoute,
     usersRoute,
 

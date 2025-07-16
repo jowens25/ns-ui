@@ -88,6 +88,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                   ),
                   SizedBox(height: 12),
                   LabeledSwitch(
+                    myGap: 70,
                     label: "SNMP Enabled",
                     value: details.Status == "active",
                     onChanged: (bool value) {
@@ -205,9 +206,11 @@ class LabeledSwitch extends StatelessWidget {
   final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final double myGap;
 
   const LabeledSwitch({
     Key? key,
+    required this.myGap,
     required this.label,
     required this.value,
     required this.onChanged,
@@ -217,11 +220,23 @@ class LabeledSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text('$label', style: const TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(width: 70),
-        Transform.scale(
-          scale: 0.60,
-          child: Switch(value: value, onChanged: onChanged),
+        SizedBox(
+          width: myGap,
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: SizedBox(
+            width: 32, // control size here
+            height: 20,
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: Switch(value: value, onChanged: onChanged),
+            ),
+          ),
         ),
       ],
     );
@@ -229,12 +244,14 @@ class LabeledSwitch extends StatelessWidget {
 }
 
 class LabeledText extends StatelessWidget {
+  final double myGap;
   final String label;
   final TextEditingController controller;
   final ValueChanged<String> onSubmitted;
 
   const LabeledText({
     Key? key,
+    required this.myGap,
     required this.label,
     required this.controller,
     required this.onSubmitted,
@@ -242,23 +259,142 @@ class LabeledText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
+    return Row(
+      children: [
+        SizedBox(
+          width: myGap,
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            onSubmitted: onSubmitted,
+            decoration: InputDecoration(isDense: true),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ReadOnlyLabeledText extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final double myGap;
+  const ReadOnlyLabeledText({
+    Key? key,
+    required this.myGap,
+    required this.label,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: myGap,
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            readOnly: true,
+            controller: controller,
+
+            decoration: InputDecoration(isDense: true),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+//        items: [
+//          DropdownMenuItem<String>(
+//            value: 'GPS',
+//            child: Text('GPS'),
+//          ),
+//          DropdownMenuItem<String>(value: '', child: Text('None')),
+//        ], "NTP,NULL,LOCL,CESM,RBDM,PPS,IRIG,ACTS,USNO,PTB,TDF,DCF,MSF,WWV,WWVB,WWVH,CHU,LORC,OMEG,GPS";
+//
+//        items: [
+//          "NTP",
+//          "NULL",
+//          "LOCL",
+//          "CESM",
+//          "RBDM",
+//          "PPS",
+//          "IRIG",
+//          "ACTS",
+//          "USNO",
+//          "PTB",
+//          "TDF",
+//          "DCF",
+//          "MSF",
+//          "WWV",
+//          "WWVB",
+//          "WWVH",
+//          "CHU",
+//          "LORC",
+//          "OMEG",
+//          "GPS",
+//        ],
+class LabeledDropdown<T> extends StatelessWidget {
+  final double myGap;
+  final String label;
+  final T value;
+  final List<T> items;
+  final ValueChanged<T?> onChanged;
+
+  const LabeledDropdown({
+    Key? key,
+    required this.myGap,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 24,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 100,
+            width: myGap,
+            height: 20,
             child: Text(
               label,
               style: const TextStyle(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
-            child: TextField(
-              controller: controller,
-              onSubmitted: onSubmitted,
-              decoration: InputDecoration(isDense: true),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                value: value,
+                items:
+                    items.map<DropdownMenuItem<T>>((T item) {
+                      return DropdownMenuItem<T>(
+                        value: item,
+                        child: Text(item.toString()),
+                      );
+                    }).toList(),
+                onChanged: onChanged,
+                isExpanded: true,
+                dropdownColor: Theme.of(context).cardColor,
+                // Use tight padding
+                padding: EdgeInsets.zero,
+                alignment: Alignment.centerLeft,
+              ),
             ),
           ),
         ],

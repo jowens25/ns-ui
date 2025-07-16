@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:ntsc_ui/api/AuthApi.dart';
 import 'package:ntsc_ui/api/SnmpApi.dart';
 import 'package:ntsc_ui/api/UserApi.dart';
+import 'package:ntsc_ui/api/NtpApi.dart';
+
 import 'package:ntsc_ui/routes.dart';
 
 void main() {
@@ -12,6 +14,7 @@ void main() {
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
   final authApi = AuthApi(serverHost: "100.127.98.7", serverPort: "5000");
+  final ntpApi = NtpApi(serverHost: "100.127.98.7", serverPort: "5000");
   final snmpApi = SnmpApi(serverHost: "100.127.98.7", serverPort: "5000");
   final userApi = UserApi(serverHost: "100.127.98.7", serverPort: "5000");
 
@@ -19,6 +22,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => authApi),
+        ChangeNotifierProvider(create: (_) => ntpApi),
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),
       ],

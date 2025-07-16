@@ -21,7 +21,7 @@ class NtpOverviewPage extends StatelessWidget {
             alignment: WrapAlignment.start,
             children: [
               SizedBox(
-                width: 200,
+                width: 275,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -32,7 +32,7 @@ class NtpOverviewPage extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 200,
+                width: 275,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -43,7 +43,7 @@ class NtpOverviewPage extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 200,
+                width: 600,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [NtpNetworkCard()],
