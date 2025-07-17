@@ -24,7 +24,7 @@ class NtpApi extends BaseApi {
     'stratum': '',
     'poll_interval': '',
     'precision': '',
-    'reference_id': 'LOCL',
+    'reference_id': 'NULL',
     'leap59': '',
     'leap59_inprogress': '',
     'leap61': '',

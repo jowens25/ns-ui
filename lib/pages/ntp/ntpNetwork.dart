@@ -93,7 +93,7 @@ class _NtpNetworkCardState extends State<NtpNetworkCard> {
                     myGap: gap,
                     label: 'IP Version',
                     value: ntpApi.ntp['ip_mode'],
-                    items: ["IPv4", "IPv6"],
+                    items: ["IPv4", "IPv6", "NA"],
 
                     onChanged: (newValue) {
                       setState(() {

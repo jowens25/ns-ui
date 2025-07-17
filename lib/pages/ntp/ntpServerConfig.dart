@@ -110,6 +110,7 @@ class _NtpServerConfigCardState extends State<NtpServerConfigCard> {
                       "LORC",
                       "OMEG",
                       "GPS",
+                      "NA",
                     ],
                     onChanged: (newValue) {
                       setState(() {
