@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ntsc_ui/api/NetworkApi.dart';
 import 'package:provider/provider.dart';
 import 'package:ntsc_ui/api/AuthApi.dart';
 import 'package:ntsc_ui/api/SnmpApi.dart';
@@ -13,10 +14,11 @@ void main() {
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final authApi = AuthApi(serverHost: "localhost", serverPort: "5000");
-  final ntpApi = NtpApi(serverHost: "localhost", serverPort: "5000");
-  final snmpApi = SnmpApi(serverHost: "localhost", serverPort: "5000");
-  final userApi = UserApi(serverHost: "localhost", serverPort: "5000");
+  final authApi = AuthApi(serverHost: "10.1.10.205", serverPort: "5000");
+  final ntpApi = NtpApi(serverHost: "10.1.10.205", serverPort: "5000");
+  final snmpApi = SnmpApi(serverHost: "10.1.10.205", serverPort: "5000");
+  final userApi = UserApi(serverHost: "10.1.10.205", serverPort: "5000");
+  final networkApi = NetworkApi(serverHost: "10.1.10.205", serverPort: "5000");
 
   runApp(
     MultiProvider(
@@ -25,6 +27,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ntpApi),
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),
+        ChangeNotifierProvider(create: (_) => networkApi),
       ],
       child: MyApp(),
     ),
@@ -40,7 +43,7 @@ class MyApp extends StatelessWidget {
       title: 'Novus UI',
       theme: ThemeData(
         colorScheme: ColorScheme(
-          brightness: Brightness.light,
+          brightness: Brightness.dark,
 
           // Primary: Your neutral foundation
           primary: Colors.grey[800]!, // Dark grey surface
