@@ -8,23 +8,24 @@ import 'package:ntsc_ui/api/UserApi.dart';
 import 'package:ntsc_ui/api/NtpApi.dart';
 
 import 'package:ntsc_ui/routes.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final authApi = AuthApi(serverHost: "10.1.10.205", serverPort: "5000");
-  final ntpApi = NtpApi(serverHost: "10.1.10.205", serverPort: "5000");
-  final snmpApi = SnmpApi(serverHost: "10.1.10.205", serverPort: "5000");
-  final userApi = UserApi(serverHost: "10.1.10.205", serverPort: "5000");
-  final networkApi = NetworkApi(serverHost: "10.1.10.205", serverPort: "5000");
+  final authApi = AuthApi(serverHost: "127.0.0.1", serverPort: "5000");
+  //final ntpApi = NtpApi(serverHost: "127.0.0.1", serverPort: "5000");
+  final snmpApi = SnmpApi(serverHost: "127.0.0.1", serverPort: "5000");
+  final userApi = UserApi(serverHost: "127.0.0.1", serverPort: "5000");
+  final networkApi = NetworkApi(serverHost: "127.0.0.1", serverPort: "5000");
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => authApi),
-        ChangeNotifierProvider(create: (_) => ntpApi),
+        //ChangeNotifierProvider(create: (_) => ntpApi),
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),
         ChangeNotifierProvider(create: (_) => networkApi),
@@ -96,4 +97,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
     );
   }
+}
+
+Future<void> getDeviceIp() async {
+  final info = NetworkInfo();
+  String? wifiIP = await info.getWifiIP();
+  print('Local IP Address: $wifiIP');
 }

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/pages/network/networkActions.dart';
 import 'package:ntsc_ui/pages/network/networkOverviewPage.dart';
-import 'package:ntsc_ui/pages/network/networkStatus.dart';
+import 'package:ntsc_ui/pages/network/networkSettings.dart';
 import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
 import 'package:ntsc_ui/pages/ntp/ntpNetwork.dart';
 import 'package:ntsc_ui/pages/ntp/ntpOverviewPage.dart';
@@ -215,20 +214,20 @@ final networkRoute = RouteConfig(
   icon: Icons.alarm,
   pageBuilder: () => NetworkOverviewPage(),
 
-  children: [
-    RouteConfig(
-      path: '/status',
-      name: 'Status',
-      icon: Icons.toggle_off,
-      pageBuilder: () => NetworkStatusPage(),
-    ),
-    RouteConfig(
-      path: '/actions',
-      name: 'Actions',
-      icon: Icons.assignment,
-      pageBuilder: () => NetworkActionsPage(),
-    ),
-  ],
+  //children: [
+  //  RouteConfig(
+  //    path: '/status',
+  //    name: 'Status',
+  //    icon: Icons.toggle_off,
+  //    pageBuilder: () => NetworkStatusPage(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/actions',
+  //    name: 'Actions',
+  //    icon: Icons.assignment,
+  //    pageBuilder: () => NetworkActionsPage(),
+  //  ),
+  //],
 );
 
 final ntpRoute = RouteConfig(
@@ -395,7 +394,7 @@ class AppRoutes {
     loginRoute,
     dashboardRoute,
     snmpRoute,
-    ntpRoute,
+    //ntpRoute,
     //ptpOcRoute,
     networkRoute,
     usersRoute,

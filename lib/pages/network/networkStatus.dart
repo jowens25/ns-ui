@@ -48,7 +48,9 @@ class NetworkStatusCardState extends State<NetworkStatusCard> {
   @override
   void initState() {
     super.initState();
-    context.read<NetworkApi>().readNetworkInfo();
+    context.read<NetworkApi>().readTelnetInfo();
+    context.read<NetworkApi>().readSshInfo();
+    context.read<NetworkApi>().readHttpInfo();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //context.read<NetworkApi>().getStatus();
@@ -69,12 +71,6 @@ class NetworkStatusCardState extends State<NetworkStatusCard> {
   Widget build(BuildContext context) {
     return Consumer<NetworkApi>(
       builder: (context, networkApi, _) {
-        var details = networkApi.sysDetails;
-
-        sysObjIdController.text = details.SysObjId;
-        contactController.text = details.SysContact;
-        locationController.text = details.SysLocation;
-        descriptionController.text = details.SysDescription;
         return Card(
           child: SizedBox(
             width: double.infinity,
@@ -91,33 +87,33 @@ class NetworkStatusCardState extends State<NetworkStatusCard> {
                   LabeledSwitch(
                     myGap: 200,
                     label: "Telnet",
-                    value: details.Status == "active",
+                    value: networkApi.telnet.Status == "active",
                     onChanged: (bool value) {
                       setState(() {
-                        details.Action = value ? "start" : "stop";
-                        networkApi.editNetworkInfo(details);
+                        networkApi.telnet.Action = value ? "start" : "stop";
+                        networkApi.editTelnetInfo(networkApi.telnet);
                       });
                     },
                   ),
                   LabeledSwitch(
                     myGap: 200,
                     label: "SSH + SFTP",
-                    value: details.Status == "active",
+                    value: networkApi.ssh.Status == "active",
                     onChanged: (bool value) {
                       setState(() {
-                        details.Action = value ? "start" : "stop";
-                        networkApi.editNetworkInfo(details);
+                        networkApi.ssh.Action = value ? "start" : "stop";
+                        networkApi.editSshInfo(networkApi.ssh);
                       });
                     },
                   ),
                   LabeledSwitch(
                     myGap: 200,
                     label: "HTTP",
-                    value: details.Status == "active",
+                    value: networkApi.http.Status == "active",
                     onChanged: (bool value) {
                       setState(() {
-                        details.Action = value ? "start" : "stop";
-                        networkApi.editNetworkInfo(details);
+                        networkApi.http.Action = value ? "start" : "stop";
+                        networkApi.editHttpInfo(networkApi.http);
                       });
                     },
                   ),
@@ -146,7 +142,7 @@ class NetworkStatusCardState extends State<NetworkStatusCard> {
                       ),
                     ],
                   ),
-                  
+
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
