@@ -40,7 +40,7 @@ class SnmpOverviewPage extends StatelessWidget {
                     SizedBox(height: 16),
                     SnmpVersion3Card(),
                     SizedBox(height: 16),
-                    SnmpTrapsCard(),
+                    //SnmpTrapsCard(),
                   ],
                 ),
               ),

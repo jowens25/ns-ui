@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       title: 'Novus UI',
       theme: ThemeData(
         colorScheme: ColorScheme(
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
 
           // Primary: Your neutral foundation
           primary: Colors.grey[800]!, // Dark grey surface

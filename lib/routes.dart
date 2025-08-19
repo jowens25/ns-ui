@@ -152,65 +152,65 @@ final usersRoute = RouteConfig(
   icon: Icons.people,
   pageBuilder: () => UsersOverviewPage(),
   isAllowed: true,
-  children: [
-    RouteConfig(
-      path: '/actions',
-      name: 'Actions',
-      icon: Icons.assessment,
-      pageBuilder: () => UsersActionsPage(),
-    ),
-    RouteConfig(
-      path: '/management',
-      name: 'Management',
-      icon: Icons.manage_accounts,
-      pageBuilder: () => UsersManagementPage(),
-    ),
-  ],
+  //children: [
+  //  RouteConfig(
+  //    path: '/actions',
+  //    name: 'Actions',
+  //    icon: Icons.assessment,
+  //    pageBuilder: () => UsersActionsPage(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/management',
+  //    name: 'Management',
+  //    icon: Icons.manage_accounts,
+  //    pageBuilder: () => UsersManagementPage(),
+  //  ),
+  //],
 );
 
 final snmpRoute = RouteConfig(
   path: '/snmp',
-  name: 'SNMP',
+  name: 'Snmp',
   icon: Icons.alarm,
   pageBuilder: () => SnmpOverviewPage(),
 
-  children: [
-    RouteConfig(
-      path: '/status',
-      name: 'Status',
-      icon: Icons.toggle_off,
-      pageBuilder: () => SnmpStatusPage(),
-    ),
-    RouteConfig(
-      path: '/actions',
-      name: 'Actions',
-      icon: Icons.assignment,
-      pageBuilder: () => SnmpActionsPage(),
-    ),
-    RouteConfig(
-      path: '/v1-v2',
-      name: 'V1/V2',
-      icon: Icons.person_add,
-      pageBuilder: () => SnmpVersion12Page(),
-    ),
-    RouteConfig(
-      path: '/v3',
-      name: 'V3',
-      icon: Icons.add_moderator,
-      pageBuilder: () => SnmpVersion3Page(),
-    ),
-    RouteConfig(
-      path: '/traps',
-      name: 'Traps',
-      icon: Icons.notification_add,
-      pageBuilder: () => SnmpTrapsPage(),
-    ),
-  ],
+  //children: [
+  //  RouteConfig(
+  //    path: '/status',
+  //    name: 'Status',
+  //    icon: Icons.toggle_off,
+  //    pageBuilder: () => SnmpStatusPage(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/actions',
+  //    name: 'Actions',
+  //    icon: Icons.assignment,
+  //    pageBuilder: () => SnmpActionsPage(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/v1-v2',
+  //    name: 'V1/V2',
+  //    icon: Icons.person_add,
+  //    pageBuilder: () => SnmpVersion12Page(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/v3',
+  //    name: 'V3',
+  //    icon: Icons.add_moderator,
+  //    pageBuilder: () => SnmpVersion3Page(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/traps',
+  //    name: 'Traps',
+  //    icon: Icons.notification_add,
+  //    pageBuilder: () => SnmpTrapsPage(),
+  //  ),
+  //],
 );
 
 final networkRoute = RouteConfig(
   path: '/network',
-  name: 'NETWORK',
+  name: 'Network',
   icon: Icons.alarm,
   pageBuilder: () => NetworkOverviewPage(),
 

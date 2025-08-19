@@ -6,7 +6,7 @@ class NetworkOverviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      title: 'NETWORK',
+      title: 'Network',
       description: 'Configuration Overview',
       children: [
         Padding(
@@ -24,6 +24,7 @@ class NetworkOverviewPage extends StatelessWidget {
                     //NetworkActionsCard(),
                     //SizedBox(height: 16),
                     //NetworkStatusCard(),
+                    NetworkSettingsCard(),
                   ],
                 ),
               ),
@@ -36,7 +37,6 @@ class NetworkOverviewPage extends StatelessWidget {
                     //SizedBox(height: 16),
                     //NetworkVersion3Card(),
                     //SizedBox(height: 16),
-                    NetworkSettingsCard(),
                   ],
                 ),
               ),

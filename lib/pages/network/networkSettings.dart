@@ -12,6 +12,8 @@ class NetworkSettingsCard extends StatefulWidget {
 }
 
 class _NetworkTrapCardState extends State<NetworkSettingsCard> {
+  final ipAddressController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -23,6 +25,13 @@ class _NetworkTrapCardState extends State<NetworkSettingsCard> {
       //context.read<NetworkApi>().getStatus();
       //context.read<NetworkApi>().getSysDetails();
     });
+  }
+
+  @override
+  void dispose() {
+    ipAddressController.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -119,6 +128,15 @@ class _NetworkTrapCardState extends State<NetworkSettingsCard> {
                         //ntpApi.writeProperty('ip_mode');
                         //ntpApi.readProperty('ip_address');
                       });
+                    },
+                  ),
+                  LabeledText(
+                    label: "Static IP",
+                    controller: TextEditingController(),
+                    myGap: 300,
+                    onSubmitted: (value) {
+                      //ntpApi.ntp['mac'] = value;
+                      //ntpApi.writeProperty('mac');
                     },
                   ),
                   LabeledText(
