@@ -78,7 +78,7 @@ class _MyTabbedPageState extends State<MyTabbedPage>
 void main() {
   final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
-  // final loginApi = LoginApi(baseUrl: "http://10.1.10.205:8080");
+  // final loginApi = LoginApi(baseUrl: "http://localhost:8080");
 
   runApp(
     MultiProvider(

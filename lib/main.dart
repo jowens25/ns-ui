@@ -15,11 +15,11 @@ void main() {
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final authApi = AuthApi(serverHost: "127.0.0.1", serverPort: "5000");
-  //final ntpApi = NtpApi(serverHost: "127.0.0.1", serverPort: "5000");
-  final snmpApi = SnmpApi(serverHost: "127.0.0.1", serverPort: "5000");
-  final userApi = UserApi(serverHost: "127.0.0.1", serverPort: "5000");
-  final networkApi = NetworkApi(serverHost: "127.0.0.1", serverPort: "5000");
+  final authApi = AuthApi(serverHost: "localhost", serverPort: "5000");
+  //final ntpApi =      NtpApi(serverHost: "localhost", serverPort: "5000");
+  final snmpApi = SnmpApi(serverHost: "localhost", serverPort: "5000");
+  final userApi = UserApi(serverHost: "localhost", serverPort: "5000");
+  final networkApi = NetworkApi(serverHost: "localhost", serverPort: "5000");
 
   runApp(
     MultiProvider(
