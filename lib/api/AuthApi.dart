@@ -8,9 +8,9 @@ import 'package:ntsc_ui/api/UserApi.dart';
 
 class AuthApi extends BaseApi {
   @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1/auth';
+  String get baseUrl => '$serverHost/api/v1/auth';
 
-  AuthApi({required super.serverHost, required super.serverPort}) {
+  AuthApi({required super.serverHost}) {
     isTokenValid();
     _startSessionTimer();
   }

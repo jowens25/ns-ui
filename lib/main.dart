@@ -9,17 +9,19 @@ import 'package:ntsc_ui/api/NtpApi.dart';
 
 import 'package:ntsc_ui/routes.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:web/web.dart' as web;
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final authApi = AuthApi(serverHost: "localhost", serverPort: "5000");
-  //final ntpApi =      NtpApi(serverHost: "localhost", serverPort: "5000");
-  final snmpApi = SnmpApi(serverHost: "localhost", serverPort: "5000");
-  final userApi = UserApi(serverHost: "localhost", serverPort: "5000");
-  final networkApi = NetworkApi(serverHost: "localhost", serverPort: "5000");
+  final host = web.window.location.origin;
+
+  final authApi = AuthApi(serverHost: host);
+  final snmpApi = SnmpApi(serverHost: host);
+  final userApi = UserApi(serverHost: host);
+  final networkApi = NetworkApi(serverHost: host);
 
   runApp(
     MultiProvider(

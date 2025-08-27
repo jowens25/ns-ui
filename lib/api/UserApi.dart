@@ -11,9 +11,9 @@ class UserApi extends BaseApi {
   List<User> get filteredUsers => _filteredUsers;
 
   @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1';
+  String get baseUrl => '$serverHost/api/v1';
 
-  UserApi({required super.serverHost, required super.serverPort});
+  UserApi({required super.serverHost});
 
   void searchUsers(String query) {
     if (query.isEmpty) {

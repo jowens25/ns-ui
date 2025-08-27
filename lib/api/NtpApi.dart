@@ -5,9 +5,9 @@ import 'BaseApi.dart';
 
 class NtpApi extends BaseApi {
   @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1/ntp';
+  String get baseUrl => '$serverHost/api/v1/ntp';
 
-  NtpApi({required super.serverHost, required super.serverPort});
+  NtpApi({required super.serverHost});
 
   Map<String, dynamic> ntp = {
     'version': '',

@@ -6,11 +6,10 @@ import 'AuthApi.dart';
 
 class BaseApi extends ChangeNotifier {
   final String serverHost;
-  final String serverPort;
 
-  String get baseUrl => 'http://$serverHost:$serverPort'; // base implementation
+  String get baseUrl => '$serverHost'; // base implementation
 
-  BaseApi({required this.serverHost, required this.serverPort});
+  BaseApi({required this.serverHost});
 
   Future<http.Response> getRequest(String endpoint) async {
     final response = await http

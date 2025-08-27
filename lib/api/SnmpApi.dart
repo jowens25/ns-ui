@@ -20,9 +20,9 @@ class SnmpApi extends BaseApi {
   SysDetails get sysDetails => _sysDetails;
 
   @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1/snmp';
+  String get baseUrl => '$serverHost/api/v1/snmp';
 
-  SnmpApi({required super.serverHost, required super.serverPort});
+  SnmpApi({required super.serverHost});
 
   Future<void> readSnmpInfo() async {
     final response = await getRequest("info");

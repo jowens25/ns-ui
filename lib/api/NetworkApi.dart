@@ -13,9 +13,9 @@ class NetworkApi extends BaseApi {
   Http get http => _http;
 
   @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1/network';
+  String get baseUrl => '$serverHost/api/v1/network';
 
-  NetworkApi({required super.serverHost, required super.serverPort});
+  NetworkApi({required super.serverHost});
 
   Future<void> readTelnetInfo() async {
     final response = await getRequest("telnet");
