@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ntsc_ui/api/NetworkApi.dart';
+import 'package:nct/api/NetworkApi.dart';
 import 'package:provider/provider.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/api/SnmpApi.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
-import 'package:ntsc_ui/api/NtpApi.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/SnmpApi.dart';
+import 'package:nct/api/UserApi.dart';
+import 'package:nct/api/NtpApi.dart';
+import 'package:nct/api/DeviceApi.dart';
 
-import 'package:ntsc_ui/routes.dart';
+import 'package:nct/routes.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:web/web.dart' as web;
 
@@ -16,10 +17,13 @@ void main() {
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final host = web.window.location.origin;
+  //final host = web.window.location.origin; // official
+  final host = "http://10.1.10.220:5000"; // development
 
   final authApi = AuthApi(serverHost: host);
   final snmpApi = SnmpApi(serverHost: host);
+  final deviceApi = DeviceApi(serverHost: host);
+
   final userApi = UserApi(serverHost: host);
   final networkApi = NetworkApi(serverHost: host);
 
@@ -27,7 +31,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => authApi),
-        //ChangeNotifierProvider(create: (_) => ntpApi),
+        ChangeNotifierProvider(create: (_) => deviceApi),
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),
         ChangeNotifierProvider(create: (_) => networkApi),
@@ -43,7 +47,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Novus UI',
+      title: 'Novus Configuration Tool',
       theme: ThemeData(
         colorScheme: ColorScheme(
           brightness: Brightness.light,

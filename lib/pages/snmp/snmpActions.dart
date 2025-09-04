@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/SnmpApi.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
+import 'package:nct/api/SnmpApi.dart';
+import 'package:nct/pages/basePage.dart';
 
 import 'package:provider/provider.dart';
 

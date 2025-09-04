@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/api/SnmpApi.dart';
+//import 'package:nct/api/LoginApi.dart';
 import 'package:provider/provider.dart';
+import 'package:nct/api/DeviceApi.dart';
 
-class SnmpVersion3Page extends StatelessWidget {
+class DeviceVersion12Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
       title: 'SNMP',
-      description: 'Snmp Version3 Card:',
+      description: 'Device Version12 Card:',
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -18,7 +19,7 @@ class SnmpVersion3Page extends StatelessWidget {
                 padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [SnmpVersion3Card()],
+                  children: [DeviceVersion12Card()],
                 ),
               ),
             ),
@@ -29,20 +30,19 @@ class SnmpVersion3Page extends StatelessWidget {
   }
 }
 
-class SnmpVersion3Card extends StatefulWidget {
+class DeviceVersion12Card extends StatefulWidget {
   @override
-  State<SnmpVersion3Card> createState() => _SnmpVersion3CardState();
+  State<DeviceVersion12Card> createState() => _DeviceVersion12CardState();
 }
 
-class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
+class _DeviceVersion12CardState extends State<DeviceVersion12Card> {
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final snmpApi = context.read<SnmpApi>();
-      //snmpApi.getAllSnmpV3Users();
-      snmpApi.readV3Users();
+      final deviceApi = context.read<DeviceApi>();
+      deviceApi.readV1v2cUsers();
     });
   }
 
@@ -65,12 +65,12 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   children: [
                     Expanded(
                       child: Text(
-                        'SNMP V3 Users',
+                        'SNMP V1/V2c Users',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                     IconButton(
-                      onPressed: () => addSnmpV3UserDialog(),
+                      onPressed: () => addDeviceV1V2UserDialog(),
                       icon: const Icon(Icons.add),
                       tooltip: 'Add SNMP Configuration',
                     ),
@@ -82,16 +82,16 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
           Container(
             height: 200,
             padding: EdgeInsets.all(16),
-            child: buildSnmpV3UsersList(),
+            child: buildDeviceV1V2UsersList(),
           ),
         ],
       ),
     );
   }
 
-  Widget buildSnmpV3UsersList() {
-    return Consumer<SnmpApi>(
-      builder: (context, snmpApi, _) {
+  Widget buildDeviceV1V2UsersList() {
+    return Consumer<DeviceApi>(
+      builder: (context, deviceApi, _) {
         return SingleChildScrollView(
           child: Card(
             child: Table(
@@ -99,10 +99,10 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
               children: [
                 TableRow(
                   children:
-                      V3User.getHeader()
+                      V1v2cUser.getHeader()
                           .map(
                             (name) => Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(4.0),
                               child: Text(
                                 name,
                                 style: const TextStyle(
@@ -114,46 +114,54 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                           .toList(),
                 ),
                 // Data rows
-                ...snmpApi.v3Users.map((snmpUser) {
+                ...deviceApi.v1v2cUsers.map((deviceUser) {
                   return TableRow(
                     children: [
                       // Version
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(snmpUser.userName),
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(deviceUser.version),
                       ),
                       // Group Name
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(snmpUser.authType),
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(deviceUser.groupName),
                       ),
                       // Community
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(snmpUser.privType),
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(deviceUser.community),
                       ),
                       // IP Version
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(snmpUser.groupName),
-                      ),
-
+                      // Padding(
+                      //   padding: const EdgeInsets.all(2.0),
+                      //   child: Text(deviceUser.ipVersion),
+                      // ),
                       // IP Address v4
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(deviceUser.source),
+                      ),
+                      // IP Address v6
+                      // Padding(
+                      //   padding: const EdgeInsets.all(2.0),
+                      //   child: Text(deviceUser.ip6Address),
+                      // ),
+                      // Edit button
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
 
                         child: SizedBox(
                           height: 36,
-
                           child: PopupMenuButton<String>(
                             icon: Icon(Icons.settings, size: 18),
 
                             onSelected: (value) {
                               if (value == 'delete') {
-                                _showDeleteUserDialog(snmpUser);
+                                _showDeleteUserDialog(deviceUser);
                               }
                               if (value == 'edit') {
-                                _showEditUserDialog(snmpUser);
+                                _showEditUserDialog(deviceUser);
                               }
                             },
                             itemBuilder:
@@ -200,14 +208,14 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     );
   }
 
-  void addSnmpV3UserDialog() {
-    final userNameController = TextEditingController();
-    final authPassphraseController = TextEditingController();
-    final privPassphraseController = TextEditingController();
+  void addDeviceV1V2UserDialog() {
+    final ipv4AddressController = TextEditingController();
+    //final ipv6AddressController = TextEditingController();
+    final communityController = TextEditingController();
 
-    String selectedAuthType = "MD5";
-    String selectedPrivType = "AES";
-    String selectedGroup = "roprivgroup";
+    // String selectedIpVersion = "ipv4";
+    String selectedDeviceVersion = "v1";
+    String selectedGroup = "ronoauthgroup";
 
     showDialog(
       context: context,
@@ -219,60 +227,60 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  //DropdownButtonFormField<String>(
+                  //  value: selectedIpVersion,
+                  //  decoration: InputDecoration(labelText: 'IP Version'),
+                  //  items: [
+                  //    DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
+                  //    DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
+                  //  ],
+                  //  onChanged: (String? newValue) {
+                  //    setDialogState(() {
+                  //      selectedIpVersion = newValue!;
+                  //    });
+                  //  },
+                  //),
                   TextField(
-                    controller: userNameController,
-                    decoration: InputDecoration(labelText: 'User Name'),
+                    controller: ipv4AddressController,
+                    decoration: InputDecoration(labelText: 'IP Address'),
                   ),
-                  DropdownButtonFormField<String>(
-                    value: selectedAuthType,
-                    decoration: InputDecoration(labelText: 'Auth Type'),
-                    items: [
-                      DropdownMenuItem(value: "MD5", child: Text("MD5")),
-                      DropdownMenuItem(value: "SHA", child: Text("SHA")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setDialogState(() {
-                        selectedAuthType = newValue!;
-                      });
-                    },
-                  ),
+                  //TextField(
+                  //  controller: ipv6AddressController,
+                  //  decoration: InputDecoration(labelText: 'IPv6 Address'),
+                  //),
                   TextField(
-                    controller: authPassphraseController,
-                    decoration: InputDecoration(labelText: 'Auth Passphrase'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedPrivType,
-                    decoration: InputDecoration(labelText: 'Priv Type'),
-                    items: [
-                      DropdownMenuItem(value: "AES", child: Text("AES")),
-                      DropdownMenuItem(value: "DES", child: Text("DES")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setDialogState(() {
-                        selectedPrivType = newValue!;
-                      });
-                    },
-                  ),
-                  TextField(
-                    controller: privPassphraseController,
-                    decoration: InputDecoration(labelText: 'Priv Passphrase'),
+                    controller: communityController,
+                    decoration: InputDecoration(labelText: 'Community'),
                   ),
                   DropdownButtonFormField<String>(
                     value: selectedGroup,
                     decoration: InputDecoration(labelText: 'Permissions'),
                     items: [
                       DropdownMenuItem(
-                        value: "roprivgroup",
+                        value: "ronoauthgroup",
                         child: Text("Read Only"),
                       ),
                       DropdownMenuItem(
-                        value: "rwprivgroup",
+                        value: "rwnoauthgroup",
                         child: Text("Read/Write"),
                       ),
                     ],
                     onChanged: (String? newValue) {
                       setDialogState(() {
                         selectedGroup = newValue!;
+                      });
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: selectedDeviceVersion,
+                    decoration: InputDecoration(labelText: 'Version'),
+                    items: [
+                      DropdownMenuItem(value: "v1", child: Text("v1")),
+                      DropdownMenuItem(value: "v2c", child: Text("v2c")),
+                    ],
+                    onChanged: (String? newValue) {
+                      setDialogState(() {
+                        selectedDeviceVersion = newValue!;
                       });
                     },
                   ),
@@ -285,18 +293,17 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final snmpApi = context.read<SnmpApi>();
-                    V3User snmpV3User = V3User.fromJson({
+                    final deviceApi = context.read<DeviceApi>();
+                    V1v2cUser deviceV1V2User = V1v2cUser.fromJson({
                       'ID': 0,
-                      'version': 'usm',
-                      'user_name': userNameController.text,
-                      'auth_type': selectedAuthType,
-                      'auth_passphrase': authPassphraseController.text,
-                      'priv_type': selectedPrivType,
-                      'priv_passphrase': privPassphraseController.text,
+                      'version': selectedDeviceVersion,
                       'group_name': selectedGroup,
+                      'community': communityController.text,
+                      //'source': selectedIpVersion,
+                      'source': ipv4AddressController.text,
+                      //'ip6_address': ipv6AddressController.text,
                     });
-                    snmpApi.writeV3User(snmpV3User);
+                    deviceApi.writeV1v2cUser(deviceV1V2User);
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
@@ -313,15 +320,15 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     );
   }
 
-  void _showDeleteUserDialog(V3User user) {
+  void _showDeleteUserDialog(V1v2cUser user) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<SnmpApi>(
-          builder: (context, snmpApi, _) {
+        return Consumer<DeviceApi>(
+          builder: (context, deviceApi, _) {
             return AlertDialog(
               title: Text('Delete User'),
-              content: Text('Delete ${user.userName}?'),
+              content: Text('Delete ${user.community}?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -329,8 +336,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    //await snmpApi.deleteV3User(user);
-                    await snmpApi.deleteV3User(user);
+                    await deviceApi.deleteV1v2cUser(user);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
@@ -346,83 +352,83 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     );
   }
 
-  void _showEditUserDialog(V3User user) {
-    final userNameController = TextEditingController();
-    final authPassphraseController = TextEditingController();
-    final privPassphraseController = TextEditingController();
+  void _showEditUserDialog(V1v2cUser user) {
+    final ipv4AddressController = TextEditingController();
+    //final ipv6AddressController = TextEditingController();
+    final communityController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<SnmpApi>(
-          builder: (context, snmpApi, _) {
+        return Consumer<DeviceApi>(
+          builder: (context, deviceApi, _) {
             //
-            userNameController.text = user.userName;
-            String selectedAuthType = user.authType;
-            authPassphraseController.text = user.authPassphase;
-            String selectedPrivType = user.privType;
-            privPassphraseController.text = user.privPassphase;
+            ipv4AddressController.text = user.source;
+            //ipv6AddressController.text = user.ip6Address;
+            communityController.text = user.community;
+            //String selectedIpVersion = user.ipVersion;
             String selectedGroup = user.groupName;
+            String selectedDeviceVersion = user.version;
 
             return AlertDialog(
               title: Text('Edit SNMP User'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  //DropdownButtonFormField<String>(
+                  //  value: selectedIpVersion,
+                  //  decoration: InputDecoration(labelText: 'IP Version'),
+                  //  items: [
+                  //    DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
+                  //    DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
+                  //  ],
+                  //  onChanged: (String? newValue) {
+                  //    setState(() {
+                  //      selectedIpVersion = newValue!;
+                  //    });
+                  //  },
+                  //),
                   TextField(
-                    controller: userNameController,
-                    decoration: InputDecoration(labelText: 'User Name'),
+                    controller: ipv4AddressController,
+                    decoration: InputDecoration(labelText: 'IP Address'),
                   ),
-                  DropdownButtonFormField<String>(
-                    value: selectedAuthType,
-                    decoration: InputDecoration(labelText: 'Auth Type'),
-                    items: [
-                      DropdownMenuItem(value: "MD5", child: Text("MD5")),
-                      DropdownMenuItem(value: "SHA", child: Text("SHA")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedAuthType = newValue!;
-                      });
-                    },
-                  ),
+                  //TextField(
+                  //  controller: ipv6AddressController,
+                  //  decoration: InputDecoration(labelText: 'IPv6 Address'),
+                  //),
                   TextField(
-                    controller: authPassphraseController,
-                    decoration: InputDecoration(labelText: 'Auth Passphrase'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedPrivType,
-                    decoration: InputDecoration(labelText: 'Priv Type'),
-                    items: [
-                      DropdownMenuItem(value: "AES", child: Text("AES")),
-                      DropdownMenuItem(value: "DES", child: Text("DES")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedPrivType = newValue!;
-                      });
-                    },
-                  ),
-                  TextField(
-                    controller: privPassphraseController,
-                    decoration: InputDecoration(labelText: 'Priv Passphrase'),
+                    controller: communityController,
+                    decoration: InputDecoration(labelText: 'Community'),
                   ),
                   DropdownButtonFormField<String>(
                     value: selectedGroup,
                     decoration: InputDecoration(labelText: 'Permissions'),
                     items: [
                       DropdownMenuItem(
-                        value: "roprivgroup",
+                        value: "ronoauthgroup",
                         child: Text("Read Only"),
                       ),
                       DropdownMenuItem(
-                        value: "rwprivgroup",
+                        value: "rwnoauthgroup",
                         child: Text("Read/Write"),
                       ),
                     ],
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedGroup = newValue!;
+                      });
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: selectedDeviceVersion,
+                    decoration: InputDecoration(labelText: 'Version'),
+                    items: [
+                      DropdownMenuItem(value: "v1", child: Text("v1")),
+                      DropdownMenuItem(value: "v2c", child: Text("v2c")),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedDeviceVersion = newValue!;
                       });
                     },
                   ),
@@ -435,30 +441,23 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final snmpApi = context.read<SnmpApi>();
+                    final deviceApi = context.read<DeviceApi>();
 
-                    //user.version = selectedSnmpVersion;
-                    //user.groupName = selectedGroup;
-                    //user.community = communityController.text;
+                    user.version = selectedDeviceVersion;
+                    user.groupName = selectedGroup;
+                    user.community = communityController.text;
                     //user.ipVersion = selectedIpVersion;
-                    //user.ip4Address = ipv4AddressController.text;
+                    user.source = ipv4AddressController.text;
                     //user.ip6Address = ipv6AddressController.text;
 
-                    user.userName = userNameController.text;
-                    user.authType = selectedAuthType;
-                    user.authPassphase = authPassphraseController.text;
-                    user.privType = selectedPrivType;
-                    user.privPassphase = privPassphraseController.text;
-                    user.groupName = selectedGroup;
+                    deviceApi.editV1v2cUser(user);
 
-                    snmpApi.editV3User(user);
-                    //snmpApi.readV3Users();
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('SNMP User added')));
                   },
-                  child: Text('Submit Edits'),
+                  child: Text('Add'),
                 ),
               ],
             );

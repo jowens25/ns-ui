@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:nct/api/DeviceApi.dart';
 import 'package:nct/pages/basePage.dart';
 
-class SnmpActionsCard extends StatelessWidget {
-  const SnmpActionsCard({super.key});
+import 'package:provider/provider.dart';
+
+class DeviceActionsCard extends StatelessWidget {
+  const DeviceActionsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +17,19 @@ class SnmpActionsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'SNMP ACTIONS Card: ',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text('Flash', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () => {},
-                child: Text('RESTORE DEFAULT SNMP CONFIGURATION'),
+                onPressed:
+                    () => {context.read<DeviceApi>().resetDeviceConfig()},
+                child: Text('Save current settings'),
+              ),
+              SizedBox(height: 8),
+
+              ElevatedButton(
+                onPressed:
+                    () => {context.read<DeviceApi>().resetDeviceConfig()},
+                child: Text('Restore default settings'),
               ),
             ],
           ),
@@ -31,7 +39,7 @@ class SnmpActionsCard extends StatelessWidget {
   }
 }
 
-class SnmpActionsPage extends StatelessWidget {
+class DeviceActionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
@@ -47,7 +55,7 @@ class SnmpActionsPage extends StatelessWidget {
                 padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [SnmpActionsCard()],
+                  children: [DeviceActionsCard()],
                 ),
               ),
             ),

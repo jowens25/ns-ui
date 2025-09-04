@@ -1,39 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/pages/network/networkOverviewPage.dart';
-import 'package:ntsc_ui/pages/network/networkSettings.dart';
-import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
-import 'package:ntsc_ui/pages/ntp/ntpNetwork.dart';
-import 'package:ntsc_ui/pages/ntp/ntpOverviewPage.dart';
-import 'package:ntsc_ui/pages/ntp/ntpServerConfig.dart';
-import 'package:ntsc_ui/pages/ntp/ntpStatus.dart';
-import 'package:ntsc_ui/pages/ntp/ntpUtcConfig.dart';
-import 'package:ntsc_ui/pages/ntp/ntpVersion.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/pages/device/deviceOverviewPage.dart';
+import 'package:nct/pages/network/networkOverviewPage.dart';
+import 'package:nct/pages/network/networkSettings.dart';
+import 'package:nct/pages/snmp/snmpActions.dart';
+import 'package:nct/pages/ntp/ntpNetwork.dart';
+import 'package:nct/pages/ntp/ntpOverviewPage.dart';
+import 'package:nct/pages/ntp/ntpServerConfig.dart';
+import 'package:nct/pages/ntp/ntpStatus.dart';
+import 'package:nct/pages/ntp/ntpUtcConfig.dart';
+import 'package:nct/pages/ntp/ntpVersion.dart';
 
-import 'package:ntsc_ui/pages/snmp/snmpTraps.dart';
-import 'package:ntsc_ui/pages/snmp/snmpVersion12.dart';
-import 'package:ntsc_ui/pages/snmp/snmpVersion3.dart';
-//import 'package:ntsc_ui/pages/unusedPages/analyticsPage.dart';
-import 'package:ntsc_ui/pages/errorPage.dart';
-import 'package:ntsc_ui/explorerLayout.dart';
-import 'package:ntsc_ui/pages/generalSettingsPage.dart';
-import 'package:ntsc_ui/pages/loginPage.dart';
-import 'package:ntsc_ui/pages/logoutPage.dart';
-//import 'package:ntsc_ui/pages/unusedPages/metricsPage.dart';
-import 'package:ntsc_ui/models.dart';
-import 'package:ntsc_ui/pages/projects/projectDetailsPage.dart';
-import 'package:ntsc_ui/pages/projects/projectFilesPage.dart';
-import 'package:ntsc_ui/pages/projects/projectsOverviewPage.dart';
-import 'package:ntsc_ui/pages/dashboard/dashboardPage.dart';
-import 'package:ntsc_ui/pages/securitySettingsPage.dart';
-import 'package:ntsc_ui/pages/settingsOverviewPage.dart';
-import 'package:ntsc_ui/pages/snmp/snmpOverviewPage.dart';
-import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
-import 'package:ntsc_ui/pages/supportPage.dart';
-import 'package:ntsc_ui/pages/users/usersActions.dart';
-import 'package:ntsc_ui/pages/users/usersManagement.dart';
-import 'package:ntsc_ui/pages/users/usersOverviewPage.dart';
+import 'package:nct/pages/snmp/snmpTraps.dart';
+import 'package:nct/pages/snmp/snmpVersion12.dart';
+import 'package:nct/pages/snmp/snmpVersion3.dart';
+//import 'package:nct/pages/unusedPages/analyticsPage.dart';
+import 'package:nct/pages/errorPage.dart';
+import 'package:nct/explorerLayout.dart';
+import 'package:nct/pages/generalSettingsPage.dart';
+import 'package:nct/pages/loginPage.dart';
+import 'package:nct/pages/logoutPage.dart';
+//import 'package:nct/pages/unusedPages/metricsPage.dart';
+import 'package:nct/models.dart';
+import 'package:nct/pages/projects/projectDetailsPage.dart';
+import 'package:nct/pages/projects/projectFilesPage.dart';
+import 'package:nct/pages/projects/projectsOverviewPage.dart';
+import 'package:nct/pages/dashboard/dashboardPage.dart';
+import 'package:nct/pages/securitySettingsPage.dart';
+import 'package:nct/pages/settingsOverviewPage.dart';
+import 'package:nct/pages/snmp/snmpOverviewPage.dart';
+import 'package:nct/pages/snmp/snmpStatus.dart';
+import 'package:nct/pages/supportPage.dart';
+import 'package:nct/pages/users/usersActions.dart';
+import 'package:nct/pages/users/usersManagement.dart';
+import 'package:nct/pages/users/usersOverviewPage.dart';
 
 import 'package:provider/provider.dart';
 
@@ -148,9 +149,31 @@ final settingsRoute = RouteConfig(
 // ================================================================
 final usersRoute = RouteConfig(
   path: '/users',
-  name: 'User Management',
+  name: 'Users',
   icon: Icons.people,
   pageBuilder: () => UsersOverviewPage(),
+  isAllowed: true,
+  //children: [
+  //  RouteConfig(
+  //    path: '/actions',
+  //    name: 'Actions',
+  //    icon: Icons.assessment,
+  //    pageBuilder: () => UsersActionsPage(),
+  //  ),
+  //  RouteConfig(
+  //    path: '/management',
+  //    name: 'Management',
+  //    icon: Icons.manage_accounts,
+  //    pageBuilder: () => UsersManagementPage(),
+  //  ),
+  //],
+);
+
+final deviceRoute = RouteConfig(
+  path: '/device',
+  name: 'Device ',
+  icon: Icons.dns,
+  pageBuilder: () => DeviceOverviewPage(),
   isAllowed: true,
   //children: [
   //  RouteConfig(
@@ -396,6 +419,7 @@ class AppRoutes {
     snmpRoute,
     //ntpRoute,
     //ptpOcRoute,
+    deviceRoute,
     networkRoute,
     usersRoute,
 

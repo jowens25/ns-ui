@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/ntp/ntpServerConfig.dart';
-import 'package:ntsc_ui/pages/ntp/ntpStatus.dart';
-import 'package:ntsc_ui/pages/ntp/ntpUtcConfig.dart';
-import 'package:ntsc_ui/pages/ntp/ntpVersion.dart';
-import 'package:ntsc_ui/pages/ntp/ntpNetwork.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/pages/ntp/ntpServerConfig.dart';
+import 'package:nct/pages/ntp/ntpStatus.dart';
+import 'package:nct/pages/ntp/ntpUtcConfig.dart';
+import 'package:nct/pages/ntp/ntpVersion.dart';
+import 'package:nct/pages/ntp/ntpNetwork.dart';
 
 class NtpOverviewPage extends StatelessWidget {
   @override

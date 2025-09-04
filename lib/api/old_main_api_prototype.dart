@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/old_prototype/LoginWidget.dart';
+import 'package:nct/old_prototype/LoginWidget.dart';
 import 'package:provider/provider.dart';
-import 'package:ntsc_ui/api/NtpServerApi.dart';
-import 'package:ntsc_ui/old_prototype/NtpServerWidget.dart';
-import 'package:ntsc_ui/api/PtpOcApi.dart';
-import 'package:ntsc_ui/old_prototype/PtpOcWidget.dart';
+import 'package:nct/api/NtpServerApi.dart';
+import 'package:nct/old_prototype/NtpServerWidget.dart';
+import 'package:nct/api/PtpOcApi.dart';
+import 'package:nct/old_prototype/PtpOcWidget.dart';
 
 class MyTabbedPage extends StatefulWidget {
   @override

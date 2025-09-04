@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
-import 'package:ntsc_ui/api/NetworkApi.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/custom/custom.dart';
+import 'package:nct/api/NetworkApi.dart';
 import 'package:provider/provider.dart';
 
 class NetworkSettingsCard extends StatefulWidget {
@@ -176,30 +176,30 @@ class _NetworkTrapCardState extends State<NetworkSettingsCard> {
   }
 }
 
-class NetworkSettingsPage extends StatelessWidget {
-  const NetworkSettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BasePage(
-      title: 'NETWORK',
-      description: 'Ethernet Settings Config',
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [NetworkSettingsCard()],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
+//class NetworkSettingsPage extends StatelessWidget {
+//  const NetworkSettingsPage({super.key});
+//
+//  @override
+//  Widget build(BuildContext context) {
+//    return BasePage(
+//      title: 'NETWORK',
+//      description: 'Ethernet Settings Config',
+//      children: [
+//        Row(
+//          crossAxisAlignment: CrossAxisAlignment.start,
+//          children: [
+//            Expanded(
+//              child: Padding(
+//                padding: EdgeInsets.all(16),
+//                child: Column(
+//                  crossAxisAlignment: CrossAxisAlignment.start,
+//                  children: [NetworkSettingsCard()],
+//                ),
+//              ),
+//            ),
+//          ],
+//        ),
+//      ],
+//    );
+//  }
+//}

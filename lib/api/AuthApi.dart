@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:ntsc_ui/api/BaseApi.dart';
+import 'package:nct/api/BaseApi.dart';
 import 'package:web/web.dart';
 import 'dart:async';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
+import 'package:nct/api/UserApi.dart';
 
 class AuthApi extends BaseApi {
   @override
@@ -46,7 +46,7 @@ class AuthApi extends BaseApi {
     final response = await postRequest("login", user.toJson());
     final decoded = json.decode(response.body);
     //_loggedIn = true;
-    //print('decoded: $decoded');
+    print('decoded: $decoded');
     setToken(decoded['token']);
     isTokenValid();
     notifyListeners();

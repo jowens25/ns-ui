@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
-import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/api/UserApi.dart';
+import 'package:nct/custom/custom.dart';
 import 'package:provider/provider.dart';
 
 class UsersActionsPage extends StatelessWidget {

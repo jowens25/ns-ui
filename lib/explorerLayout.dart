@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
-import 'package:ntsc_ui/models.dart';
-import 'package:ntsc_ui/routes.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/UserApi.dart';
+import 'package:nct/models.dart';
+import 'package:nct/routes.dart';
 import 'package:provider/provider.dart';
 
 // Main Layout with Explorer

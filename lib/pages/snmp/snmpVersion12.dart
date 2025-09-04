@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-//import 'package:ntsc_ui/api/LoginApi.dart';
+import 'package:nct/pages/basePage.dart';
+//import 'package:nct/api/LoginApi.dart';
 import 'package:provider/provider.dart';
-import 'package:ntsc_ui/api/SnmpApi.dart';
+import 'package:nct/api/SnmpApi.dart';
 
 class SnmpVersion12Page extends StatelessWidget {
   @override

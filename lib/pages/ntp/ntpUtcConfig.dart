@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/custom/custom.dart';
 import 'package:provider/provider.dart';
-import 'package:ntsc_ui/api/NtpApi.dart';
+import 'package:nct/api/NtpApi.dart';
 
 class NtpUtcConfigCard extends StatefulWidget {
   @override

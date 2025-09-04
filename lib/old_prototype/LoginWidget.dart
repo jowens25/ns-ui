@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/UserApi.dart';
 import 'package:provider/provider.dart';
 
 class LoginWidget extends StatefulWidget {

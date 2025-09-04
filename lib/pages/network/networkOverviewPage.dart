@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/network/networkSettings.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/pages/network/networkSettings.dart';
 
 class NetworkOverviewPage extends StatelessWidget {
   @override

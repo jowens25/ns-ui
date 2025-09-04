@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
+import 'package:nct/pages/basePage.dart';
 
 class ProjectFilesPage extends StatelessWidget {
   final String projectId;

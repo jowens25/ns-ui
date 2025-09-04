@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:ntsc_ui/api/AuthApi.dart';
+import 'package:nct/api/AuthApi.dart';
 import 'BaseApi.dart';
 
 class UserApi extends BaseApi {

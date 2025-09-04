@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/snmp/snmpActions.dart';
-import 'package:ntsc_ui/pages/snmp/snmpStatus.dart';
-import 'package:ntsc_ui/pages/snmp/snmpTraps.dart';
-import 'package:ntsc_ui/pages/snmp/snmpVersion12.dart';
-import 'package:ntsc_ui/pages/snmp/snmpVersion3.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/pages/snmp/snmpActions.dart';
+import 'package:nct/pages/snmp/snmpStatus.dart';
+import 'package:nct/pages/snmp/snmpTraps.dart';
+import 'package:nct/pages/snmp/snmpVersion12.dart';
+import 'package:nct/pages/snmp/snmpVersion3.dart';
 
 class SnmpOverviewPage extends StatelessWidget {
   @override

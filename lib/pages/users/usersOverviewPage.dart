@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/users/usersActions.dart';
-import 'package:ntsc_ui/pages/users/usersManagement.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/pages/users/usersActions.dart';
+import 'package:nct/pages/users/usersManagement.dart';
 
 class UsersOverviewPage extends StatelessWidget {
   @override
