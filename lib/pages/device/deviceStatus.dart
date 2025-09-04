@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nct/api/DeviceApi.dart';
-import 'package:nct/pages/basePage.dart';
 import 'package:provider/provider.dart';
 
 //class DeviceStatusPage extends StatefulWidget {

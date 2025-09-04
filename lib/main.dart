@@ -5,12 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:nct/api/AuthApi.dart';
 import 'package:nct/api/SnmpApi.dart';
 import 'package:nct/api/UserApi.dart';
-import 'package:nct/api/NtpApi.dart';
+
 import 'package:nct/api/DeviceApi.dart';
 
 import 'package:nct/routes.dart';
 import 'package:network_info_plus/network_info_plus.dart';
-import 'package:web/web.dart' as web;
+//import 'package:web/web.dart' as web;
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");

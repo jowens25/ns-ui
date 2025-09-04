@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nct/pages/basePage.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:nct/api/NetworkApi.dart';
 import 'package:provider/provider.dart';
