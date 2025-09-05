@@ -29,11 +29,13 @@ class NetworkOverviewPage extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 750,
+                width: 350,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    //NetworkVersion12Card(),
+                    NetworkAccessCard(),
+
+                    //NetworkAccessCard(),
                     //SizedBox(height: 16),
                     //NetworkVersion3Card(),
                     //SizedBox(height: 16),

@@ -18,7 +18,7 @@ void main() {
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
   //final host = web.window.location.origin; // official
-  final host = "http://10.1.10.220:5000"; // development
+  final host = "http://10.1.10.205:5000"; // development
 
   final authApi = AuthApi(serverHost: host);
   final snmpApi = SnmpApi(serverHost: host);

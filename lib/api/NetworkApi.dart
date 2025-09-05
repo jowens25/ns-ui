@@ -12,6 +12,9 @@ class NetworkApi extends BaseApi {
   Http _http = Http(Action: "Action", Status: "Status");
   Http get http => _http;
 
+  List<AllowedNode> _allowedNodes = [];
+  List<AllowedNode> get allowedNodes => _allowedNodes;
+
   @override
   String get baseUrl => '$serverHost/api/v1/network';
 
@@ -65,7 +68,31 @@ class NetworkApi extends BaseApi {
     notifyListeners();
   }
 
-  resetNetworkConfig() {}
+  Future<void> readNetworkAccess() async {
+    final response = await getRequest("access");
+    final decoded = jsonDecode(response.body);
+    _allowedNodes =
+        (decoded['allowed_nodes'] as List)
+            .map((userJson) => AllowedNode.fromJson(userJson))
+            .toList();
+
+    notifyListeners();
+  }
+
+  Future<void> writeNetworkAccess(AllowedNode node) async {
+    final response = await postRequest("access", node.toJson());
+    final decoded = json.decode(response.body);
+    readNetworkAccess();
+    notifyListeners();
+  }
+
+  Future<void> deleteNetworkAccess(AllowedNode node) async {
+    final response = await deleteRequest("access/${node.id}", node.toJson());
+    final decoded = json.decode(response.body);
+    _allowedNodes.remove(node);
+    readNetworkAccess();
+    notifyListeners();
+  }
 }
 
 class Telnet {
@@ -110,5 +137,24 @@ class Http {
 
   Map<String, dynamic> toJson() {
     return {'action': Action, 'status': Status};
+  }
+}
+
+class AllowedNode {
+  int? id;
+  String address;
+
+  AllowedNode({this.id, required this.address});
+
+  factory AllowedNode.fromJson(Map<String, dynamic> json) {
+    return AllowedNode(id: json['ID'], address: json['address'] ?? '');
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'ID': id, 'address': address};
+  }
+
+  static List<String> getHeader() {
+    return ['Address', 'Remove'];
   }
 }
