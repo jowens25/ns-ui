@@ -72,39 +72,6 @@ class _NetworkCardState extends State<NetworkSettingsCard> {
 
                   LabeledSwitch(
                     myGap: 300,
-                    label: "Telnet",
-                    value: networkApi.telnet.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        networkApi.telnet.Action = value ? "start" : "stop";
-                        networkApi.editTelnetInfo(networkApi.telnet);
-                      });
-                    },
-                  ),
-                  LabeledSwitch(
-                    myGap: 300,
-                    label: "SSH + SFTP",
-                    value: networkApi.ssh.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        networkApi.ssh.Action = value ? "start" : "stop";
-                        networkApi.editSshInfo(networkApi.ssh);
-                      });
-                    },
-                  ),
-                  LabeledSwitch(
-                    myGap: 300,
-                    label: "HTTP",
-                    value: networkApi.http.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        networkApi.http.Action = value ? "start" : "stop";
-                        networkApi.editHttpInfo(networkApi.http);
-                      });
-                    },
-                  ),
-                  LabeledSwitch(
-                    myGap: 300,
                     label: "Enable DHCPv4",
                     value: true, //details.Status == "active",
                     onChanged: (bool value) {
@@ -199,6 +166,96 @@ class _NetworkCardState extends State<NetworkSettingsCard> {
                         'address': value,
                       });
                       networkApi.deleteNetworkAccess(node);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class NetworkProtcolCard extends StatefulWidget {
+  const NetworkProtcolCard({super.key});
+
+  @override
+  State<NetworkProtcolCard> createState() => _NetworkProtcolCard();
+}
+
+class _NetworkProtcolCard extends State<NetworkProtcolCard> {
+  @override
+  void initState() {
+    super.initState();
+    //context.read<NetworkApi>().readFtpInfo();
+    context.read<NetworkApi>().readTelnetInfo();
+    context.read<NetworkApi>().readSshInfo();
+    context.read<NetworkApi>().readHttpInfo();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      //context.read<NetworkApi>().getStatus();
+      //context.read<NetworkApi>().getSysDetails();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NetworkApi>(
+      builder: (context, networkApi, _) {
+        return Card(
+          child: SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top row: title and add button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Protocol:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  LabeledSwitch(
+                    myGap: 250,
+                    label: "Telnet",
+                    value: networkApi.telnet.Status == "active",
+                    onChanged: (bool value) {
+                      setState(() {
+                        networkApi.telnet.Action = value ? "start" : "stop";
+                        networkApi.editTelnetInfo(networkApi.telnet);
+                      });
+                    },
+                  ),
+                  LabeledSwitch(
+                    myGap: 250,
+                    label: "SSH + SFTP",
+                    value: networkApi.ssh.Status == "active",
+                    onChanged: (bool value) {
+                      setState(() {
+                        networkApi.ssh.Action = value ? "start" : "stop";
+                        networkApi.editSshInfo(networkApi.ssh);
+                      });
+                    },
+                  ),
+                  LabeledSwitch(
+                    myGap: 250,
+                    label: "HTTP",
+                    value: networkApi.http.Status == "active",
+                    onChanged: (bool value) {
+                      setState(() {
+                        networkApi.http.Action = value ? "start" : "stop";
+                        networkApi.editHttpInfo(networkApi.http);
+                      });
                     },
                   ),
                 ],

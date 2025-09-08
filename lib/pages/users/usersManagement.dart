@@ -120,6 +120,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
           itemCount: userApi.filteredUsers.length,
           itemBuilder: (context, index) {
             final user = userApi.filteredUsers[index];
+            print(user.id);
             return Card(
               margin: EdgeInsets.only(bottom: 8),
               child: ListTile(
@@ -275,7 +276,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text("User Deleted??")));
+                    ).showSnackBar(SnackBar(content: Text(userApi.response)));
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),

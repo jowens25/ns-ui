@@ -33,6 +33,7 @@ class NetworkOverviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    NetworkProtcolCard(),
                     NetworkAccessCard(),
 
                     //NetworkAccessCard(),

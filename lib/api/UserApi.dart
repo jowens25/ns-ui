@@ -10,6 +10,9 @@ class UserApi extends BaseApi {
   List<User> _filteredUsers = [];
   List<User> get filteredUsers => _filteredUsers;
 
+  String _response = "response";
+  String get response => _response;
+
   @override
   String get baseUrl => '$serverHost/api/v1';
 
@@ -52,6 +55,7 @@ class UserApi extends BaseApi {
   Future<void> readUsers() async {
     final response = await getRequest("users");
     final decoded = jsonDecode(response.body);
+    print(decoded);
     _users =
         (decoded['users'] as List)
             .map((userJson) => User.fromJson(userJson))
@@ -72,6 +76,7 @@ class UserApi extends BaseApi {
   Future<void> deleteUser(User user) async {
     final response = await deleteRequest("users/${user.id}", user.toJson());
     final decoded = json.decode(response.body);
+    _response = decoded["error"];
     //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
     print(decoded);
     readUsers();
@@ -108,7 +113,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
+      id: json['ID'],
       role: json['role'] ?? '',
       name: json['username'] ?? json['name'] ?? '',
       email: json['email'] ?? '',
@@ -118,7 +123,7 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'ID': id,
       'role': role,
       'username': name,
       'email': email,
