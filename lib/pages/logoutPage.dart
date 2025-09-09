@@ -75,28 +75,28 @@ class LogoutPageState extends State<LogoutPage> {
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Recent Activity',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '12 updates',
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                //SizedBox(width: 16),
+                //Expanded(
+                //  child: Card(
+                //    child: Padding(
+                //      padding: EdgeInsets.all(16),
+                //      child: Column(
+                //        crossAxisAlignment: CrossAxisAlignment.start,
+                //        children: [
+                //          Text(
+                //            'Recent Activity',
+                //            style: TextStyle(fontWeight: FontWeight.bold),
+                //          ),
+                //          SizedBox(height: 8),
+                //          Text(
+                //            '12 updates',
+                //            style: Theme.of(context).textTheme.headlineMedium,
+                //          ),
+                //        ],
+                //      ),
+                //    ),
+                //  ),
+                //),
               ],
             ),
           ],

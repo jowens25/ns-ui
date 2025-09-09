@@ -52,7 +52,7 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //context.read<SnmpApi>().getStatus();
-      //context.read<SnmpApi>().getSysDetails();
+      //context.read<SnmpApi>().getSyssnmpApi.sysDetails();
     });
   }
 
@@ -69,12 +69,10 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
   Widget build(BuildContext context) {
     return Consumer<SnmpApi>(
       builder: (context, snmpApi, _) {
-        var details = snmpApi.sysDetails;
-
-        sysObjIdController.text = details.SysObjId;
-        contactController.text = details.SysContact;
-        locationController.text = details.SysLocation;
-        descriptionController.text = details.SysDescription;
+        sysObjIdController.text = snmpApi.sysDetails.SysObjId;
+        contactController.text = snmpApi.sysDetails.SysContact;
+        locationController.text = snmpApi.sysDetails.SysLocation;
+        descriptionController.text = snmpApi.sysDetails.SysDescription;
         return Card(
           child: SizedBox(
             width: double.infinity,
@@ -91,11 +89,11 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                   LabeledSwitch(
                     myGap: 70,
                     label: "SNMP Enabled",
-                    value: details.Status == "active",
+                    value: snmpApi.sysDetails.Status == "active",
                     onChanged: (bool value) {
                       setState(() {
-                        details.Action = value ? "start" : "stop";
-                        snmpApi.editSnmpInfo(details);
+                        snmpApi.sysDetails.Action = value ? "start" : "stop";
+                        snmpApi.editSnmpInfo(snmpApi.sysDetails);
                       });
                     },
                   ),
@@ -115,8 +113,8 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
-                            details.SysObjId = value;
-                            snmpApi.editSnmpInfo(details);
+                            snmpApi.sysDetails.SysObjId = value;
+                            snmpApi.editSnmpInfo(snmpApi.sysDetails);
                           },
                           controller: sysObjIdController,
                           decoration: InputDecoration(isDense: true),
@@ -138,8 +136,8 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
-                            details.SysContact = value;
-                            snmpApi.editSnmpInfo(details);
+                            snmpApi.sysDetails.SysContact = value;
+                            snmpApi.editSnmpInfo(snmpApi.sysDetails);
                           },
                           controller: contactController,
                           decoration: InputDecoration(isDense: true),
@@ -161,8 +159,8 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
-                            details.SysLocation = value;
-                            snmpApi.editSnmpInfo(details);
+                            snmpApi.sysDetails.SysLocation = value;
+                            snmpApi.editSnmpInfo(snmpApi.sysDetails);
                           },
                           controller: locationController,
                           decoration: InputDecoration(isDense: true),
@@ -184,8 +182,8 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {
-                            details.SysDescription = value;
-                            snmpApi.editSnmpInfo(details);
+                            snmpApi.sysDetails.SysDescription = value;
+                            snmpApi.editSnmpInfo(snmpApi.sysDetails);
                           },
                           controller: descriptionController,
                           decoration: InputDecoration(isDense: true),

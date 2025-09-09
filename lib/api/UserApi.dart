@@ -32,13 +32,14 @@ class UserApi extends BaseApi {
     notifyListeners();
   }
 
-  void getCurrentUserFromToken() {
-    final parts = AuthApi.getToken().split('.');
+  void getCurrentUserFromToken(String token) {
+    final parts = token.split('.');
     if (parts.length != 3) return;
-
     final payload = json.decode(
       utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
     );
+    print(payload);
+
     currentUser = User(
       id: payload['sub'] ?? payload['userId'] ?? payload['id'],
       name: payload['name'] ?? payload['username'] ?? '',

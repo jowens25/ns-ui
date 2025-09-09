@@ -46,7 +46,7 @@ class DeviceStatusCardState extends State<DeviceStatusCard> {
   @override
   void initState() {
     super.initState();
-    context.read<DeviceApi>().readDeviceInfo();
+    // context.read<DeviceApi>().readDeviceInfo();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //context.read<DeviceApi>().getStatus();

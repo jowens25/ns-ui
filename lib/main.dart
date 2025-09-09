@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nct/api/NetworkApi.dart';
+import 'package:nct/api/SecurityApi.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/api/AuthApi.dart';
 import 'package:nct/api/SnmpApi.dart';
@@ -26,6 +27,7 @@ void main() {
 
   final userApi = UserApi(serverHost: host);
   final networkApi = NetworkApi(serverHost: host);
+  final securityApi = SecurityApi(serverHost: host);
 
   runApp(
     MultiProvider(
@@ -35,6 +37,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),
         ChangeNotifierProvider(create: (_) => networkApi),
+        ChangeNotifierProvider(create: (_) => securityApi),
       ],
       child: MyApp(),
     ),

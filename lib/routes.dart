@@ -53,12 +53,12 @@ final logoutRoute = RouteConfig(
   pageBuilder: () => LogoutPage(),
 );
 
-final dashboardRoute = RouteConfig(
-  path: '/dashboard',
-  name: 'Dashboard',
-  icon: Icons.dashboard,
-  pageBuilder: () => DashboardPage(),
-);
+//final dashboardRoute = RouteConfig(
+//  path: '/dashboard',
+//  name: 'Dashboard',
+//  icon: Icons.dashboard,
+//  pageBuilder: () => DashboardPage(),
+//);
 
 // ================================================================
 final projectsRoute = RouteConfig(
@@ -369,12 +369,12 @@ class AppRouter {
 
       // If authenticated and on login page, redirect to dashboard
       if (loggedIn && isLoginRoute) {
-        return '/dashboard';
+        return '/device';
       }
 
       // Check if route is allowed by server
       if (!AppRoutes.isRouteAllowed(state.uri.path)) {
-        return loggedIn ? '/dashboard' : '/login';
+        return loggedIn ? '/device' : '/login';
       }
 
       return null; // Allow navigation
@@ -384,7 +384,7 @@ class AppRouter {
         path: '/',
         redirect: (BuildContext context, GoRouterState state) {
           final authApi = Provider.of<AuthApi>(context, listen: false);
-          return authApi.isLoggedIn ? '/dashboard' : '/login';
+          return authApi.isLoggedIn ? '/device' : '/login';
         },
       ),
       //GoRoute(
@@ -412,12 +412,13 @@ class AppRouter {
 // Single source of truth for all routes
 class AppRoutes {
   static final List<RouteConfig> routes = [
+    deviceRoute,
+
     loginRoute,
-    dashboardRoute,
+    //dashboardRoute,
     snmpRoute,
     //ntpRoute,
     //ptpOcRoute,
-    deviceRoute,
     networkRoute,
     usersRoute,
 

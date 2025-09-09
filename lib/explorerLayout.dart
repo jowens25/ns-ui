@@ -31,6 +31,10 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   Widget build(BuildContext context) {
     String currentRoute = GoRouterState.of(context).uri.path;
     final authApi = Provider.of<AuthApi>(context, listen: false);
+    //final userApi = Provider.of<UserApi>(context, listen: false);
+
+    //userApi.getCurrentUserFromToken();
+
     explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
 
     return Scaffold(
@@ -138,6 +142,7 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                         Spacer(),
                         Consumer<UserApi>(
                           builder: (context, userApi, _) {
+                            //userApi.getCurrentUserFromToken();
                             return Text(
                               userApi.currentUser?.name != null
                                   ? "Welcome, ${userApi.currentUser!.name}"

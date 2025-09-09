@@ -42,6 +42,7 @@ class LoginCardState extends State<LoginCard> {
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     return Consumer<AuthApi>(
       builder: (context, authApi, _) {
@@ -90,14 +91,18 @@ class LoginCardState extends State<LoginCard> {
                                 });
                                 await authApi.login(user);
 
+                                context.read<UserApi>().getCurrentUserFromToken(
+                                  AuthApi.getToken(),
+                                );
+
                                 //await authApi.login(
                                 //  _usernameController.text,
                                 //  _passwordController.text,
                                 //);
                                 context.go('/dashboard');
 
-                                print("error: $_errorMessage");
-                                print("is logged in???? ${authApi.isLoggedIn}");
+                                //print("error: $_errorMessage");
+                                //print("is logged in???? ${authApi.isLoggedIn}");
                                 // print("token: ${authApi.getToken()}");
                               } catch (e) {
                                 setState(() {

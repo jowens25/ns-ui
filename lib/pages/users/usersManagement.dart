@@ -186,8 +186,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
       builder: (BuildContext context) {
         return Consumer<UserApi>(
           builder: (context, userApi, _) {
-            String selectedRole =
-                "viewer"; // Add this as a variable in your widget state
+            String selectedRole = "viewer";
 
             return AlertDialog(
               title: Text('Add User'),
