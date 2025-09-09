@@ -57,7 +57,7 @@ class UserApi extends BaseApi {
     final decoded = jsonDecode(response.body);
     print(decoded);
     _users =
-        (decoded['users'] as List)
+        (decoded['system_users'] as List)
             .map((userJson) => User.fromJson(userJson))
             .toList();
     _filteredUsers = List.from(_users);
@@ -67,7 +67,6 @@ class UserApi extends BaseApi {
   Future<void> writeUser(User user) async {
     final response = await postRequest("users", user.toJson());
     final decoded = json.decode(response.body);
-    //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
     print(decoded);
     readUsers();
     notifyListeners();
@@ -75,10 +74,11 @@ class UserApi extends BaseApi {
 
   Future<void> deleteUser(User user) async {
     final response = await deleteRequest("users/${user.id}", user.toJson());
+    //print(response.body);
     final decoded = json.decode(response.body);
-    _response = decoded["error"];
-    //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
-    print(decoded);
+
+    _response = decoded["error"] ?? "User deleted";
+    //print(decoded);
     readUsers();
     notifyListeners();
   }

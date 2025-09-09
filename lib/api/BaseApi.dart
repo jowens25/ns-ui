@@ -22,9 +22,7 @@ class BaseApi extends ChangeNotifier {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to get $baseUrl/$endpoint: ${response.statusCode}',
-      );
+      print('Failed to get $baseUrl/$endpoint: ${response.statusCode}');
     }
     return response;
   }
@@ -45,9 +43,7 @@ class BaseApi extends ChangeNotifier {
         .timeout(const Duration(seconds: 5));
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to patch $body to $endpoint: ${response.statusCode}',
-      );
+      print('Failed to patch $body to $endpoint: ${response.statusCode}');
     }
     return response;
   }
@@ -67,9 +63,7 @@ class BaseApi extends ChangeNotifier {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to post $body to $endpoint: ${response.statusCode}',
-      );
+      print('Failed to post $body to $endpoint: ${response.statusCode}');
     }
     return response;
   }
@@ -89,9 +83,7 @@ class BaseApi extends ChangeNotifier {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to delete $body from $endpoint: ${response.statusCode}',
-      );
+      print('Failed to delete $body from $endpoint: ${response.statusCode}');
     }
     return response;
   }
