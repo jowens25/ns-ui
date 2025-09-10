@@ -68,6 +68,9 @@ class UserApi extends BaseApi {
   Future<void> writeUser(User user) async {
     final response = await postRequest("users", user.toJson());
     final decoded = json.decode(response.body);
+    _response = decoded["password"] ?? "User added";
+    print(_response);
+
     print(decoded);
     readUsers();
     notifyListeners();

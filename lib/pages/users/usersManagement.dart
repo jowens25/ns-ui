@@ -242,7 +242,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(
                         context,
-                      ).showSnackBar(SnackBar(content: Text('User added')));
+                      ).showSnackBar(SnackBar(content: Text(userApi.response)));
                     }
                   },
                   child: Text('Add'),

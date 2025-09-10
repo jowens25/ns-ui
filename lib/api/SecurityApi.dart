@@ -3,6 +3,9 @@ import 'dart:async';
 import 'BaseApi.dart';
 
 class SecurityApi extends BaseApi {
+  String? _response;
+  String? get response => _response;
+
   SecurityPolicy _securityPolicy = SecurityPolicy(
     MinimumLength: "0",
     RequireUpper: "0",
@@ -30,9 +33,26 @@ class SecurityApi extends BaseApi {
   }
 
   Future<void> editSecurityPolicy(SecurityPolicy policy) async {
-    final response = await postRequest("policy", securityPolicy.toJson());
-    print(response.body);
+    final response = await postRequest("policy", policy.toJson());
+    print("post response ${response.body}");
     readSecurityPolicy();
+    notifyListeners();
+  }
+
+  Future<void> editCurrentUserPassword(
+    String old,
+    String new1,
+    String new2,
+  ) async {
+    Password pw = Password.fromJson({"old": old, "new1": new1, "new2": new2});
+    _response = null;
+
+    if (new1 != new2) {
+      _response = "new passwords do not match";
+    }
+    final response = await postRequest("chpw", pw.toJson());
+    //print("post response ${response.body}");
+    //readSecurityPolicy();
     notifyListeners();
   }
 }
@@ -86,5 +106,25 @@ class SecurityPolicy {
       'maximum_age': MaximumAge,
       'expiration_warning': ExpirationWarning,
     };
+  }
+}
+
+class Password {
+  String Old;
+  String New1;
+  String New2;
+
+  Password({required this.Old, required this.New1, required this.New2});
+
+  factory Password.fromJson(Map<String, dynamic> json) {
+    return Password(
+      Old: json['old'] ?? '',
+      New1: json['new1'] ?? '',
+      New2: json['new2'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'old': Old, 'new1': New1, 'new2': New2};
   }
 }

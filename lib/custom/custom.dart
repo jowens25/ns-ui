@@ -104,6 +104,44 @@ class LabeledText extends StatelessWidget {
   }
 }
 
+class HiddenLabeledText extends StatelessWidget {
+  final double myGap;
+  final String label;
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
+
+  const HiddenLabeledText({
+    Key? key,
+    required this.myGap,
+    required this.label,
+    required this.controller,
+    required this.onSubmitted,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: myGap,
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            obscureText: true,
+            controller: controller,
+            onSubmitted: onSubmitted,
+            decoration: InputDecoration(isDense: true),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class ReadOnlyLabeledText extends StatelessWidget {
   final String label;
   final TextEditingController controller;

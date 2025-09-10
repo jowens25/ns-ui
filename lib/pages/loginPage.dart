@@ -76,9 +76,9 @@ class LoginCardState extends State<LoginCard> {
                               (value) => value!.isEmpty ? 'Required' : null,
                         ),
                         SizedBox(height: 16),
-                        if (_errorMessage != null)
+                        if (authApi.authResponse != null)
                           Text(
-                            _errorMessage!,
+                            authApi.authResponse!,
                             style: TextStyle(color: Colors.red),
                           ),
                         ElevatedButton(

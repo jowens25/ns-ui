@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:nct/api/SecurityApi.dart';
 import 'package:nct/pages/basePage.dart';
@@ -72,6 +73,8 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      context.read<SecurityApi>().readSecurityPolicy();
+
                       _showPasswordSecuityDialog(securityApi.securityPolicy);
                     },
                     child: Text('Security Policy'),
@@ -82,7 +85,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => _showNotImplemented(),
+                    onPressed: () => _showChangeMyPasswordDialog(),
                     child: Text('Change My Password'),
                   ),
                 ),
@@ -159,6 +162,16 @@ class _UsersActionsCard extends State<UsersActionsCard> {
 
                     LabeledSwitch(
                       myGap: 295,
+                      label: "Require special character",
+                      value: policy.RequireSpecial == "true",
+                      onChanged: (value) {
+                        policy.RequireSpecial = value ? "true" : "false";
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+
+                    LabeledSwitch(
+                      myGap: 295,
                       label: "Doesn't Match Username",
                       value: policy.RequireNoUser == "true",
                       onChanged: (value) {
@@ -203,11 +216,94 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    securityApi.editSecurityPolicy(policy);
+                    //securityApi.editSecurityPolicy(policy);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Security Updated')));
+                  },
+                  child: Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showChangeMyPasswordDialog() {
+    final oldPwCtrl = TextEditingController();
+    final newPwCtrl1 = TextEditingController();
+    final newPwCtrl2 = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<SecurityApi>(
+          builder: (context, securityApi, _) {
+            return AlertDialog(
+              title: Text('Password Security'),
+              content: SizedBox(
+                width: 500,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    HiddenLabeledText(
+                      myGap: 300,
+                      label: "Old password:",
+                      controller: oldPwCtrl,
+                      onSubmitted: (value) {
+                        //policy.MinimumAge = value;
+                        //securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    HiddenLabeledText(
+                      myGap: 300,
+                      label: "New password:",
+                      controller: newPwCtrl1,
+                      onSubmitted: (value) {
+                        //policy.MaximumAge = value;
+                        //securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    HiddenLabeledText(
+                      myGap: 300,
+                      label: "Confirm password:",
+                      controller: newPwCtrl2,
+                      onSubmitted: (value) {
+                        // policy.ExpirationWarning = value;
+                        //securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    if (securityApi.response != null)
+                      Text(
+                        securityApi.response!,
+                        style: TextStyle(color: Colors.red),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    //securityApi.editSecurityPolicy(policy);
+                    securityApi.editCurrentUserPassword(
+                      oldPwCtrl.text,
+                      newPwCtrl1.text,
+                      newPwCtrl2.text,
+                    );
+                    if (securityApi.response == null) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Password updated")),
+                      );
+                    }
                   },
                   child: Text('Submit'),
                 ),

@@ -10,6 +10,9 @@ class AuthApi extends BaseApi {
   @override
   String get baseUrl => '$serverHost/api/v1/auth';
 
+  String? _authResponse;
+  String? get authResponse => _authResponse;
+
   AuthApi({required super.serverHost}) {
     isTokenValid();
     _startSessionTimer();
@@ -47,6 +50,11 @@ class AuthApi extends BaseApi {
     final decoded = json.decode(response.body);
     //_loggedIn = true;
     print('decoded: $decoded');
+
+    if (decoded['error'] != null) {
+      _authResponse = decoded['error'];
+    }
+
     setToken(decoded['token']);
     isTokenValid();
     notifyListeners();
@@ -54,6 +62,7 @@ class AuthApi extends BaseApi {
 
   void logout() {
     deleteToken();
+    _authResponse = null;
     _loggedIn = false;
     notifyListeners();
   }

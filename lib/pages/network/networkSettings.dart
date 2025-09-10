@@ -140,34 +140,6 @@ class _NetworkCardState extends State<NetworkSettingsCard> {
                     },
                     child: const Text('Submit'),
                   ),
-                  LabeledText(
-                    label: "Access Network",
-                    controller: TextEditingController(),
-                    myGap: 300,
-                    onSubmitted: (value) {
-                      //ntpApi.ntp['mac'] = value;
-                      //ntpApi.writeProperty('mac');
-                      AllowedNode node = AllowedNode.fromJson({
-                        'ID': 0,
-                        'address': value,
-                      });
-                      networkApi.writeNetworkAccess(node);
-                    },
-                  ),
-                  LabeledText(
-                    label: "Remove Access Network",
-                    controller: TextEditingController(),
-                    myGap: 300,
-                    onSubmitted: (value) {
-                      //ntpApi.ntp['mac'] = value;
-                      //ntpApi.writeProperty('mac');
-                      AllowedNode node = AllowedNode.fromJson({
-                        'ID': 0,
-                        'address': value,
-                      });
-                      networkApi.deleteNetworkAccess(node);
-                    },
-                  ),
                 ],
               ),
             ),
