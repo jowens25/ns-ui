@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nct/custom/custom.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 final Uri websiteUrl = Uri.parse('https://novuspower.com');
 final Uri phoneUrl = Uri(scheme: 'tel', path: '8168367446');
@@ -43,58 +42,27 @@ class SupportCard extends StatelessWidget {
     return Card(
       child: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => _launchUrl(websiteUrl),
-                  child: Text('Visit Our Site'),
-                ),
-              ],
-            ),
+          SizedBox(height: 10),
+          StaticLabeledText(
+            label: "  Website",
+            myGap: 150,
+            myText: "novuspower.com",
           ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => _launchUrl(phoneUrl),
-                  child: Text('Call Us'),
-                ),
-              ],
-            ),
+          SizedBox(height: 10),
+          StaticLabeledText(
+            label: "  Phone",
+            myGap: 150,
+            myText: "(816) 836-7446",
           ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => _launchUrl(emailUrl),
-                  child: Text('Send Us an Email'),
-                ),
-              ],
-            ),
+          SizedBox(height: 10),
+          StaticLabeledText(
+            label: "  Email",
+            myGap: 150,
+            myText: "support@novuspower.com",
           ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => context.go('/login'),
-                  child: Text('Go to Login Page'),
-                ),
-              ],
-            ),
-          ),
+          SizedBox(height: 10),
         ],
       ),
     );
-  }
-
-  Future<void> _launchUrl(url) async {
-    if (!await launchUrl(url)) {
-      throw Exception('Could not launch $url');
-    }
   }
 }

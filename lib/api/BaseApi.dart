@@ -6,12 +6,15 @@ import 'AuthApi.dart';
 
 class BaseApi extends ChangeNotifier {
   final String serverHost;
+  bool _invalid = true;
+  bool get invalid => _invalid;
 
-  String get baseUrl => '$serverHost'; // base implementation
+  String get baseUrl => serverHost; // base implementation
 
   BaseApi({required this.serverHost});
 
   Future<http.Response> getRequest(String endpoint) async {
+    _invalid = false;
     final response = await http
         .get(
           Uri.parse('$baseUrl/$endpoint'),
@@ -21,6 +24,10 @@ class BaseApi extends ChangeNotifier {
           },
         )
         .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 404) {
+      _invalid = true;
+    }
     if (response.statusCode != 200 && response.statusCode != 201) {
       print('Failed to get $baseUrl/$endpoint: ${response.statusCode}');
     }

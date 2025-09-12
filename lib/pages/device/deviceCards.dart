@@ -2,36 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:nct/api/DeviceApi.dart';
 import 'package:provider/provider.dart';
 
-//class DeviceStatusPage extends StatefulWidget {
-//  @override
-//  DeviceStatusPageState createState() => DeviceStatusPageState();
-//}
+class DeviceActionsCard extends StatelessWidget {
+  const DeviceActionsCard({super.key});
 
-//class DeviceStatusPageState extends State<DeviceStatusPage> {
-//  @override
-//  Widget build(BuildContext context) {
-//    return BasePage(
-//      title: 'SNMP',
-//      description: 'Status:',
-//      children: [
-//        Row(
-//          crossAxisAlignment: CrossAxisAlignment.start,
-//          children: [
-//            Expanded(
-//              child: Padding(
-//                padding: EdgeInsets.all(16),
-//                child: Column(
-//                  crossAxisAlignment: CrossAxisAlignment.start,
-//                  children: [DeviceStatusCard()],
-//                ),
-//              ),
-//            ),
-//          ],
-//        ),
-//      ],
-//    );
-//  }
-//}
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Flash', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              ElevatedButton(
+                onPressed:
+                    () => {context.read<DeviceApi>().resetDeviceConfig()},
+                child: Text('Save current settings'),
+              ),
+              SizedBox(height: 8),
+
+              ElevatedButton(
+                onPressed:
+                    () => {context.read<DeviceApi>().resetDeviceConfig()},
+                child: Text('Restore default settings'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class DeviceStatusCard extends StatefulWidget {
   @override

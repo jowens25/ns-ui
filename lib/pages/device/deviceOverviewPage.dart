@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/pages/device/deviceActions.dart';
-import 'package:nct/pages/device/deviceStatus.dart';
+import 'package:nct/pages/device/deviceCards.dart';
 
 class DeviceOverviewPage extends StatelessWidget {
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nct/api/SecurityApi.dart';
 import 'package:nct/pages/basePage.dart';
 import 'package:nct/api/UserApi.dart';
 import 'package:provider/provider.dart';
@@ -181,73 +182,141 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
+    final securityApi = context.read<SecurityApi>();
+    SecurityPolicy policy =
+        securityApi.securityPolicy!; // Use the getter instead
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<UserApi>(
-          builder: (context, userApi, _) {
-            String selectedRole = "viewer";
+        bool _obscurePassword = true; // initially obscure
 
-            return AlertDialog(
-              title: Text('Add User'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(labelText: 'Name'),
-                  ),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Consumer<UserApi>(
+              builder: (context, userApi, _) {
+                String selectedRole = "admin";
 
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(labelText: 'Email'),
+                return AlertDialog(
+                  title: Text('Add User'),
+                  content: SizedBox(
+                    width: 400,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(labelText: 'Name'),
+                        ),
+
+                        TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: passwordController,
+                                obscureText: _obscurePassword,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                ),
+                                onChanged: (value) {
+                                  setDialogState(() {}); // refresh UI if needed
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setDialogState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+
+                        // Show password validation errors if any
+                        if (passwordController.text.isNotEmpty &&
+                            !securityApi.validatePassword(
+                              passwordController.text,
+                              nameController.text,
+                              policy,
+                            ))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children:
+                                  securityApi.validationError!
+                                      .map(
+                                        (err) => Text(
+                                          err,
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                            ),
+                          ),
+                        SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: selectedRole,
+                          decoration: InputDecoration(labelText: 'Role'),
+                          items: [
+                            DropdownMenuItem(
+                              value: "viewer",
+                              child: Text("Viewer"),
+                            ),
+                            DropdownMenuItem(
+                              value: "admin",
+                              child: Text("Admin"),
+                            ),
+                          ],
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedRole = newValue!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(labelText: 'Password'),
-                  ),
-                  SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedRole,
-                    decoration: InputDecoration(labelText: 'Role'),
-                    items: [
-                      DropdownMenuItem(value: "viewer", child: Text("Viewer")),
-                      DropdownMenuItem(value: "admin", child: Text("Admin")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedRole = newValue!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (nameController.text.isNotEmpty &&
-                        emailController.text.isNotEmpty) {
-                      User user = User.fromJson({
-                        'username': nameController.text,
-                        'email': emailController.text,
-                        'password': passwordController.text,
-                        'role': selectedRole,
-                      });
-                      userApi.writeUser(user);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(userApi.response)));
-                    }
-                  },
-                  child: Text('Add'),
-                ),
-              ],
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (nameController.text.isNotEmpty &&
+                            emailController.text.isNotEmpty) {
+                          User user = User.fromJson({
+                            'username': nameController.text,
+                            'email': emailController.text,
+                            'password': passwordController.text,
+                            'role': selectedRole,
+                          });
+                          userApi.writeUser(user);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(userApi.response)),
+                          );
+                        }
+                      },
+                      child: Text('Add'),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );

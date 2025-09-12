@@ -10,7 +10,8 @@ import 'package:nct/api/UserApi.dart';
 import 'package:nct/api/DeviceApi.dart';
 
 import 'package:nct/routes.dart';
-import 'package:network_info_plus/network_info_plus.dart';
+
+import 'package:web/web.dart' as web;
 //import 'package:web/web.dart' as web;
 
 void main() {
@@ -106,10 +107,4 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
     );
   }
-}
-
-Future<void> getDeviceIp() async {
-  final info = NetworkInfo();
-  String? wifiIP = await info.getWifiIP();
-  print('Local IP Address: $wifiIP');
 }

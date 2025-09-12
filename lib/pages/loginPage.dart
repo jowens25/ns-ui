@@ -33,7 +33,6 @@ class LoginCardState extends State<LoginCard> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -104,11 +103,7 @@ class LoginCardState extends State<LoginCard> {
                                 //print("error: $_errorMessage");
                                 //print("is logged in???? ${authApi.isLoggedIn}");
                                 // print("token: ${authApi.getToken()}");
-                              } catch (e) {
-                                setState(() {
-                                  _errorMessage = e.toString();
-                                });
-                              }
+                              } catch (e) {}
                             }
                           },
                           child: Text('Login ' + web.window.location.origin),

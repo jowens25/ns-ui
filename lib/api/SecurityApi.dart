@@ -1,23 +1,17 @@
 import 'dart:convert';
 import 'dart:async';
+//import 'dart:ffi';
 import 'BaseApi.dart';
 
 class SecurityApi extends BaseApi {
   String? _response;
   String? get response => _response;
 
-  SecurityPolicy _securityPolicy = SecurityPolicy(
-    MinimumLength: "0",
-    RequireUpper: "0",
-    RequireLower: "0",
-    RequireNumber: "0",
-    RequireSpecial: "0",
-    RequireNoUser: "0",
-    MinimumAge: "0",
-    MaximumAge: "0",
-    ExpirationWarning: "0",
-  );
-  SecurityPolicy get securityPolicy => _securityPolicy;
+  List<String>? _validationErrors;
+  List<String>? get validationError => _validationErrors;
+
+  SecurityPolicy? _securityPolicy;
+  SecurityPolicy? get securityPolicy => _securityPolicy;
 
   @override
   String get baseUrl => '$serverHost/api/v1/security';
@@ -39,34 +33,63 @@ class SecurityApi extends BaseApi {
     notifyListeners();
   }
 
-  Future<void> editCurrentUserPassword(
-    String old,
-    String new1,
-    String new2,
-  ) async {
-    Password pw = Password.fromJson({"old": old, "new1": new1, "new2": new2});
-    _response = null;
+  bool validatePassword(
+    String password,
+    String username,
+    SecurityPolicy policy,
+  ) {
+    List<String> errors = [];
 
-    if (new1 != new2) {
-      _response = "new passwords do not match";
+    if (password.length < policy.MinimumLength) {
+      errors.add(
+        "Password must be at least ${policy.MinimumLength} characters long",
+      );
     }
-    final response = await postRequest("chpw", pw.toJson());
-    //print("post response ${response.body}");
-    //readSecurityPolicy();
-    notifyListeners();
+
+    if (policy.RequireUpper && !password.contains(RegExp(r'[A-Z]'))) {
+      errors.add("Password must contain at least one uppercase letter");
+    }
+
+    if (policy.RequireLower && !password.contains(RegExp(r'[a-z]'))) {
+      errors.add("Password must contain at least one lowercase letter");
+    }
+
+    if (policy.RequireNumber && !password.contains(RegExp(r'[0-9]'))) {
+      errors.add("Password must contain at least one number");
+    }
+
+    if (policy.RequireSpecial &&
+        !password.contains(RegExp(r'[!@#$%^&*(),.?\":{}|<>]'))) {
+      errors.add("Password must contain at least one special character");
+    }
+
+    if (policy.RequireNoUser &&
+        username.isNotEmpty &&
+        password.toLowerCase().contains(username.toLowerCase())) {
+      errors.add("Password cannot contain the username");
+    }
+
+    _validationErrors = errors;
+    if (errors.isNotEmpty) {
+      _response = errors.join('\n');
+      return false;
+    }
+
+    _response = null;
+    return true;
   }
 }
 
 class SecurityPolicy {
-  String MinimumLength;
-  String RequireUpper;
-  String RequireLower;
-  String RequireNumber;
-  String RequireSpecial;
-  String RequireNoUser;
-  String MinimumAge;
-  String MaximumAge;
-  String ExpirationWarning;
+  int MinimumLength;
+  bool RequireUpper;
+  bool RequireLower;
+  bool RequireNumber;
+  bool RequireSpecial;
+  bool RequireNoUser;
+  int MinimumAge;
+  int MaximumAge;
+  int ExpirationWarning;
 
   SecurityPolicy({
     required this.MinimumLength,
@@ -82,15 +105,15 @@ class SecurityPolicy {
 
   factory SecurityPolicy.fromJson(Map<String, dynamic> json) {
     return SecurityPolicy(
-      MinimumLength: json['minimum_length'] ?? '',
-      RequireUpper: json['require_upper'] ?? '',
-      RequireLower: json['require_lower'] ?? '',
-      RequireNumber: json['require_number'] ?? '',
-      RequireSpecial: json['require_special'] ?? '',
-      RequireNoUser: json['require_nouser'] ?? '',
-      MinimumAge: json['minimum_age'] ?? '',
-      MaximumAge: json['maximum_age'] ?? '',
-      ExpirationWarning: json['expiration_warning'] ?? '',
+      MinimumLength: json['minimum_length'] ?? 0,
+      RequireUpper: json['require_upper'] ?? false,
+      RequireLower: json['require_lower'] ?? false,
+      RequireNumber: json['require_number'] ?? false,
+      RequireSpecial: json['require_special'] ?? false,
+      RequireNoUser: json['require_nouser'] ?? false,
+      MinimumAge: json['minimum_age'] ?? 0,
+      MaximumAge: json['maximum_age'] ?? 0,
+      ExpirationWarning: json['expiration_warning'] ?? 0,
     );
   }
 
@@ -106,25 +129,5 @@ class SecurityPolicy {
       'maximum_age': MaximumAge,
       'expiration_warning': ExpirationWarning,
     };
-  }
-}
-
-class Password {
-  String Old;
-  String New1;
-  String New2;
-
-  Password({required this.Old, required this.New1, required this.New2});
-
-  factory Password.fromJson(Map<String, dynamic> json) {
-    return Password(
-      Old: json['old'] ?? '',
-      New1: json['new1'] ?? '',
-      New2: json['new2'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'old': Old, 'new1': New1, 'new2': New2};
   }
 }

@@ -1,10 +1,6 @@
-import 'dart:math';
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:nct/api/SecurityApi.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/api/UserApi.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:provider/provider.dart';
 
@@ -75,20 +71,20 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     onPressed: () {
                       context.read<SecurityApi>().readSecurityPolicy();
 
-                      _showPasswordSecuityDialog(securityApi.securityPolicy);
+                      _showPasswordSecuityDialog(securityApi.securityPolicy!);
                     },
                     child: Text('Security Policy'),
                   ),
                 ),
                 SizedBox(height: 8),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => _showChangeMyPasswordDialog(),
-                    child: Text('Change My Password'),
-                  ),
-                ),
+                //SizedBox(
+                //  width: double.infinity,
+                //  child: ElevatedButton(
+                //    onPressed: () => _showChangeMyPasswordDialog(),
+                //    child: Text('Change My Password'),
+                //  ),
+                //),
               ],
             ),
           ),
@@ -97,17 +93,19 @@ class _UsersActionsCard extends State<UsersActionsCard> {
     );
   }
 
-  void _showNotImplemented() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Not implemented yet')));
-  }
-
   void _showPasswordSecuityDialog(SecurityPolicy policy) {
-    final minLenCtrl = TextEditingController(text: policy.MinimumLength);
-    final minAgeCtrl = TextEditingController(text: policy.MinimumAge);
-    final maxAgeCtrl = TextEditingController(text: policy.MaximumAge);
-    final warnAgeCtrl = TextEditingController(text: policy.ExpirationWarning);
+    final minLenCtrl = TextEditingController(
+      text: policy.MinimumLength.toString(),
+    );
+    final minAgeCtrl = TextEditingController(
+      text: policy.MinimumAge.toString(),
+    );
+    final maxAgeCtrl = TextEditingController(
+      text: policy.MaximumAge.toString(),
+    );
+    final warnAgeCtrl = TextEditingController(
+      text: policy.ExpirationWarning.toString(),
+    );
 
     showDialog(
       context: context,
@@ -126,16 +124,16 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                       label: "Minimum Length",
                       controller: minLenCtrl,
                       onSubmitted: (value) {
-                        policy.MinimumLength = value;
+                        policy.MinimumLength = int.parse(value);
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
                     LabeledSwitch(
                       myGap: 295,
                       label: "Require Uppercase Character",
-                      value: policy.RequireUpper == "true",
+                      value: policy.RequireUpper,
                       onChanged: (value) {
-                        policy.RequireUpper = value ? "true" : "false";
+                        policy.RequireUpper = value;
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -143,9 +141,9 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     LabeledSwitch(
                       myGap: 295,
                       label: "Require Lowercase Character",
-                      value: policy.RequireLower == "true",
+                      value: policy.RequireLower,
                       onChanged: (value) {
-                        policy.RequireLower = value ? "true" : "false";
+                        policy.RequireLower = value;
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -153,9 +151,9 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     LabeledSwitch(
                       myGap: 295,
                       label: "Require at least one numeral",
-                      value: policy.RequireNumber == "true",
+                      value: policy.RequireNumber,
                       onChanged: (value) {
-                        policy.RequireNumber = value ? "true" : "false";
+                        policy.RequireNumber = value;
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -163,9 +161,9 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     LabeledSwitch(
                       myGap: 295,
                       label: "Require special character",
-                      value: policy.RequireSpecial == "true",
+                      value: policy.RequireSpecial,
                       onChanged: (value) {
-                        policy.RequireSpecial = value ? "true" : "false";
+                        policy.RequireSpecial = value;
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -173,9 +171,9 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     LabeledSwitch(
                       myGap: 295,
                       label: "Doesn't Match Username",
-                      value: policy.RequireNoUser == "true",
+                      value: policy.RequireNoUser,
                       onChanged: (value) {
-                        policy.RequireNoUser = value ? "true" : "false";
+                        policy.RequireNoUser = value;
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -184,7 +182,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                       label: "Minimum Password Age (Days)",
                       controller: minAgeCtrl,
                       onSubmitted: (value) {
-                        policy.MinimumAge = value;
+                        policy.MinimumAge = int.parse(value);
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -193,7 +191,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                       label: "Maximum Password Age (Days)",
                       controller: maxAgeCtrl,
                       onSubmitted: (value) {
-                        policy.MaximumAge = value;
+                        policy.MaximumAge = int.parse(value);
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -202,7 +200,7 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                       label: "Expiration Warning (Days)",
                       controller: warnAgeCtrl,
                       onSubmitted: (value) {
-                        policy.ExpirationWarning = value;
+                        policy.ExpirationWarning = int.parse(value);
                         securityApi.editSecurityPolicy(policy);
                       },
                     ),
@@ -221,89 +219,6 @@ class _UsersActionsCard extends State<UsersActionsCard> {
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Security Updated')));
-                  },
-                  child: Text('Submit'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showChangeMyPasswordDialog() {
-    final oldPwCtrl = TextEditingController();
-    final newPwCtrl1 = TextEditingController();
-    final newPwCtrl2 = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Consumer<SecurityApi>(
-          builder: (context, securityApi, _) {
-            return AlertDialog(
-              title: Text('Password Security'),
-              content: SizedBox(
-                width: 500,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    HiddenLabeledText(
-                      myGap: 300,
-                      label: "Old password:",
-                      controller: oldPwCtrl,
-                      onSubmitted: (value) {
-                        //policy.MinimumAge = value;
-                        //securityApi.editSecurityPolicy(policy);
-                      },
-                    ),
-                    HiddenLabeledText(
-                      myGap: 300,
-                      label: "New password:",
-                      controller: newPwCtrl1,
-                      onSubmitted: (value) {
-                        //policy.MaximumAge = value;
-                        //securityApi.editSecurityPolicy(policy);
-                      },
-                    ),
-                    HiddenLabeledText(
-                      myGap: 300,
-                      label: "Confirm password:",
-                      controller: newPwCtrl2,
-                      onSubmitted: (value) {
-                        // policy.ExpirationWarning = value;
-                        //securityApi.editSecurityPolicy(policy);
-                      },
-                    ),
-                    SizedBox(height: 10),
-                    if (securityApi.response != null)
-                      Text(
-                        securityApi.response!,
-                        style: TextStyle(color: Colors.red),
-                      ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    //securityApi.editSecurityPolicy(policy);
-                    securityApi.editCurrentUserPassword(
-                      oldPwCtrl.text,
-                      newPwCtrl1.text,
-                      newPwCtrl2.text,
-                    );
-                    if (securityApi.response == null) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Password updated")),
-                      );
-                    }
                   },
                   child: Text('Submit'),
                 ),
