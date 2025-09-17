@@ -86,7 +86,7 @@ class MyApp extends StatelessWidget {
 
         textTheme: GoogleFonts.robotoMonoTextTheme(Theme.of(context).textTheme),
 
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: Colors.grey[200], // Slightly lighter than surface
           elevation: 4, // Higher to make it pop
           shadowColor: Colors.black26, // Softer, more natural shadow
