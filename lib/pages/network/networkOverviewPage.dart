@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
-import 'package:ntsc_ui/pages/network/networkActions.dart';
-import 'package:ntsc_ui/pages/network/networkStatus.dart';
-import 'package:ntsc_ui/pages/network/networkPort.dart';
-import 'package:ntsc_ui/pages/network/networkVersion12.dart';
-import 'package:ntsc_ui/pages/network/networkVersion3.dart';
+import 'package:nct/pages/basePage.dart';
+import 'package:nct/pages/network/networkSettings.dart';
 
 class NetworkOverviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      title: 'NETWORK',
+      title: 'Network',
       description: 'Configuration Overview',
       children: [
         Padding(
@@ -25,22 +21,26 @@ class NetworkOverviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    NetworkActionsCard(),
+                    //NetworkActionsCard(),
                     //SizedBox(height: 16),
-                    NetworkStatusCard(),
+                    //NetworkStatusCard(),
+                    NetworkInfoCard(),
+
+                    //NetworkSettingsCard(),
                   ],
                 ),
               ),
               SizedBox(
-                width: 750,
+                width: 350,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    //NetworkVersion12Card(),
+                    NetworkProtcolCard(),
+                    NetworkAccessCard(),
+                    //NetworkAccessCard(),
                     //SizedBox(height: 16),
                     //NetworkVersion3Card(),
                     //SizedBox(height: 16),
-                    NetworkPortCard(),
                   ],
                 ),
               ),

@@ -1,4 +1,4 @@
-package com.example.ntsc_ui
+package com.example.nct
 
 import io.flutter.embedding.android.FlutterActivity
 

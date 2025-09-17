@@ -6,13 +6,15 @@ import 'AuthApi.dart';
 
 class BaseApi extends ChangeNotifier {
   final String serverHost;
-  final String serverPort;
+  bool _invalid = true;
+  bool get invalid => _invalid;
 
-  String get baseUrl => 'http://$serverHost:$serverPort'; // base implementation
+  String get baseUrl => serverHost; // base implementation
 
-  BaseApi({required this.serverHost, required this.serverPort});
+  BaseApi({required this.serverHost});
 
   Future<http.Response> getRequest(String endpoint) async {
+    _invalid = false;
     final response = await http
         .get(
           Uri.parse('$baseUrl/$endpoint'),
@@ -22,10 +24,12 @@ class BaseApi extends ChangeNotifier {
           },
         )
         .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 404) {
+      _invalid = true;
+    }
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to get $baseUrl/$endpoint: ${response.statusCode}',
-      );
+      print('Failed to get $baseUrl/$endpoint: ${response.statusCode}');
     }
     return response;
   }
@@ -46,9 +50,7 @@ class BaseApi extends ChangeNotifier {
         .timeout(const Duration(seconds: 5));
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to patch $body to $endpoint: ${response.statusCode}',
-      );
+      print('Failed to patch $body to $endpoint: ${response.statusCode}');
     }
     return response;
   }
@@ -68,9 +70,7 @@ class BaseApi extends ChangeNotifier {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to post $body to $endpoint: ${response.statusCode}',
-      );
+      print('Failed to post $body to $endpoint: ${response.statusCode}');
     }
     return response;
   }
@@ -90,9 +90,7 @@ class BaseApi extends ChangeNotifier {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to delete $body from $endpoint: ${response.statusCode}',
-      );
+      print('Failed to delete $body from $endpoint: ${response.statusCode}');
     }
     return response;
   }

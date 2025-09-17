@@ -1,16 +1,19 @@
 import 'dart:convert';
 
-import 'package:ntsc_ui/api/BaseApi.dart';
+import 'package:nct/api/BaseApi.dart';
 import 'package:web/web.dart';
 import 'dart:async';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
+import 'package:nct/api/UserApi.dart';
 
 class AuthApi extends BaseApi {
   @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1/auth';
+  String get baseUrl => '$serverHost/api/v1/auth';
 
-  AuthApi({required super.serverHost, required super.serverPort}) {
+  String? _authResponse;
+  String? get authResponse => _authResponse;
+
+  AuthApi({required super.serverHost}) {
     isTokenValid();
     _startSessionTimer();
   }
@@ -46,7 +49,12 @@ class AuthApi extends BaseApi {
     final response = await postRequest("login", user.toJson());
     final decoded = json.decode(response.body);
     //_loggedIn = true;
-    //print('decoded: $decoded');
+    print('decoded: $decoded');
+
+    if (decoded['error'] != null) {
+      _authResponse = decoded['error'];
+    }
+
     setToken(decoded['token']);
     isTokenValid();
     notifyListeners();
@@ -54,6 +62,7 @@ class AuthApi extends BaseApi {
 
   void logout() {
     deleteToken();
+    _authResponse = null;
     _loggedIn = false;
     notifyListeners();
   }

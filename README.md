@@ -1,3 +1,3 @@
-# ntsc_ui
+# nct
 
 A new Flutter project.

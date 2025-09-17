@@ -1,6 +1,6 @@
 {
-    "name": "ntsc_ui",
-    "short_name": "ntsc_ui",
+    "name": "nct",
+    "short_name": "nct",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

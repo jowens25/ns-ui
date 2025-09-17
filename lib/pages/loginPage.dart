@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
-import 'package:ntsc_ui/pages/basePage.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/UserApi.dart';
+import 'package:nct/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:web/web.dart' as web;
 
 class LoginPage extends StatelessWidget {
   @override
@@ -32,7 +33,6 @@ class LoginCardState extends State<LoginCard> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -41,6 +41,7 @@ class LoginCardState extends State<LoginCard> {
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     return Consumer<AuthApi>(
       builder: (context, authApi, _) {
@@ -74,9 +75,9 @@ class LoginCardState extends State<LoginCard> {
                               (value) => value!.isEmpty ? 'Required' : null,
                         ),
                         SizedBox(height: 16),
-                        if (_errorMessage != null)
+                        if (authApi.authResponse != null)
                           Text(
-                            _errorMessage!,
+                            authApi.authResponse!,
                             style: TextStyle(color: Colors.red),
                           ),
                         ElevatedButton(
@@ -89,23 +90,23 @@ class LoginCardState extends State<LoginCard> {
                                 });
                                 await authApi.login(user);
 
+                                context.read<UserApi>().getCurrentUserFromToken(
+                                  AuthApi.getToken(),
+                                );
+
                                 //await authApi.login(
                                 //  _usernameController.text,
                                 //  _passwordController.text,
                                 //);
                                 context.go('/dashboard');
 
-                                print("error: $_errorMessage");
-                                print("is logged in???? ${authApi.isLoggedIn}");
+                                //print("error: $_errorMessage");
+                                //print("is logged in???? ${authApi.isLoggedIn}");
                                 // print("token: ${authApi.getToken()}");
-                              } catch (e) {
-                                setState(() {
-                                  _errorMessage = e.toString();
-                                });
-                              }
+                              } catch (e) {}
                             }
                           },
-                          child: Text('Login'),
+                          child: Text('Login ' + web.window.location.origin),
                         ),
 
                         SizedBox(height: 8),

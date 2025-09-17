@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ntsc_ui/api/AuthApi.dart';
-import 'package:ntsc_ui/api/UserApi.dart';
-import 'package:ntsc_ui/models.dart';
-import 'package:ntsc_ui/routes.dart';
+import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/UserApi.dart';
+import 'package:nct/models.dart';
+import 'package:nct/routes.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Main Layout with Explorer
 class ExplorerLayout extends StatefulWidget {
@@ -31,6 +32,10 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   Widget build(BuildContext context) {
     String currentRoute = GoRouterState.of(context).uri.path;
     final authApi = Provider.of<AuthApi>(context, listen: false);
+    //final userApi = Provider.of<UserApi>(context, listen: false);
+
+    //userApi.getCurrentUserFromToken();
+
     explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
 
     return Scaffold(
@@ -66,11 +71,21 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                     children: [
                       //Icon(Icons.explore, size: 20),
                       //SizedBox(width: 8)
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 217, // Adjust width as needed
-                        height: 30, // Adjust height as needed
-                        fit: BoxFit.contain,
+                      InkWell(
+                        onTap: () async {
+                          final Uri url = Uri.parse('https://novuspower.com');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 217, // Adjust width as needed
+                          height: 30, // Adjust height as needed
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       //Text(
                       //  'NOVUS',
@@ -138,6 +153,7 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                         Spacer(),
                         Consumer<UserApi>(
                           builder: (context, userApi, _) {
+                            //userApi.getCurrentUserFromToken();
                             return Text(
                               userApi.currentUser?.name != null
                                   ? "Welcome, ${userApi.currentUser!.name}"

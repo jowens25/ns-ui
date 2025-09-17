@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:ntsc_ui/api/AuthApi.dart';
+import 'package:nct/api/AuthApi.dart';
 import 'BaseApi.dart';
 
 class UserApi extends BaseApi {
@@ -10,10 +10,13 @@ class UserApi extends BaseApi {
   List<User> _filteredUsers = [];
   List<User> get filteredUsers => _filteredUsers;
 
-  @override
-  String get baseUrl => 'http://$serverHost:$serverPort/api/v1';
+  String _response = "response";
+  String get response => _response;
 
-  UserApi({required super.serverHost, required super.serverPort});
+  @override
+  String get baseUrl => '$serverHost/api/v1';
+
+  UserApi({required super.serverHost});
 
   void searchUsers(String query) {
     if (query.isEmpty) {
@@ -29,13 +32,14 @@ class UserApi extends BaseApi {
     notifyListeners();
   }
 
-  void getCurrentUserFromToken() {
-    final parts = AuthApi.getToken().split('.');
+  void getCurrentUserFromToken(String token) {
+    final parts = token.split('.');
     if (parts.length != 3) return;
-
     final payload = json.decode(
       utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
     );
+    print(payload);
+
     currentUser = User(
       id: payload['sub'] ?? payload['userId'] ?? payload['id'],
       name: payload['name'] ?? payload['username'] ?? '',
@@ -52,8 +56,9 @@ class UserApi extends BaseApi {
   Future<void> readUsers() async {
     final response = await getRequest("users");
     final decoded = jsonDecode(response.body);
+    print(decoded);
     _users =
-        (decoded['users'] as List)
+        (decoded['system_users'] as List)
             .map((userJson) => User.fromJson(userJson))
             .toList();
     _filteredUsers = List.from(_users);
@@ -63,7 +68,9 @@ class UserApi extends BaseApi {
   Future<void> writeUser(User user) async {
     final response = await postRequest("users", user.toJson());
     final decoded = json.decode(response.body);
-    //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
+    _response = decoded["password"] ?? "User added";
+    print(_response);
+
     print(decoded);
     readUsers();
     notifyListeners();
@@ -71,9 +78,11 @@ class UserApi extends BaseApi {
 
   Future<void> deleteUser(User user) async {
     final response = await deleteRequest("users/${user.id}", user.toJson());
+    //print(response.body);
     final decoded = json.decode(response.body);
-    //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
-    print(decoded);
+
+    _response = decoded["error"] ?? "User deleted";
+    //print(decoded);
     readUsers();
     notifyListeners();
   }
@@ -108,7 +117,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
+      id: json['ID'],
       role: json['role'] ?? '',
       name: json['username'] ?? json['name'] ?? '',
       email: json['email'] ?? '',
@@ -118,7 +127,7 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'ID': id,
       'role': role,
       'username': name,
       'email': email,

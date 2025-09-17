@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "ntsc_ui",
+            "name": "nct",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "ntsc_ui (profile mode)",
+            "name": "nct (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "ntsc_ui (release mode)",
+            "name": "nct (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
