@@ -12,6 +12,21 @@ class NetworkApi extends BaseApi {
   Http _http = Http(Action: "Action", Status: "Status");
   Http get http => _http;
 
+  Map<String, dynamic> networkInfo = {
+    'port_status': '',
+    'hostname': '',
+    'gateway': '',
+    'interface': '',
+    'speed': '',
+    'mac': '',
+    'ip_address': '',
+    'dhcp': '',
+    'dns1': '',
+    'dns2': '',
+    'ignore_auto_dns': '',
+    'connection_status': '',
+  };
+
   List<AllowedNode> _allowedNodes = [];
   List<AllowedNode> get allowedNodes => _allowedNodes;
 
@@ -66,6 +81,16 @@ class NetworkApi extends BaseApi {
     await patchRequest("http", http.toJson());
     readHttpInfo();
     notifyListeners();
+  }
+
+  Future<void> readNetworkInfo() async {
+    final response = await getRequest("info");
+    if (response.statusCode == 200) {
+      networkInfo = jsonDecode(response.body)['info'];
+      notifyListeners();
+    } else {
+      throw Exception('Failed to load info');
+    }
   }
 
   Future<void> readNetworkAccess() async {

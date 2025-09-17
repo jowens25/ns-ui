@@ -24,7 +24,9 @@ class NetworkOverviewPage extends StatelessWidget {
                     //NetworkActionsCard(),
                     //SizedBox(height: 16),
                     //NetworkStatusCard(),
-                    NetworkSettingsCard(),
+                    NetworkInfoCard(),
+
+                    //NetworkSettingsCard(),
                   ],
                 ),
               ),
@@ -35,7 +37,6 @@ class NetworkOverviewPage extends StatelessWidget {
                   children: [
                     NetworkProtcolCard(),
                     NetworkAccessCard(),
-
                     //NetworkAccessCard(),
                     //SizedBox(height: 16),
                     //NetworkVersion3Card(),

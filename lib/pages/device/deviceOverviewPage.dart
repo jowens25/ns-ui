@@ -16,18 +16,18 @@ class DeviceOverviewPage extends StatelessWidget {
             runSpacing: 16,
             alignment: WrapAlignment.start,
             children: [
-              SizedBox(
-                width: 300,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [DeviceActionsCard()],
-                ),
-              ),
+              ///SizedBox(
+              ///  width: 300,
+              ///  child: Column(
+              ///    crossAxisAlignment: CrossAxisAlignment.start,
+              ///    //children: [DeviceActionsCard()],
+              ///  ),
+              ///),
               SizedBox(
                 width: 550,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [DeviceStatusCard()],
+                  children: [DeviceConfigCard()],
                 ),
               ),
               //SizedBox(

@@ -45,12 +45,11 @@ class _NetworkCardState extends State<NetworkSettingsCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top row: title and add button
                   Row(
                     children: [
                       Expanded(
                         child: Text(
-                          'Ethernet Settings:',
+                          'DNS Settings:',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -58,57 +57,10 @@ class _NetworkCardState extends State<NetworkSettingsCard> {
                   ),
                   const SizedBox(height: 16),
 
-                  LabeledSwitch(
-                    myGap: 300,
-                    label: "Enable eth0 interface",
-                    value: true, //details.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        //details.Action = value ? "start" : "stop";
-                        //networkApi.editNetworkInfo(details);
-                      });
-                    },
-                  ),
-
-                  LabeledSwitch(
-                    myGap: 300,
-                    label: "Enable DHCPv4",
-                    value: true, //details.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        //details.Action = value ? "start" : "stop";
-                        //networkApi.editNetworkInfo(details);
-                      });
-                    },
-                  ),
-
-                  LabeledDropdown<String>(
-                    myGap: 300,
-                    label: 'IPv6 Auto Configuration',
-                    value: "Auto",
-                    items: ["Auto", "Disabled", "Stateful"],
-
-                    onChanged: (newValue) {
-                      setState(() {
-                        //ntpApi.ntp['ip_mode'] = newValue;
-                        //ntpApi.writeProperty('ip_mode');
-                        //ntpApi.readProperty('ip_address');
-                      });
-                    },
-                  ),
-                  LabeledText(
-                    label: "Static IP",
-                    controller: TextEditingController(),
-                    myGap: 300,
-                    onSubmitted: (value) {
-                      //ntpApi.ntp['mac'] = value;
-                      //ntpApi.writeProperty('mac');
-                    },
-                  ),
                   LabeledText(
                     label: "DNS Primary",
                     controller: TextEditingController(),
-                    myGap: 300,
+                    myGap: 250,
                     onSubmitted: (value) {
                       //ntpApi.ntp['mac'] = value;
                       //ntpApi.writeProperty('mac');
@@ -117,28 +69,21 @@ class _NetworkCardState extends State<NetworkSettingsCard> {
                   LabeledText(
                     label: "DNS Secondary",
                     controller: TextEditingController(),
-                    myGap: 300,
+                    myGap: 250,
                     onSubmitted: (value) {
                       //ntpApi.ntp['mac'] = value;
                       //ntpApi.writeProperty('mac');
                     },
                   ),
+
                   LabeledText(
-                    label: "Domain",
+                    label: "Ignore Auto DNS",
                     controller: TextEditingController(),
-                    myGap: 300,
+                    myGap: 250,
                     onSubmitted: (value) {
-                      // ntpApi.ntp['mac'] = value;
-                      // ntpApi.writeProperty('mac');
+                      //ntpApi.ntp['mac'] = value;
+                      //ntpApi.writeProperty('mac');
                     },
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Action to perform when the button is pressed
-                      print('Button pressed!');
-                      networkApi.readNetworkAccess();
-                    },
-                    child: const Text('Submit'),
                   ),
                 ],
               ),
@@ -158,6 +103,19 @@ class NetworkProtcolCard extends StatefulWidget {
 }
 
 class _NetworkProtcolCard extends State<NetworkProtcolCard> {
+  final port_statusCtrller = TextEditingController();
+  final hostnameCtrller = TextEditingController();
+  final gatewayCtrller = TextEditingController();
+  final interfaceCtrller = TextEditingController();
+  final speedCtrller = TextEditingController();
+  final macCtrller = TextEditingController();
+  final ip_addressCtrller = TextEditingController();
+  final dhcpCtrller = TextEditingController();
+  final dns1Ctrller = TextEditingController();
+  final dns2Ctrller = TextEditingController();
+  final ignore_auto_dnsCtrller = TextEditingController();
+  final connection_statusCtrller = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -165,6 +123,8 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
     context.read<NetworkApi>().readTelnetInfo();
     context.read<NetworkApi>().readSshInfo();
     context.read<NetworkApi>().readHttpInfo();
+    context.read<NetworkApi>().readNetworkInfo();
+    //context.read<NetworkApi>().readNetworkInfo
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       //context.read<NetworkApi>().getStatus();
@@ -176,6 +136,20 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
   Widget build(BuildContext context) {
     return Consumer<NetworkApi>(
       builder: (context, networkApi, _) {
+        port_statusCtrller.text = networkApi.networkInfo['port_status'];
+        hostnameCtrller.text = networkApi.networkInfo['hostname'];
+        gatewayCtrller.text = networkApi.networkInfo['gateway'];
+        interfaceCtrller.text = networkApi.networkInfo['interface'];
+        speedCtrller.text = networkApi.networkInfo['speed'];
+        macCtrller.text = networkApi.networkInfo['mac'];
+        ip_addressCtrller.text = networkApi.networkInfo['ip_address'];
+        dhcpCtrller.text = networkApi.networkInfo['dhcp'];
+        dns1Ctrller.text = networkApi.networkInfo['dns1'];
+        dns2Ctrller.text = networkApi.networkInfo['dns2'];
+        ignore_auto_dnsCtrller.text = networkApi.networkInfo['ignore_auto_dns'];
+        connection_statusCtrller.text =
+            networkApi.networkInfo['connection_status'];
+
         return Card(
           child: SizedBox(
             width: double.infinity,
@@ -184,19 +158,17 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top row: title and add button
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Protocol:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                  LabeledSwitch(
+                    myGap: 250,
+                    label: "HTTP",
+                    value: networkApi.http.Status == "active",
+                    onChanged: (bool value) {
+                      setState(() {
+                        networkApi.http.Action = value ? "start" : "stop";
+                        networkApi.editHttpInfo(networkApi.http);
+                      });
+                    },
                   ),
-                  const SizedBox(height: 16),
-
                   LabeledSwitch(
                     myGap: 250,
                     label: "Telnet",
@@ -216,17 +188,6 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       setState(() {
                         networkApi.ssh.Action = value ? "start" : "stop";
                         networkApi.editSshInfo(networkApi.ssh);
-                      });
-                    },
-                  ),
-                  LabeledSwitch(
-                    myGap: 250,
-                    label: "HTTP",
-                    value: networkApi.http.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        networkApi.http.Action = value ? "start" : "stop";
-                        networkApi.editHttpInfo(networkApi.http);
                       });
                     },
                   ),
@@ -399,6 +360,159 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
               ],
             );
           },
+        );
+      },
+    );
+  }
+}
+
+//
+//class NetworkAccessCard extends StatefulWidget {
+//  @override
+//  State<NetworkAccessCard> createState() => _NetworkAccessCard();
+//}
+//
+//class _NetworkAccessCard extends State<NetworkAccessCard> {
+//  @override
+//  void initState() {
+//    super.initState();
+//
+//    context.read<NetworkApi>().readNetworkAccess();
+//
+//    //WidgetsBinding.instance.addPostFrameCallback((_) {});
+//  }
+//
+
+class NetworkInfoCard extends StatefulWidget {
+  @override
+  State<NetworkInfoCard> createState() => _NetworkInfoCardState();
+}
+
+class _NetworkInfoCardState extends State<NetworkInfoCard> {
+  final port_statusCtrller = TextEditingController();
+  final hostnameCtrller = TextEditingController();
+  final gatewayCtrller = TextEditingController();
+  final interfaceCtrller = TextEditingController();
+  final speedCtrller = TextEditingController();
+  final macCtrller = TextEditingController();
+  final ip_addressCtrller = TextEditingController();
+  final dhcpCtrller = TextEditingController();
+  final dns1Ctrller = TextEditingController();
+  final dns2Ctrller = TextEditingController();
+  final ignore_auto_dnsCtrller = TextEditingController();
+  final connection_statusCtrller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final networkApi = context.read<NetworkApi>();
+      //ntpApi.readAll();
+      networkApi.readNetworkInfo();
+    });
+  }
+
+  @override
+  void dispose() {
+    port_statusCtrller.dispose();
+    hostnameCtrller.dispose();
+    gatewayCtrller.dispose();
+    interfaceCtrller.dispose();
+    speedCtrller.dispose();
+    macCtrller.dispose();
+    ip_addressCtrller.dispose();
+    dhcpCtrller.dispose();
+    dns1Ctrller.dispose();
+    dns2Ctrller.dispose();
+    ignore_auto_dnsCtrller.dispose();
+    connection_statusCtrller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NetworkApi>(
+      builder: (context, networkApi, _) {
+        hostnameCtrller.text = networkApi.networkInfo['hostname'];
+        gatewayCtrller.text = networkApi.networkInfo['gateway'];
+        interfaceCtrller.text = networkApi.networkInfo['interface'];
+        speedCtrller.text = networkApi.networkInfo['speed'];
+        macCtrller.text = networkApi.networkInfo['mac'];
+        ip_addressCtrller.text = networkApi.networkInfo['ip_address'];
+        dhcpCtrller.text = networkApi.networkInfo['dhcp'];
+        dns1Ctrller.text = networkApi.networkInfo['dns1'];
+        dns2Ctrller.text = networkApi.networkInfo['dns2'];
+        ignore_auto_dnsCtrller.text = networkApi.networkInfo['ignore_auto_dns'];
+        connection_statusCtrller.text =
+            networkApi.networkInfo['connection_status'];
+
+        return Card(
+          child: SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ReadOnlyLabeledText(
+                    label: "Hostname",
+                    controller: hostnameCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Gateway",
+                    controller: gatewayCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Interface",
+                    controller: interfaceCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Speed",
+                    controller: speedCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "MAC Address",
+                    controller: macCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "IP Address",
+                    controller: ip_addressCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "DHCP",
+                    controller: dhcpCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Primary DNS",
+                    controller: dns1Ctrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Secondary DNS",
+                    controller: dns2Ctrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Ignore Auto DNS",
+                    controller: ignore_auto_dnsCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Connection Status",
+                    controller: connection_statusCtrller,
+                    myGap: 200,
+                  ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
