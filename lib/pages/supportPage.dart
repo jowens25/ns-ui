@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nct/custom/custom.dart';
+import 'package:nct/main.dart';
 import 'package:nct/pages/basePage.dart';
-
 final Uri websiteUrl = Uri.parse('https://novuspower.com');
 final Uri phoneUrl = Uri(scheme: 'tel', path: '8168367446');
 final Uri emailUrl = Uri(scheme: 'mailto', path: 'support@novuspower.com');
@@ -59,6 +59,11 @@ class SupportCard extends StatelessWidget {
             label: "  Email",
             myGap: 150,
             myText: "support@novuspower.com",
+          ),
+          StaticLabeledText(
+            label: "  Version",
+            myGap: 150,
+            myText: frontendVersion,
           ),
           SizedBox(height: 10),
         ],

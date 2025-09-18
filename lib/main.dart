@@ -13,6 +13,7 @@ import 'package:nct/routes.dart';
 
 import 'package:web/web.dart' as web;
 //import 'package:web/web.dart' as web;
+final String frontendVersion = "1.4.60";
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
@@ -29,6 +30,7 @@ void main() {
   final userApi = UserApi(serverHost: host);
   final networkApi = NetworkApi(serverHost: host);
   final securityApi = SecurityApi(serverHost: host);
+
 
   runApp(
     MultiProvider(
