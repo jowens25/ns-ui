@@ -11,16 +11,17 @@ import 'package:nct/api/DeviceApi.dart';
 import 'package:nct/routes.dart';
 
 import 'package:web/web.dart' as web;
+
 //import 'package:web/web.dart' as web;
-final String frontendVersion = "1.1.61";
+final String frontendVersion = "1.1.64";
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  //final host = web.window.location.origin; // official
-  final host = "http://localhost:5000"; // development
+  final host = web.window.location.origin; // official
+  //final host = "http://localhost:5000"; // development
 
   final snmpApi = SnmpApi(serverHost: host);
   final deviceApi = DeviceApi(serverHost: host);
@@ -28,7 +29,6 @@ void main() {
   final userApi = UserApi(serverHost: host);
   final networkApi = NetworkApi(serverHost: host);
   final securityApi = SecurityApi(serverHost: host);
-
 
   runApp(
     MultiProvider(
