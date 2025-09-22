@@ -60,6 +60,8 @@ class SupportCard extends StatelessWidget {
             myGap: 150,
             myText: "support@novuspower.com",
           ),
+                    SizedBox(height: 10),
+
           StaticLabeledText(
             label: "  Version",
             myGap: 150,

@@ -4,6 +4,9 @@ import 'package:nct/custom/custom.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/api/DeviceApi.dart';
 
+import 'package:flutter/material.dart';
+// ... other imports
+
 class DeviceConfigCard extends StatefulWidget {
   @override
   State<DeviceConfigCard> createState() => _DeviceConfigCardState();
@@ -11,32 +14,79 @@ class DeviceConfigCard extends StatefulWidget {
 
 class _DeviceConfigCardState extends State<DeviceConfigCard> {
   final commandCtrl = TextEditingController();
-
-  /// This will hold a list of "command + response" entries
   final List<_CommandEntry> history = [];
+
+  // ADD: Scroll controller for history list
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
     commandCtrl.dispose();
+    _scrollController.dispose(); // Dispose the controller!
     super.dispose();
   }
 
   void _sendCommand(DeviceApi deviceApi, String command) async {
-    // Add a temporary entry with "pending" response
     setState(() {
       history.add(_CommandEntry(command: command, response: '...'));
     });
 
-    // Send command and wait for response
+    // After new entry, scroll to bottom
+    _scrollToBottom();
+
+    // Send command
     await deviceApi.writeCommand(command);
 
-    // Replace last history entry with updated response
     setState(() {
-      history[history.length - 1] =
-          _CommandEntry(command: command, response: deviceApi.serialResponse ?? '');
+      history[history.length - 1] = _CommandEntry(
+        command: command,
+        response: deviceApi.serialResponse ?? '',
+      );
     });
 
+    _scrollToBottom(); // Scroll again after response updated
+
     commandCtrl.clear();
+  }
+
+  // Helper function
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  // Show suggested commands in a dialog
+  void _showCommandInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text("Try these commands"),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("help"),
+                Text("reset"),
+                Text("status"),
+                // Add more suggestions as needed
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -46,15 +96,29 @@ class _DeviceConfigCardState extends State<DeviceConfigCard> {
         return Card(
           child: SizedBox(
             width: double.infinity,
-            height: 400, // ✅ Fixed height to make list scrollable
+            height: 400,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// Scrollable history of commands + responses
+  
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                       
+                        IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          tooltip: "Commands",
+                          onPressed: _showCommandInfo,
+                        ),
+                      ],
+                    ),
+                  
+                  SizedBox(height: 4),
                   Expanded(
                     child: ListView.builder(
+                      controller: _scrollController, // <-- add controller
                       itemCount: history.length,
                       itemBuilder: (context, index) {
                         final entry = history[index];
@@ -63,22 +127,20 @@ class _DeviceConfigCardState extends State<DeviceConfigCard> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("> ${entry.command}",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue)),
-                              Text(entry.response,
-                                  style: const TextStyle(color: Colors.green)),
+                              Text(
+                                "> ${entry.command}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(entry.response),
                             ],
                           ),
                         );
                       },
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  /// Command input at the bottom
                   LabeledText(
                     label: "Command",
                     controller: commandCtrl,
@@ -99,10 +161,9 @@ class _DeviceConfigCardState extends State<DeviceConfigCard> {
   }
 }
 
-/// Helper class to store command + response together
+// Helper class as before
 class _CommandEntry {
   final String command;
   final String response;
-
   _CommandEntry({required this.command, required this.response});
 }

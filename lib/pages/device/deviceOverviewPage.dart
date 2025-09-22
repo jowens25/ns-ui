@@ -7,7 +7,7 @@ class DeviceOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Device',
-      description: 'Configuration Overview',
+      description: 'Configuration Terminal',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
