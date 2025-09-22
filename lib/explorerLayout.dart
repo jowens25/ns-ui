@@ -24,8 +24,9 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   @override
   void initState() {
     super.initState();
-    final authApi = Provider.of<UserApi>(context, listen: false);
-    explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
+    final userApi = Provider.of<UserApi>(context, listen: false);
+    userApi.getCurrentUserFromToken(UserApi.getToken());
+    explorerItems = AppRoutes.generateExplorerItems(userApi.isLoggedIn);
   }
 
   @override
@@ -153,9 +154,7 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                         Spacer(),
                         Consumer<UserApi>(
                           builder: (context, userApi, _) {
-      
                             return Text(
-                              
                               userApi.currentUser?.name != null
                                   ? "Welcome, ${userApi.currentUser!.name}"
                                   : "Welcome",

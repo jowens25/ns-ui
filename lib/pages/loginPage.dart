@@ -27,6 +27,7 @@ class LoginCardState extends State<LoginCard> {
   @override
   void initState() {
     super.initState();
+    context.read<UserApi>().getCurrentUserFromToken(UserApi.getToken());
   }
 
   final _formKey = GlobalKey<FormState>();
