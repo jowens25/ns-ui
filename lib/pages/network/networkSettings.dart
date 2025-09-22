@@ -396,6 +396,8 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
   final speedCtrller = TextEditingController();
   final macCtrller = TextEditingController();
   final ip_addressCtrller = TextEditingController();
+  final netmaskCtrller = TextEditingController();
+
   final dhcpCtrller = TextEditingController();
   final dns1Ctrller = TextEditingController();
   final dns2Ctrller = TextEditingController();
@@ -421,6 +423,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
     speedCtrller.dispose();
     macCtrller.dispose();
     ip_addressCtrller.dispose();
+    netmaskCtrller.dispose();
     dhcpCtrller.dispose();
     dns1Ctrller.dispose();
     dns2Ctrller.dispose();
@@ -439,6 +442,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
         speedCtrller.text = networkApi.networkInfo['speed'];
         macCtrller.text = networkApi.networkInfo['mac'];
         ip_addressCtrller.text = networkApi.networkInfo['ip_address'];
+        netmaskCtrller.text = networkApi.networkInfo['netmask'];
         dhcpCtrller.text = networkApi.networkInfo['dhcp'];
         dns1Ctrller.text = networkApi.networkInfo['dns1'];
         dns2Ctrller.text = networkApi.networkInfo['dns2'];
@@ -482,6 +486,11 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                   ReadOnlyLabeledText(
                     label: "IP Address",
                     controller: ip_addressCtrller,
+                    myGap: 200,
+                  ),
+                  ReadOnlyLabeledText(
+                    label: "Netmask",
+                    controller: netmaskCtrller,
                     myGap: 200,
                   ),
                   ReadOnlyLabeledText(

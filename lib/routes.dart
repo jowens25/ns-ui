@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nct/api/AuthApi.dart';
 import 'package:nct/pages/device/deviceOverviewPage.dart';
 import 'package:nct/pages/network/networkOverviewPage.dart';
-
+import 'package:nct/api/UserApi.dart';
 import 'package:nct/pages/errorPage.dart';
 import 'package:nct/explorerLayout.dart';
 import 'package:nct/pages/loginPage.dart';
@@ -77,7 +76,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
-      final authApi = Provider.of<AuthApi>(context, listen: false);
+      final authApi = Provider.of<UserApi>(context, listen: false);
       final loggedIn = authApi.isLoggedIn;
 
       final isLoginRoute = state.uri.path == '/login';
@@ -103,7 +102,7 @@ class AppRouter {
       GoRoute(
         path: '/',
         redirect: (BuildContext context, GoRouterState state) {
-          final authApi = Provider.of<AuthApi>(context, listen: false);
+          final authApi = Provider.of<UserApi>(context, listen: false);
           return authApi.isLoggedIn ? '/device' : '/login';
         },
       ),

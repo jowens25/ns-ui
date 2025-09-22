@@ -7,6 +7,11 @@ class DeviceApi extends BaseApi {
   @override
   String get baseUrl => '$serverHost/api/v1/device';
 
+
+  String? _serialResponse;
+  String? get serialResponse => _serialResponse; 
+
+
   DeviceApi({required super.serverHost});
 
   Map<String, dynamic> device = {
@@ -67,6 +72,15 @@ class DeviceApi extends BaseApi {
     final response = await postRequest(endpoint, {endpoint: device[endpoint]});
     final decoded = json.decode(response.body);
     print(decoded);
+    notifyListeners();
+  }
+
+  Future<void> writeCommand(String command) async {
+
+    final response = await postRequest("serial/$command", {"":""});
+    final decoded = json.decode(response.body);
+    _serialResponse = decoded[command] ?? '';
+    print(_serialResponse);
     notifyListeners();
   }
 }

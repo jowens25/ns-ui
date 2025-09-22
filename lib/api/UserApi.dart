@@ -1,9 +1,23 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:nct/api/AuthApi.dart';
+
 import 'BaseApi.dart';
 
+import 'dart:convert';
+
+import 'package:nct/api/BaseApi.dart';
+import 'package:provider/provider.dart';
+import 'package:web/web.dart';
+import 'dart:async';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+
 class UserApi extends BaseApi {
+  @override
+  String get baseUrl => '$serverHost/api/v1';
+
+  String? _authResponse;
+  String? get authResponse => _authResponse;
+
   User? currentUser;
   List<User> _users = [];
   List<User> get users => _users;
@@ -13,10 +27,86 @@ class UserApi extends BaseApi {
   String _response = "response";
   String get response => _response;
 
-  @override
-  String get baseUrl => '$serverHost/api/v1';
+  bool _loggedIn = false;
+  bool get isLoggedIn => _loggedIn;
 
-  UserApi({required super.serverHost});
+  Timer? _sessionTimer;
+
+  UserApi({required super.serverHost}) {
+    isTokenValid();
+    _startSessionTimer();
+  }
+
+  Future<void> login(User user) async {
+    final response = await postRequest("login", user.toJson());
+    final decoded = json.decode(response.body);
+    //_loggedIn = true;
+    print('decoded: $decoded');
+
+    if (decoded['error'] != null) {
+      _authResponse = decoded['error'];
+    }
+
+    setToken(decoded['token']);
+    isTokenValid();
+    notifyListeners();
+  }
+
+  void logout() {
+    deleteToken();
+    _authResponse = null;
+    _loggedIn = false;
+    notifyListeners();
+  }
+
+  static String getToken() {
+    final cookies = document.cookie.split(';');
+    for (var cookie in cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith('token=')) {
+        return cookie.substring('token='.length);
+      }
+    }
+    return '';
+  }
+
+  void setToken(String tok) {
+    document.cookie = 'token=$tok; path=/; max-age=3600; samesite=lax';
+  }
+
+  void deleteToken() {
+    document.cookie = 'token=; path=/; max-age=0';
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startSessionTimer() {
+    _sessionTimer?.cancel();
+    _sessionTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+      isTokenValid();
+      notifyListeners();
+    });
+  }
+
+  void isTokenValid() {
+    try {
+      JWT.verify(getToken(), SecretKey("your-secret-key"));
+      _loggedIn = true;
+      //final userApi = Provider.of<UserApi>(context, listen: false);
+      //userApi.getCurrentUserFromToken(getToken());
+    } on JWTExpiredException {
+      print('JWT expired');
+      _loggedIn = false;
+    } on JWTException catch (ex) {
+      print('Signature invalid: ${ex.message}');
+      _loggedIn = false;
+    }
+    notifyListeners();
+  }
 
   void searchUsers(String query) {
     if (query.isEmpty) {
@@ -49,6 +139,10 @@ class UserApi extends BaseApi {
     );
 
     notifyListeners();
+  }
+
+  void clearUser() {
+    currentUser = null;
   }
 
   // gets , sets, reads wriites all thsat

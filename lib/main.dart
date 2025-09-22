@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:nct/api/NetworkApi.dart';
 import 'package:nct/api/SecurityApi.dart';
 import 'package:provider/provider.dart';
-import 'package:nct/api/AuthApi.dart';
 import 'package:nct/api/SnmpApi.dart';
 import 'package:nct/api/UserApi.dart';
 
@@ -13,17 +12,16 @@ import 'package:nct/routes.dart';
 
 import 'package:web/web.dart' as web;
 //import 'package:web/web.dart' as web;
-final String frontendVersion = "1.4.60";
+final String frontendVersion = "1.1.61";
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final host = web.window.location.origin; // official
-  //final host = "http://10.1.10.220:5000"; // development
+  //final host = web.window.location.origin; // official
+  final host = "http://localhost:5000"; // development
 
-  final authApi = AuthApi(serverHost: host);
   final snmpApi = SnmpApi(serverHost: host);
   final deviceApi = DeviceApi(serverHost: host);
 
@@ -35,7 +33,6 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => authApi),
         ChangeNotifierProvider(create: (_) => deviceApi),
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),

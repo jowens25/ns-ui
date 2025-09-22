@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nct/api/AuthApi.dart';
 import 'package:nct/api/UserApi.dart';
 import 'package:nct/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
@@ -43,8 +42,8 @@ class LoginCardState extends State<LoginCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthApi>(
-      builder: (context, authApi, _) {
+    return Consumer<UserApi>(
+      builder: (context, userApi, _) {
         return Row(
           children: [
             Expanded(
@@ -75,9 +74,9 @@ class LoginCardState extends State<LoginCard> {
                               (value) => value!.isEmpty ? 'Required' : null,
                         ),
                         SizedBox(height: 16),
-                        if (authApi.authResponse != null)
+                        if (userApi.authResponse != null)
                           Text(
-                            authApi.authResponse!,
+                            userApi.authResponse!,
                             style: TextStyle(color: Colors.red),
                           ),
                         ElevatedButton(
@@ -88,21 +87,21 @@ class LoginCardState extends State<LoginCard> {
                                   'username': _usernameController.text,
                                   'password': _passwordController.text,
                                 });
-                                await authApi.login(user);
+                                await userApi.login(user);
 
                                 context.read<UserApi>().getCurrentUserFromToken(
-                                  AuthApi.getToken(),
+                                  UserApi.getToken(),
                                 );
 
-                                //await authApi.login(
+                                //await userApi.login(
                                 //  _usernameController.text,
                                 //  _passwordController.text,
                                 //);
                                 context.go('/dashboard');
 
                                 //print("error: $_errorMessage");
-                                //print("is logged in???? ${authApi.isLoggedIn}");
-                                // print("token: ${authApi.getToken()}");
+                                //print("is logged in???? ${userApi.isLoggedIn}");
+                                // print("token: ${userApi.getToken()}");
                               } catch (e) {}
                             }
                           },

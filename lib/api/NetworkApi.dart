@@ -20,6 +20,7 @@ class NetworkApi extends BaseApi {
     'speed': '',
     'mac': '',
     'ip_address': '',
+    'netmask':'',
     'dhcp': '',
     'dns1': '',
     'dns2': '',

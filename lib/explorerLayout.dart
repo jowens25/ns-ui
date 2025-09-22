@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/UserApi.dart';
 import 'package:nct/api/UserApi.dart';
 import 'package:nct/models.dart';
 import 'package:nct/routes.dart';
@@ -24,14 +24,14 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   @override
   void initState() {
     super.initState();
-    final authApi = Provider.of<AuthApi>(context, listen: false);
+    final authApi = Provider.of<UserApi>(context, listen: false);
     explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
   }
 
   @override
   Widget build(BuildContext context) {
     String currentRoute = GoRouterState.of(context).uri.path;
-    final authApi = Provider.of<AuthApi>(context, listen: false);
+    final authApi = Provider.of<UserApi>(context, listen: false);
     //final userApi = Provider.of<UserApi>(context, listen: false);
 
     //userApi.getCurrentUserFromToken();
@@ -153,8 +153,9 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                         Spacer(),
                         Consumer<UserApi>(
                           builder: (context, userApi, _) {
-                            //userApi.getCurrentUserFromToken();
+      
                             return Text(
+                              
                               userApi.currentUser?.name != null
                                   ? "Welcome, ${userApi.currentUser!.name}"
                                   : "Welcome",

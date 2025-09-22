@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nct/api/AuthApi.dart';
+import 'package:nct/api/UserApi.dart';
 import 'package:nct/pages/basePage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -28,8 +28,9 @@ class LogoutPageState extends State<LogoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthApi>(
-      builder: (context, authApi, _) {
+
+    return Consumer< UserApi>(
+      builder: (context, userApi, _) {
         return BasePage(
           title: 'Logout',
           description: 'Please Logout',
@@ -53,7 +54,8 @@ class LogoutPageState extends State<LogoutPage> {
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
                                   try {
-                                    authApi.logout();
+                                    userApi.logout();
+                                    userApi.clearUser();
                                     // Handle successful login (e.g., save token, navigate)
                                     context.go('/login');
                                   } catch (e) {
