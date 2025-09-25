@@ -128,30 +128,3 @@ class _NtpServerConfigCardState extends State<NtpServerConfigCard> {
     );
   }
 }
-
-class NtpServerConfigPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BasePage(
-      title: 'NTP',
-      description: 'NTP Server ServerConfig Info:',
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Column: Actions
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [NtpServerConfigCard()],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}

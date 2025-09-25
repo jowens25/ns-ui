@@ -12,6 +12,14 @@ class NetworkApi extends BaseApi {
   Http _http = Http(Action: "Action", Status: "Status");
   Http get http => _http;
 
+  Ftp _ftp = Ftp(Action: "Action", Status: "Status");
+  Ftp get ftp => _ftp;
+
+  late Timer _pingTimer;
+
+  bool _invalid = true;
+  bool get invalid => _invalid;
+
   Map<String, dynamic> networkInfo = {
     'port_status': '',
     'hostname': '',
@@ -20,10 +28,11 @@ class NetworkApi extends BaseApi {
     'speed': '',
     'mac': '',
     'ip_address': '',
-    'netmask':'',
+    'netmask': '',
     'dhcp': '',
     'dns1': '',
     'dns2': '',
+
     'ignore_auto_dns': '',
     'connection_status': '',
   };
@@ -34,7 +43,15 @@ class NetworkApi extends BaseApi {
   @override
   String get baseUrl => '$serverHost/api/v1/network';
 
-  NetworkApi({required super.serverHost});
+  @override
+  void dispose() {
+    _pingTimer.cancel();
+    super.dispose();
+  }
+
+  NetworkApi({required super.serverHost}) {
+    _startPinging();
+  }
 
   Future<void> readTelnetInfo() async {
     final response = await getRequest("telnet");
@@ -84,6 +101,22 @@ class NetworkApi extends BaseApi {
     notifyListeners();
   }
 
+  Future<void> readFtpInfo() async {
+    final response = await getRequest("ftp");
+    if (response.statusCode == 200) {
+      _ftp = Ftp.fromJson(jsonDecode(response.body)['info']);
+      notifyListeners();
+    } else {
+      throw Exception('Failed to load info');
+    }
+  }
+
+  Future<void> editFtpInfo(Ftp ftp) async {
+    await patchRequest("ftp", ftp.toJson());
+    readFtpInfo();
+    notifyListeners();
+  }
+
   Future<void> readNetworkInfo() async {
     final response = await getRequest("info");
     if (response.statusCode == 200) {
@@ -94,13 +127,29 @@ class NetworkApi extends BaseApi {
     }
   }
 
+  Future<void> writeNetworkInfo(String endpoint) async {
+    final response = await postRequest("info/$endpoint", {
+      endpoint: networkInfo[endpoint],
+    });
+    final decoded = json.decode(response.body);
+    print(decoded);
+    notifyListeners();
+  }
+
+  Future<void> resetNetwork() async {
+    final response = await postRequest("reset", {});
+    notifyListeners();
+  }
+
   Future<void> readNetworkAccess() async {
     final response = await getRequest("access");
     final decoded = jsonDecode(response.body);
-    _allowedNodes =
-        (decoded['allowed_nodes'] as List)
-            .map((userJson) => AllowedNode.fromJson(userJson))
-            .toList();
+    if (decoded['allowed_nodes'] != null) {
+      _allowedNodes =
+          (decoded['allowed_nodes'] as List)
+              .map((userJson) => AllowedNode.fromJson(userJson))
+              .toList();
+    }
 
     notifyListeners();
   }
@@ -118,6 +167,35 @@ class NetworkApi extends BaseApi {
     _allowedNodes.remove(node);
     readNetworkAccess();
     notifyListeners();
+  }
+
+  void _startPinging() {
+    _pingTimer = Timer.periodic(Duration(seconds: 1), (_) async {
+      try {
+        final response = await getRequest("health");
+        if (response.statusCode == 200) {
+          final decoded = jsonDecode(response.body);
+          print("Health check: $decoded");
+
+          if (_invalid) {
+            _invalid = false;
+            notifyListeners(); // Only notify if state actually changed
+          }
+        } else {
+          // Non-200 means something went wrong
+          if (!_invalid) {
+            _invalid = true;
+            notifyListeners();
+          }
+        }
+      } catch (e) {
+        print("Health check failed: $e");
+        if (!_invalid) {
+          _invalid = true;
+          notifyListeners();
+        }
+      }
+    });
   }
 }
 
@@ -159,6 +237,21 @@ class Http {
 
   factory Http.fromJson(Map<String, dynamic> json) {
     return Http(Action: json['action'] ?? '', Status: json['status'] ?? '');
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'action': Action, 'status': Status};
+  }
+}
+
+class Ftp {
+  String Action;
+  String Status;
+
+  Ftp({required this.Action, required this.Status});
+
+  factory Ftp.fromJson(Map<String, dynamic> json) {
+    return Ftp(Action: json['action'] ?? '', Status: json['status'] ?? '');
   }
 
   Map<String, dynamic> toJson() {

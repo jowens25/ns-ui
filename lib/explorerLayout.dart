@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nct/api/UserApi.dart';
-import 'package:nct/api/UserApi.dart';
+import 'package:nct/api/NetworkApi.dart';
 import 'package:nct/models.dart';
 import 'package:nct/routes.dart';
 import 'package:provider/provider.dart';
@@ -24,19 +24,37 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
   @override
   void initState() {
     super.initState();
-    final userApi = Provider.of<UserApi>(context, listen: false);
-    userApi.getCurrentUserFromToken(UserApi.getToken());
-    explorerItems = AppRoutes.generateExplorerItems(userApi.isLoggedIn);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userApi = Provider.of<UserApi>(context, listen: false);
+      userApi.getCurrentUserFromToken(UserApi.getToken());
+      explorerItems = AppRoutes.generateExplorerItems(userApi.isLoggedIn);
+    });
+
+    //final userApi = Provider.of<UserApi>(context, listen: false);
+    //userApi.getCurrentUserFromToken(UserApi.getToken());
+
+    //final userApi = Provider.of<UserApi>(context, listen: false);
+    //userApi.getCurrentUserFromToken(UserApi.getToken());
   }
 
   @override
   Widget build(BuildContext context) {
+    return Consumer<NetworkApi>(
+      builder: (context, networkApi, _) {
+        return Stack(
+          children: [
+            _buildMainLayout(context), // your existing UI layout
+            if (networkApi.invalid) _buildDisconnectedOverlay(context),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMainLayout(BuildContext context) {
     String currentRoute = GoRouterState.of(context).uri.path;
     final authApi = Provider.of<UserApi>(context, listen: false);
-    //final userApi = Provider.of<UserApi>(context, listen: false);
-
-    //userApi.getCurrentUserFromToken();
-
     explorerItems = AppRoutes.generateExplorerItems(authApi.isLoggedIn);
 
     return Scaffold(
@@ -162,22 +180,6 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                           },
                         ),
                         Spacer(),
-                        // Navigation buttons
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.arrow_back, size: 18),
-                              onPressed:
-                                  context.canPop() ? () => context.pop() : null,
-                              tooltip: 'Go Back',
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.refresh, size: 18),
-                              onPressed: () => context.go(currentRoute),
-                              tooltip: 'Refresh',
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -188,6 +190,22 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDisconnectedOverlay(BuildContext context) {
+    return Container(
+      color: Colors.black.withOpacity(0.5),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Reconnecting to server...'),
+          ],
+        ),
       ),
     );
   }

@@ -102,19 +102,24 @@ class _DeviceConfigCardState extends State<DeviceConfigCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-  
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                       
-                        IconButton(
-                          icon: const Icon(Icons.info_outline),
-                          tooltip: "Commands",
-                          onPressed: _showCommandInfo,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Configuration terminal:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
-                      ],
-                    ),
-                  
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        tooltip: "Commands",
+                        onPressed: _showCommandInfo,
+                      ),
+                    ],
+                  ),
+
                   SizedBox(height: 4),
                   Expanded(
                     child: ListView.builder(

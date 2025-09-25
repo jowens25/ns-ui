@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/pages/users/usersActions.dart';
 import 'package:nct/pages/users/usersManagement.dart';
 
 class UsersOverviewPage extends StatelessWidget {
+  const UsersOverviewPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BasePage(
       title: 'User Management',
-      description: 'Manage users, actions and authentication',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -18,17 +18,10 @@ class UsersOverviewPage extends StatelessWidget {
             alignment: WrapAlignment.start,
             children: [
               SizedBox(
-                width: 400,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [UsersActionsCard(), SizedBox(height: 16)],
-                ),
-              ),
-              SizedBox(
                 width: 500,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [UsersManagementCard(), SizedBox(height: 16)],
+                  children: [UsersManagementCard()],
                 ),
               ),
             ],

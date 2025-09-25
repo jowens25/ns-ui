@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nct/pages/basePage.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/api/NtpApi.dart';
@@ -140,33 +139,6 @@ class _NtpUtcConfigCardState extends State<NtpUtcConfigCard> {
           ),
         );
       },
-    );
-  }
-}
-
-class NtpUtcConfigPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BasePage(
-      title: 'NTP',
-      description: 'NTP Server UtcConfig Info:',
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Column: Actions
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [NtpUtcConfigCard()],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

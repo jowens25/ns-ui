@@ -9,6 +9,9 @@ class SnmpApi extends BaseApi {
   List<V3User> _v3Users = [];
   List<V3User> get v3Users => _v3Users;
 
+  String _response = "response";
+  String get response => _response;
+
   SysDetails _sysDetails = SysDetails(
     Action: "Action",
     Status: "Status",
@@ -103,9 +106,7 @@ class SnmpApi extends BaseApi {
     print(decoded['v3_user']);
     try {
       _v3Users.add(V3User.fromJson(decoded['v3_user']));
-    } catch (e) {
-      print("you stupid: $e");
-    }
+    } catch (e) {}
     notifyListeners();
   }
 
@@ -131,6 +132,8 @@ class SnmpApi extends BaseApi {
   Future<void> resetSnmpConfig() async {
     final response = await getRequest("reset_config");
     print(response.body);
+    _response = response.body;
+    readSnmpInfo();
     readV1v2cUsers();
     readV3Users();
     notifyListeners();
@@ -143,6 +146,7 @@ class V1v2cUser {
   String groupName;
   String community;
   String source;
+  String secName;
   //String ipVersion;
   //String ip4Address;
   //String ip6Address;
@@ -153,6 +157,7 @@ class V1v2cUser {
     required this.groupName,
     required this.community,
     required this.source,
+    required this.secName,
     //required this.ipVersion,
     //required this.ip4Address,
     //required this.ip6Address,
@@ -166,6 +171,7 @@ class V1v2cUser {
       community: json['community'] ?? '',
       //ipVersion: json['ip_version'] ?? '',
       source: json['source'] ?? '',
+      secName: json['sec_name'] ?? '',
       //ip6Address: json['ip6_address'] ?? '',
     );
   }
@@ -177,6 +183,7 @@ class V1v2cUser {
       'group_name': groupName,
       'community': community,
       'source': source,
+      'sec_name': secName,
       //'ip_version': ipVersion,
       //'ip4_address': ip4Address,
       //'ip6_address': ip6Address,

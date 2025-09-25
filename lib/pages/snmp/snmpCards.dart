@@ -1,39 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nct/api/SnmpApi.dart';
-import 'package:nct/pages/basePage.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/custom/custom.dart';
-
-class SnmpStatusPage extends StatefulWidget {
-  @override
-  SnmpStatusPageState createState() => SnmpStatusPageState();
-}
-
-class SnmpStatusPageState extends State<SnmpStatusPage> {
-  @override
-  Widget build(BuildContext context) {
-    return BasePage(
-      title: 'SNMP',
-      description: 'Status:',
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [SnmpStatusCard()],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
 
 class SnmpStatusCard extends StatefulWidget {
   @override
@@ -81,13 +49,26 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Status:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Info',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        tooltip: "Info",
+                        onPressed: _showInfo,
+                      ),
+                    ],
                   ),
                   SizedBox(height: 12),
                   LabeledSwitch(
-                    myGap: 70,
+                    myGap: 120,
                     label: "SNMP Enabled",
                     value: snmpApi.sysDetails.Status == "active",
                     onChanged: (bool value) {
@@ -191,6 +172,14 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                       ),
                     ],
                   ),
+
+                  SizedBox(height: 24),
+
+                  ElevatedButton(
+                    onPressed: () => {_showRestoreDefaultSNMPConfigDialog()},
+                    child: Text('RESTORE DEFAULT CONFIGURATION'),
+                  ),
+                  //// addd button here
                 ],
               ),
             ),
@@ -199,31 +188,57 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
       },
     );
   }
-}
 
-class SnmpActionsCard extends StatelessWidget {
-  const SnmpActionsCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Actions', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => {context.read<SnmpApi>().resetSnmpConfig()},
-                child: Text('RESTORE DEFAULT SNMP CONFIGURATION'),
+  void _showInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [Text("Add, edit, remove and review SNMP")],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
               ),
             ],
           ),
-        ),
-      ),
+    );
+  }
+
+  void _showRestoreDefaultSNMPConfigDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<SnmpApi>(
+          builder: (context, snmpApi, _) {
+            return AlertDialog(
+              content: Text(
+                'Are you sure you want to restore the SNMP config?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await context.read<SnmpApi>().resetSnmpConfig();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
+                  },
+                  child: Text('Restore', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -264,7 +279,10 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     Expanded(
                       child: Text(
                         'SNMP V1/V2c Users',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -703,7 +721,10 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     Expanded(
                       child: Text(
                         'SNMP V3 Users',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     IconButton(

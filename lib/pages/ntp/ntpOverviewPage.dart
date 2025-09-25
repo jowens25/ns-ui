@@ -11,7 +11,6 @@ class NtpOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'NTP',
-      description: 'View and Manage NTP Server Configuration',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),

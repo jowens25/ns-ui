@@ -7,7 +7,6 @@ class SnmpOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'SNMP',
-      description: 'Configuration Overview',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -21,8 +20,7 @@ class SnmpOverviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SnmpActionsCard(),
-                    SizedBox(height: 16),
+                    // cards
                     SnmpStatusCard(),
                   ],
                 ),
@@ -33,9 +31,7 @@ class SnmpOverviewPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SnmpVersion12Card(),
-                    SizedBox(height: 16),
                     SnmpVersion3Card(),
-                    SizedBox(height: 16),
                     //SnmpTrapsCard(),
                   ],
                 ),

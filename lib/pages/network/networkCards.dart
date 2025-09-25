@@ -3,98 +3,6 @@ import 'package:nct/custom/custom.dart';
 import 'package:nct/api/NetworkApi.dart';
 import 'package:provider/provider.dart';
 
-class NetworkSettingsCard extends StatefulWidget {
-  const NetworkSettingsCard({super.key});
-
-  @override
-  State<NetworkSettingsCard> createState() => _NetworkCardState();
-}
-
-class _NetworkCardState extends State<NetworkSettingsCard> {
-  final ipAddressController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<NetworkApi>().readTelnetInfo();
-    context.read<NetworkApi>().readSshInfo();
-    context.read<NetworkApi>().readHttpInfo();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      //context.read<NetworkApi>().getStatus();
-      //context.read<NetworkApi>().getSysDetails();
-    });
-  }
-
-  @override
-  void dispose() {
-    ipAddressController.dispose();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<NetworkApi>(
-      builder: (context, networkApi, _) {
-        return Card(
-          child: SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'DNS Settings:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  LabeledText(
-                    label: "DNS Primary",
-                    controller: TextEditingController(),
-                    myGap: 250,
-                    onSubmitted: (value) {
-                      //ntpApi.ntp['mac'] = value;
-                      //ntpApi.writeProperty('mac');
-                    },
-                  ),
-                  LabeledText(
-                    label: "DNS Secondary",
-                    controller: TextEditingController(),
-                    myGap: 250,
-                    onSubmitted: (value) {
-                      //ntpApi.ntp['mac'] = value;
-                      //ntpApi.writeProperty('mac');
-                    },
-                  ),
-
-                  LabeledText(
-                    label: "Ignore Auto DNS",
-                    controller: TextEditingController(),
-                    myGap: 250,
-                    onSubmitted: (value) {
-                      //ntpApi.ntp['mac'] = value;
-                      //ntpApi.writeProperty('mac');
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 class NetworkProtcolCard extends StatefulWidget {
   const NetworkProtcolCard({super.key});
 
@@ -158,6 +66,25 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Protocols:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        tooltip: "Info",
+                        onPressed: _showInfo,
+                      ),
+                    ],
+                  ),
                   LabeledSwitch(
                     myGap: 250,
                     label: "HTTP",
@@ -191,12 +118,44 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       });
                     },
                   ),
+                  LabeledSwitch(
+                    myGap: 250,
+                    label: "FTP",
+                    value: networkApi.ftp.Status == "active",
+                    onChanged: (bool value) {
+                      setState(() {
+                        networkApi.ftp.Action = value ? "start" : "stop";
+                        networkApi.editFtpInfo(networkApi.ftp);
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text("Access Control"),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [Text("Enable or disable insecure protocols")],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
     );
   }
 }
@@ -235,14 +194,23 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Access Control',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        'Access Control:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     IconButton(
                       onPressed: () => addNetworkAccessDialog(),
                       icon: const Icon(Icons.add),
                       tooltip: 'Add Access',
+                    ),
+
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      tooltip: "Info",
+                      onPressed: _showInfo,
                     ),
                   ],
                 ),
@@ -282,6 +250,37 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
           },
         );
       },
+    );
+  }
+
+  void _showInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text("Access Control"),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "By default all ip address are allowed to access the system",
+                ),
+                Text("Access may be restricted by adding an allowed node"),
+                Text("Adding '10.1.10.1/24' will allow any ip on that subnet"),
+                Text("Adding '10.1.10.201/32' will only allow 10.1.10.201"),
+                Text(
+                  "Remove these restrictions by running 'ns network unrestrict' via cli",
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
     );
   }
 
@@ -366,23 +365,6 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
   }
 }
 
-//
-//class NetworkAccessCard extends StatefulWidget {
-//  @override
-//  State<NetworkAccessCard> createState() => _NetworkAccessCard();
-//}
-//
-//class _NetworkAccessCard extends State<NetworkAccessCard> {
-//  @override
-//  void initState() {
-//    super.initState();
-//
-//    context.read<NetworkApi>().readNetworkAccess();
-//
-//    //WidgetsBinding.instance.addPostFrameCallback((_) {});
-//  }
-//
-
 class NetworkInfoCard extends StatefulWidget {
   @override
   State<NetworkInfoCard> createState() => _NetworkInfoCardState();
@@ -458,16 +440,41 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Status:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        tooltip: "Info",
+                        onPressed: _showInfo,
+                      ),
+                    ],
+                  ),
                   ReadOnlyLabeledText(
+                    label: "Connection Status",
+                    controller: connection_statusCtrller,
+                    myGap: 200,
+                  ),
+
+                  LabeledText(
                     label: "Hostname",
                     controller: hostnameCtrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['hostname'] = value;
+                      networkApi.writeNetworkInfo('hostname');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "Gateway",
-                    controller: gatewayCtrller,
-                    myGap: 200,
-                  ),
+
                   ReadOnlyLabeledText(
                     label: "Interface",
                     controller: interfaceCtrller,
@@ -483,40 +490,89 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     controller: macCtrller,
                     myGap: 200,
                   ),
-                  ReadOnlyLabeledText(
-                    label: "IP Address",
+
+                  LabeledText(
+                    label: "IPv4 Gateway",
+                    controller: gatewayCtrller,
+                    myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['gateway'] = value;
+                      networkApi.writeNetworkInfo('gateway');
+                    },
+                  ),
+
+                  LabeledText(
+                    label: "IPv4 Address",
                     controller: ip_addressCtrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['ip_address'] = value;
+                      networkApi.writeNetworkInfo('ip_address');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "Netmask",
+
+                  LabeledText(
+                    label: "IPv4 Netmask",
                     controller: netmaskCtrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['netmask'] = value;
+                      networkApi.writeNetworkInfo('netmask');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "DHCP",
+
+                  LabeledText(
+                    label: "IPv4 DHCP",
                     controller: dhcpCtrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['dhcp'] = value;
+                      networkApi.writeNetworkInfo('dhcp');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "Primary DNS",
+
+                  LabeledText(
+                    label: "IPv4 DNS Primary",
                     controller: dns1Ctrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['dns1'] = value;
+                      networkApi.writeNetworkInfo('dns1');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "Secondary DNS",
+
+                  LabeledText(
+                    label: "IPv4 DNS Secondary",
                     controller: dns2Ctrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['dns2'] = value;
+                      networkApi.writeNetworkInfo('dns2');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "Ignore Auto DNS",
+
+                  LabeledText(
+                    label: "IPv4 DNS Ignore Auto",
                     controller: ignore_auto_dnsCtrller,
                     myGap: 200,
+                    onSubmitted: (value) {
+                      networkApi.networkInfo['ignore_auto_dns'] = value;
+                      networkApi.writeNetworkInfo('ignore_auto_dns');
+                    },
                   ),
-                  ReadOnlyLabeledText(
-                    label: "Connection Status",
-                    controller: connection_statusCtrller,
-                    myGap: 200,
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          networkApi.resetNetwork();
+                        },
+                        child: Text('Reset network config'),
+                      ),
+                      SizedBox(width: 40),
+                    ],
                   ),
                 ],
               ),
@@ -524,6 +580,32 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
           ),
         );
       },
+    );
+  }
+
+  void _showInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text("Access Control"),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Manage ipv4 network configuration"),
+                Text(
+                  "Editing a field then pressing enter will submit the change",
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
     );
   }
 }

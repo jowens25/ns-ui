@@ -3,15 +3,10 @@ import 'package:flutter/material.dart';
 // Base Page Component for consistent styling
 class BasePage extends StatelessWidget {
   final String title;
-  final String description;
   final List<Widget> children;
 
-  const BasePage({
-    Key? key,
-    required this.title,
-    required this.description,
-    this.children = const [],
-  }) : super(key: key);
+  const BasePage({Key? key, required this.title, this.children = const []})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +34,7 @@ class BasePage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(description, style: Theme.of(context).textTheme.bodyLarge),
+
                 if (children.isNotEmpty) ...[SizedBox(height: 16), ...children],
               ],
             ),
