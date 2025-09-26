@@ -10,7 +10,6 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Login',
-      description: '',
       children: [
         Row(children: [Expanded(child: LoginCard())]),
       ],
@@ -27,7 +26,7 @@ class LoginCardState extends State<LoginCard> {
   @override
   void initState() {
     super.initState();
-    context.read<UserApi>().getCurrentUserFromToken(UserApi.getToken());
+    //context.read<UserApi>().getCurrentUserFromToken(UserApi.getToken());
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -90,7 +89,7 @@ class LoginCardState extends State<LoginCard> {
                                 });
                                 await userApi.login(user);
 
-                                context.read<UserApi>().getCurrentUserFromToken(
+                                userApi.getCurrentUserFromToken(
                                   UserApi.getToken(),
                                 );
 

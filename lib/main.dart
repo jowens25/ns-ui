@@ -13,7 +13,7 @@ import 'package:nct/routes.dart';
 import 'package:web/web.dart' as web;
 
 //import 'package:web/web.dart' as web;
-final String frontendVersion = "1.1.64";
+final String frontendVersion = "1.1.65";
 
 void main() {
   //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");

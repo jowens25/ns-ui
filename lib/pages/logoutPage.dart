@@ -28,78 +28,38 @@ class LogoutPageState extends State<LogoutPage> {
 
   @override
   Widget build(BuildContext context) {
-
-    return Consumer< UserApi>(
+    return Consumer<UserApi>(
       builder: (context, userApi, _) {
         return BasePage(
           title: 'Logout',
-          description: 'Please Logout',
+
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            //
-                            //
-                            //
-                            //
-                            ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  try {
-                                    userApi.logout();
-                                    userApi.clearUser();
-                                    // Handle successful login (e.g., save token, navigate)
-                                    context.go('/login');
-                                  } catch (e) {
-                                    setState(() {
-                                      errorMessage = e.toString();
-                                    });
-                                  }
-                                }
-                              },
-                              child: Text('Log out'),
-                            ),
-                            //
-                            //
-                            //
-                            //
-                          ],
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 500,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            userApi.logout();
+                            userApi.clearUser();
+                            // Handle successful login (e.g., save token, navigate)
+                            context.go('/login');
+                          },
+                          child: Text('Log out'),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ),
-                //SizedBox(width: 16),
-                //Expanded(
-                //  child: Card(
-                //    child: Padding(
-                //      padding: EdgeInsets.all(16),
-                //      child: Column(
-                //        crossAxisAlignment: CrossAxisAlignment.start,
-                //        children: [
-                //          Text(
-                //            'Recent Activity',
-                //            style: TextStyle(fontWeight: FontWeight.bold),
-                //          ),
-                //          SizedBox(height: 8),
-                //          Text(
-                //            '12 updates',
-                //            style: Theme.of(context).textTheme.headlineMedium,
-                //          ),
-                //        ],
-                //      ),
-                //    ),
-                //  ),
-                //),
-              ],
+                ],
+              ),
             ),
           ],
         );

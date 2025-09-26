@@ -11,7 +11,6 @@ class ErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Error',
-      description: 'An error occurred while navigating.',
       children: [
         Text('Error: $error', style: TextStyle(color: Colors.red)),
         SizedBox(height: 16),

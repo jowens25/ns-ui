@@ -1,34 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nct/api/SecurityApi.dart';
-import 'package:nct/pages/basePage.dart';
 import 'package:nct/api/UserApi.dart';
 import 'package:provider/provider.dart';
-
-class UsersManagementPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BasePage(
-      title: 'User Management',
-      description: 'Management:',
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [UsersManagementCard()],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
+import 'package:nct/custom/custom.dart';
 
 class UsersManagementCard extends StatefulWidget {
   @override
@@ -44,6 +18,8 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userApi = context.read<UserApi>();
+      context.read<SecurityApi>().readSecurityPolicy();
+
       userApi.readUsers();
       _searchController.addListener(() {
         userApi.searchUsers(_searchController.text);
@@ -61,47 +37,85 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Users', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(
-                  width: 300,
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search users...',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 12,
+    return Consumer<SecurityApi>(
+      builder: (context, securityApi, _) {
+        return Card(
+          child: SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Users:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        tooltip: "Info",
+                        onPressed: _showInfo,
+                      ),
+                    ],
                   ),
-                ),
-                IconButton(
-                  onPressed: () => _showAddUserDialog(),
-                  icon: Icon(Icons.add),
-                  tooltip: 'Add User',
-                ),
-              ],
+                  SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 300,
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search users...',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _showAddUserDialog(),
+                        icon: Icon(Icons.add),
+                        tooltip: 'Add User',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+
+                  // Users List
+                  Container(height: 230, child: _buildUsersList()),
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<SecurityApi>().readSecurityPolicy();
+
+                          _showPasswordSecuityDialog(
+                            securityApi.securityPolicy!,
+                          );
+                        },
+                        child: Text('Security Policy'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          // Users List
-          Container(
-            height: 400,
-            padding: EdgeInsets.all(16),
-            child: _buildUsersList(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -121,55 +135,221 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
           itemCount: userApi.filteredUsers.length,
           itemBuilder: (context, index) {
             final user = userApi.filteredUsers[index];
-            print(user.id);
-            return Card(
-              margin: EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  child: Text(
-                    user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+            return Container(
+              child: Card(
+                color: Colors.grey,
+                margin: EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Text(
+                      user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                    ),
+                  ),
+                  title: Text('${user.name} - ${user.role}'),
+                  subtitle: Text(user.email),
+
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _showDeleteUserDialog(user);
+                      }
+                      if (value == 'edit') {
+                        _showEditUserDialog(user);
+                      }
+                    },
+                    itemBuilder:
+                        (context) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 16),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 16, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                   ),
                 ),
-                title: Text('${user.name} - ${user.role}'),
-                subtitle: Text(user.email),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
-                trailing: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      _showDeleteUserDialog(user);
-                    }
-                    if (value == 'edit') {
-                      _showEditUserDialog(user);
-                    }
-                  },
-                  itemBuilder:
-                      (context) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 16),
-                              SizedBox(width: 8),
-                              Text('Edit'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, size: 16, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+  void _showInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text("User management"),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "On this page you can add users, look up existing users and configure the password policy.",
+                ),
+
+                // Add more suggestions as needed
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showPasswordSecuityDialog(SecurityPolicy policy) {
+    final minLenCtrl = TextEditingController(
+      text: policy.MinimumLength.toString(),
+    );
+    final minAgeCtrl = TextEditingController(
+      text: policy.MinimumAge.toString(),
+    );
+    final maxAgeCtrl = TextEditingController(
+      text: policy.MaximumAge.toString(),
+    );
+    final warnAgeCtrl = TextEditingController(
+      text: policy.ExpirationWarning.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<SecurityApi>(
+          builder: (context, securityApi, _) {
+            return AlertDialog(
+              title: Text('Password Security'),
+              content: SizedBox(
+                width: 500,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LabeledText(
+                      myGap: 300,
+                      label: "Minimum Length",
+                      controller: minLenCtrl,
+                      onSubmitted: (value) {
+                        policy.MinimumLength = int.parse(value);
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    LabeledSwitch(
+                      myGap: 295,
+                      label: "Require Uppercase Character",
+                      value: policy.RequireUpper,
+                      onChanged: (value) {
+                        policy.RequireUpper = value;
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+
+                    LabeledSwitch(
+                      myGap: 295,
+                      label: "Require Lowercase Character",
+                      value: policy.RequireLower,
+                      onChanged: (value) {
+                        policy.RequireLower = value;
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+
+                    LabeledSwitch(
+                      myGap: 295,
+                      label: "Require at least one numeral",
+                      value: policy.RequireNumber,
+                      onChanged: (value) {
+                        policy.RequireNumber = value;
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+
+                    LabeledSwitch(
+                      myGap: 295,
+                      label: "Require special character",
+                      value: policy.RequireSpecial,
+                      onChanged: (value) {
+                        policy.RequireSpecial = value;
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+
+                    LabeledSwitch(
+                      myGap: 295,
+                      label: "Doesn't Match Username",
+                      value: policy.RequireNoUser,
+                      onChanged: (value) {
+                        policy.RequireNoUser = value;
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    LabeledText(
+                      myGap: 300,
+                      label: "Minimum Password Age (Days)",
+                      controller: minAgeCtrl,
+                      onSubmitted: (value) {
+                        policy.MinimumAge = int.parse(value);
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    LabeledText(
+                      myGap: 300,
+                      label: "Maximum Password Age (Days)",
+                      controller: maxAgeCtrl,
+                      onSubmitted: (value) {
+                        policy.MaximumAge = int.parse(value);
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                    LabeledText(
+                      myGap: 300,
+                      label: "Expiration Warning (Days)",
+                      controller: warnAgeCtrl,
+                      onSubmitted: (value) {
+                        policy.ExpirationWarning = int.parse(value);
+                        securityApi.editSecurityPolicy(policy);
+                      },
+                    ),
+                  ],
                 ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    //securityApi.editSecurityPolicy(policy);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Security Updated')));
+                  },
+                  child: Text('Submit'),
+                ),
+              ],
             );
           },
         );

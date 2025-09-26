@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:nct/main.dart';
 import 'package:nct/pages/basePage.dart';
+
 final Uri websiteUrl = Uri.parse('https://novuspower.com');
 final Uri phoneUrl = Uri(scheme: 'tel', path: '8168367446');
 final Uri emailUrl = Uri(scheme: 'mailto', path: 'support@novuspower.com');
@@ -28,8 +29,25 @@ class SupportPageState extends State<SupportPage> {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Support',
-      description: 'Service Contacts',
-      children: [SupportCard()],
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            alignment: WrapAlignment.start,
+            children: [
+              SizedBox(
+                width: 500,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [SupportCard()],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -60,7 +78,7 @@ class SupportCard extends StatelessWidget {
             myGap: 150,
             myText: "support@novuspower.com",
           ),
-                    SizedBox(height: 10),
+          SizedBox(height: 10),
 
           StaticLabeledText(
             label: "  Version",

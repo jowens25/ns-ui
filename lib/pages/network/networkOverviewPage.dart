@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/pages/network/networkSettings.dart';
+import 'package:nct/pages/network/networkCards.dart';
 
 class NetworkOverviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Network',
-      description: 'Configuration Overview',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),

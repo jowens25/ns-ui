@@ -7,7 +7,6 @@ class DeviceOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Device',
-      description: 'Configuration Terminal',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -24,7 +23,7 @@ class DeviceOverviewPage extends StatelessWidget {
               ///  ),
               ///),
               SizedBox(
-                width: 550,
+                width: 500,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [DeviceConfigCard()],
