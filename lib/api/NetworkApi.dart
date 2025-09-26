@@ -17,7 +17,7 @@ class NetworkApi extends BaseApi {
 
   late Timer _pingTimer;
 
-  bool _invalid = true;
+  bool _invalid = false;
   bool get invalid => _invalid;
 
   Map<String, dynamic> networkInfo = {
@@ -184,14 +184,14 @@ class NetworkApi extends BaseApi {
         } else {
           // Non-200 means something went wrong
           if (!_invalid) {
-            _invalid = true;
+            _invalid = false;
             notifyListeners();
           }
         }
       } catch (e) {
         print("Health check failed: $e");
         if (!_invalid) {
-          _invalid = true;
+          _invalid = false;
           notifyListeners();
         }
       }

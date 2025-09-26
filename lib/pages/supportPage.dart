@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:nct/main.dart';
 import 'package:nct/pages/basePage.dart';
+import 'package:web/web.dart' as web;
 
 final Uri websiteUrl = Uri.parse('https://novuspower.com');
 final Uri phoneUrl = Uri(scheme: 'tel', path: '8168367446');
@@ -60,6 +61,24 @@ class SupportCard extends StatelessWidget {
     return Card(
       child: Column(
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(width: 16),
+
+              Expanded(
+                child: Text(
+                  'Contact:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                tooltip: "Info",
+                onPressed: () => _showInfo(context),
+              ),
+            ],
+          ),
           SizedBox(height: 10),
           StaticLabeledText(
             label: "  Website",
@@ -85,9 +104,31 @@ class SupportCard extends StatelessWidget {
             myGap: 150,
             myText: frontendVersion,
           ),
+
           SizedBox(height: 10),
         ],
       ),
+    );
+  }
+
+  void _showInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text("Host"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [Text(web.window.location.origin)],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
     );
   }
 }

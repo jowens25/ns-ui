@@ -105,7 +105,7 @@ class LoginCardState extends State<LoginCard> {
                               } catch (e) {}
                             }
                           },
-                          child: Text('Login ' + web.window.location.origin),
+                          child: Text('Login'),
                         ),
 
                         SizedBox(height: 8),
