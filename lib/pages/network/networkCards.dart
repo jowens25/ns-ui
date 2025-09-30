@@ -88,17 +88,17 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       ),
                     ],
                   ),
-                  LabeledSwitch(
-                    myGap: 250,
-                    label: "HTTP",
-                    value: networkApi.http.Status == "active",
-                    onChanged: (bool value) {
-                      setState(() {
-                        networkApi.http.Action = value ? "start" : "stop";
-                        networkApi.editHttpInfo(networkApi.http);
-                      });
-                    },
-                  ),
+                  //LabeledSwitch(
+                  //  myGap: 250,
+                  //  label: "HTTP",
+                  //  value: networkApi.http.Status == "active",
+                  //  onChanged: (bool value) {
+                  //    setState(() {
+                  //      networkApi.http.Action = value ? "start" : "stop";
+                  //      networkApi.editHttpInfo(networkApi.http);
+                  //    });
+                  //  },
+                  //),
                   LabeledSwitch(
                     myGap: 250,
                     label: "Telnet",
