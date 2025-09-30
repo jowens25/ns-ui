@@ -567,7 +567,8 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          networkApi.resetNetwork();
+                          _showRestoreDefaultNetworkConfigDialog();
+                          //networkApi.resetNetwork();
                         },
                         child: Text('Reset network config'),
                       ),
@@ -578,6 +579,40 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showRestoreDefaultNetworkConfigDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<NetworkApi>(
+          builder: (context, networkApi, _) {
+            return AlertDialog(
+              content: Text(
+                'Are you sure you want to restore the default network config?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    networkApi.resetNetwork();
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Network config reset")),
+                    );
+                  },
+                  child: Text('Restore', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
         );
       },
     );

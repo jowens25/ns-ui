@@ -61,10 +61,12 @@ class SupportCard extends StatelessWidget {
     return Card(
       child: Column(
         children: [
+          SizedBox(height: 16, width: 16),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              SizedBox(width: 16),
+              SizedBox(height: 16, width: 16),
 
               Expanded(
                 child: Text(
@@ -72,11 +74,11 @@ class SupportCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.info_outline),
-                tooltip: "Info",
-                onPressed: () => _showInfo(context),
-              ),
+              //IconButton(
+              //  icon: const Icon(Icons.info_outline),
+              //  tooltip: "Info",
+              //  onPressed: () => _showInfo(context),
+              //),
             ],
           ),
           SizedBox(height: 10),

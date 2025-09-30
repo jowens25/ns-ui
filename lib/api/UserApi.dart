@@ -45,6 +45,8 @@ class UserApi extends BaseApi {
 
     if (decoded['error'] != null) {
       _authResponse = decoded['error'];
+      notifyListeners();
+      return;
     }
 
     setToken(decoded['token']);
@@ -183,7 +185,7 @@ class UserApi extends BaseApi {
 
   Future<void> editUser(User user) async {
     print(user.toJson());
-    final response = await patchRequest("users/${user.id}", user.toJson());
+    final response = await patchRequest("users/${user.name}", user.toJson());
 
     final decoded = json.decode(response.body);
     print(decoded);

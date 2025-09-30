@@ -203,9 +203,9 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "On this page you can add users, look up existing users and configure the password policy.",
-                ),
+                Text("Add users, remove and configure password policy"),
+                Text("Admins - read and write"),
+                Text("Viewers - read only"),
 
                 // Add more suggestions as needed
               ],
@@ -250,10 +250,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       myGap: 300,
                       label: "Minimum Length",
                       controller: minLenCtrl,
-                      onSubmitted: (value) {
-                        policy.MinimumLength = int.parse(value);
-                        securityApi.editSecurityPolicy(policy);
-                      },
+                      onSubmitted: (value) {},
                     ),
                     LabeledSwitch(
                       myGap: 295,
@@ -308,28 +305,19 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       myGap: 300,
                       label: "Minimum Password Age (Days)",
                       controller: minAgeCtrl,
-                      onSubmitted: (value) {
-                        policy.MinimumAge = int.parse(value);
-                        securityApi.editSecurityPolicy(policy);
-                      },
+                      onSubmitted: (value) {},
                     ),
                     LabeledText(
                       myGap: 300,
                       label: "Maximum Password Age (Days)",
                       controller: maxAgeCtrl,
-                      onSubmitted: (value) {
-                        policy.MaximumAge = int.parse(value);
-                        securityApi.editSecurityPolicy(policy);
-                      },
+                      onSubmitted: (value) {},
                     ),
                     LabeledText(
                       myGap: 300,
                       label: "Expiration Warning (Days)",
                       controller: warnAgeCtrl,
-                      onSubmitted: (value) {
-                        policy.ExpirationWarning = int.parse(value);
-                        securityApi.editSecurityPolicy(policy);
-                      },
+                      onSubmitted: (value) {},
                     ),
                   ],
                 ),
@@ -341,7 +329,9 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    //securityApi.editSecurityPolicy(policy);
+                    policy.MinimumLength = int.parse(minLenCtrl.text);
+
+                    securityApi.editSecurityPolicy(policy);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
@@ -410,8 +400,8 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                             IconButton(
                               icon: Icon(
                                 _obscurePassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
                                 setDialogState(() {
@@ -453,7 +443,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                           decoration: InputDecoration(labelText: 'Role'),
                           items: [
                             DropdownMenuItem(
-                              value: "viewer",
+                              value: "user",
                               child: Text("Viewer"),
                             ),
                             DropdownMenuItem(
@@ -541,76 +531,142 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
+    final securityApi = context.read<SecurityApi>();
+    SecurityPolicy policy =
+        securityApi.securityPolicy!; // Use the getter instead
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<UserApi>(
-          builder: (context, userApi, _) {
-            //
-            nameController.text = user.name;
-            emailController.text = user.email;
-            passwordController.text = 'userpassword';
-            String selectedRole = user.role;
-            //String selectedRole = "viewer";
+        bool _obscurePassword = true; // initially obscure
 
-            return AlertDialog(
-              title: Text('Edit User'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(labelText: 'Name'),
-                  ),
+        nameController.text = user.name;
+        emailController.text = user.email;
+        passwordController.text = '';
+        String selectedRole = user.role;
 
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(labelText: 'Email'),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Consumer<UserApi>(
+              builder: (context, userApi, _) {
+                return AlertDialog(
+                  title: Text('Edit User'),
+                  content: SizedBox(
+                    width: 400,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(labelText: 'Name'),
+                          readOnly: true,
+                        ),
+
+                        TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: passwordController,
+                                obscureText: _obscurePassword,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                ),
+                                onChanged: (value) {
+                                  setDialogState(() {}); // refresh UI if needed
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setDialogState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+
+                        // Show password validation errors if any
+                        if (passwordController.text.isNotEmpty &&
+                            !securityApi.validatePassword(
+                              passwordController.text,
+                              nameController.text,
+                              policy,
+                            ))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children:
+                                  securityApi.validationError!
+                                      .map(
+                                        (err) => Text(
+                                          err,
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                            ),
+                          ),
+                        SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: selectedRole,
+                          decoration: InputDecoration(labelText: 'Role'),
+                          items: [
+                            DropdownMenuItem(
+                              value: "viewer",
+                              child: Text("Viewer"),
+                            ),
+                            DropdownMenuItem(
+                              value: "admin",
+                              child: Text("Admin"),
+                            ),
+                          ],
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedRole = newValue!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(labelText: 'Password'),
-                  ),
-                  SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedRole,
-                    decoration: InputDecoration(labelText: 'Role'),
-                    items: [
-                      DropdownMenuItem(value: "viewer", child: Text("Viewer")),
-                      DropdownMenuItem(value: "admin", child: Text("Admin")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedRole = newValue!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.isNotEmpty &&
-                        emailController.text.isNotEmpty) {
-                      user.name = nameController.text;
-                      user.email = emailController.text;
-                      user.password = passwordController.text;
-                      user.role = selectedRole;
-                      await userApi.editUser(user);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('User updated')));
-                    }
-                  },
-                  child: Text('Save'),
-                ),
-              ],
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        User user = User.fromJson({
+                          'username': nameController.text,
+                          'email': emailController.text,
+                          'password': passwordController.text,
+                          'role': selectedRole,
+                        });
+                        userApi.editUser(user);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(userApi.response)),
+                        );
+                      },
+                      child: Text('Save'),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );

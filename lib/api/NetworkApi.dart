@@ -15,11 +15,6 @@ class NetworkApi extends BaseApi {
   Ftp _ftp = Ftp(Action: "Action", Status: "Status");
   Ftp get ftp => _ftp;
 
-  late Timer _pingTimer;
-
-  bool _invalid = false;
-  bool get invalid => _invalid;
-
   Map<String, dynamic> networkInfo = {
     'port_status': '',
     'hostname': '',
@@ -45,13 +40,10 @@ class NetworkApi extends BaseApi {
 
   @override
   void dispose() {
-    _pingTimer.cancel();
     super.dispose();
   }
 
-  NetworkApi({required super.serverHost}) {
-    _startPinging();
-  }
+  NetworkApi({required super.serverHost});
 
   Future<void> readTelnetInfo() async {
     final response = await getRequest("telnet");
@@ -169,34 +161,8 @@ class NetworkApi extends BaseApi {
     notifyListeners();
   }
 
-  void _startPinging() {
-    _pingTimer = Timer.periodic(Duration(seconds: 1), (_) async {
-      try {
-        final response = await getRequest("health");
-        if (response.statusCode == 200) {
-          final decoded = jsonDecode(response.body);
-          print("Health check: $decoded");
-
-          if (_invalid) {
-            _invalid = false;
-            notifyListeners(); // Only notify if state actually changed
-          }
-        } else {
-          // Non-200 means something went wrong
-          if (!_invalid) {
-            _invalid = false;
-            notifyListeners();
-          }
-        }
-      } catch (e) {
-        print("Health check failed: $e");
-        if (!_invalid) {
-          _invalid = false;
-          notifyListeners();
-        }
-      }
-    });
-  }
+  //
+  //
 }
 
 class Telnet {

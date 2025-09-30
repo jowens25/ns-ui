@@ -40,13 +40,13 @@ final usersRoute = RouteConfig(
   isAllowed: true,
 );
 
-final deviceRoute = RouteConfig(
-  path: '/device',
-  name: 'Device ',
-  icon: Icons.dns,
-  pageBuilder: () => DeviceOverviewPage(),
-  isAllowed: true,
-);
+//final deviceRoute = RouteConfig(
+//  path: '/device',
+//  name: 'Device ',
+//  icon: Icons.dns,
+//  pageBuilder: () => DeviceOverviewPage(),
+//  isAllowed: true,
+//);
 
 final snmpRoute = RouteConfig(
   path: '/snmp',
@@ -88,12 +88,12 @@ class AppRouter {
 
       // If authenticated and on login page, redirect to dashboard
       if (loggedIn && isLoginRoute) {
-        return '/device';
+        return '/network';
       }
 
       // Check if route is allowed by server
       if (!AppRoutes.isRouteAllowed(state.uri.path)) {
-        return loggedIn ? '/device' : '/login';
+        return loggedIn ? '/network' : '/login';
       }
 
       return null; // Allow navigation
@@ -103,7 +103,7 @@ class AppRouter {
         path: '/',
         redirect: (BuildContext context, GoRouterState state) {
           final authApi = Provider.of<UserApi>(context, listen: false);
-          return authApi.isLoggedIn ? '/device' : '/login';
+          return authApi.isLoggedIn ? '/network' : '/login';
         },
       ),
 
@@ -124,11 +124,11 @@ class AppRouter {
 // Single source of truth for all routes
 class AppRoutes {
   static final List<RouteConfig> routes = [
-    deviceRoute,
-    usersRoute,
+    //deviceRoute,
+    networkRoute,
     loginRoute,
     snmpRoute,
-    networkRoute,
+    usersRoute,
     supportRoute,
     logoutRoute,
   ];
@@ -180,10 +180,6 @@ class AppRoutes {
   static List<ExplorerItem> generateExplorerItems(bool isLoggedIn) {
     //inal loginApi = Provider.of<LoginApi>(context, listen: false);
     // Only return items if user is authenticated
-    if (!isLoggedIn) {
-      return [];
-    }
-
     List<ExplorerItem> items = [];
 
     ExplorerItem buildItem(RouteConfig config, String parentPath) {
@@ -197,6 +193,12 @@ class AppRoutes {
         children:
             config.children.map((child) => buildItem(child, fullPath)).toList(),
       );
+    }
+
+    if (!isLoggedIn) {
+      items.add(buildItem(loginRoute, ''));
+      items.add(buildItem(supportRoute, ''));
+      return items;
     }
 
     for (var route in routes) {

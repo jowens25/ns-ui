@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nct/api/NetworkApi.dart';
 import 'package:nct/api/SecurityApi.dart';
+import 'package:nct/api/TimeApi.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/api/SnmpApi.dart';
 import 'package:nct/api/UserApi.dart';
@@ -20,11 +21,12 @@ void main() {
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final host = web.window.location.origin; // official
-  //final host = "http://localhost:5000"; // development
+  //final host = web.window.location.origin; // official
+  final host = "http://localhost:5000"; // development
 
   final snmpApi = SnmpApi(serverHost: host);
   final deviceApi = DeviceApi(serverHost: host);
+  final timeApi = TimeApi(serverHost: host);
 
   final userApi = UserApi(serverHost: host);
   final networkApi = NetworkApi(serverHost: host);
@@ -34,6 +36,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => deviceApi),
+        ChangeNotifierProvider(create: (_) => timeApi),
         ChangeNotifierProvider(create: (_) => snmpApi),
         ChangeNotifierProvider(create: (_) => userApi),
         ChangeNotifierProvider(create: (_) => networkApi),

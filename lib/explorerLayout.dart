@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nct/api/TimeApi.dart';
 import 'package:nct/api/UserApi.dart';
 import 'package:nct/api/NetworkApi.dart';
 import 'package:nct/models.dart';
@@ -45,7 +46,7 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
         return Stack(
           children: [
             _buildMainLayout(context), // your existing UI layout
-            if (networkApi.invalid) _buildDisconnectedOverlay(context),
+            //if (networkApi.healthy) _buildDisconnectedOverlay(context),
           ],
         );
       },
@@ -180,6 +181,11 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
                           },
                         ),
                         Spacer(),
+                        Consumer<TimeApi>(
+                          builder: (context, timeApi, _) {
+                            return Text(timeApi.time);
+                          },
+                        ),
                       ],
                     ),
                   ),
