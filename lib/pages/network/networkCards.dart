@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:nct/api/NetworkApi.dart';
 import 'package:provider/provider.dart';
+import 'package:web/web.dart' as web;
 
 class NetworkProtcolCard extends StatefulWidget {
   const NetworkProtcolCard({super.key});
@@ -320,6 +321,7 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                     networkApi.writeNetworkAccess(node);
 
                     Navigator.pop(context);
+                    web.window.location.reload();
                   },
                   child: Text('Add'),
                 ),
@@ -349,6 +351,7 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                   onPressed: () async {
                     await networkApi.deleteNetworkAccess(node);
                     Navigator.pop(context);
+                    web.window.location.reload();
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
@@ -468,6 +471,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['hostname'] = value;
                       networkApi.writeNetworkInfo('hostname');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -494,6 +498,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['gateway'] = value;
                       networkApi.writeNetworkInfo('gateway');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -504,6 +509,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['ip_address'] = value;
                       networkApi.writeNetworkInfo('ip_address');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -514,6 +520,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['netmask'] = value;
                       networkApi.writeNetworkInfo('netmask');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -524,6 +531,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['dhcp'] = value;
                       networkApi.writeNetworkInfo('dhcp');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -534,6 +542,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['dns1'] = value;
                       networkApi.writeNetworkInfo('dns1');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -544,6 +553,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['dns2'] = value;
                       networkApi.writeNetworkInfo('dns2');
+                      web.window.location.reload();
                     },
                   ),
 
@@ -554,6 +564,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['ignore_auto_dns'] = value;
                       networkApi.writeNetworkInfo('ignore_auto_dns');
+                      web.window.location.reload();
                     },
                   ),
                   SizedBox(height: 20),
@@ -599,6 +610,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                   onPressed: () async {
                     networkApi.resetNetwork();
                     Navigator.of(context).pop();
+                    web.window.location.reload();
                   },
                   child: Text('Restore', style: TextStyle(color: Colors.red)),
                 ),
