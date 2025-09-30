@@ -272,7 +272,7 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                 Text("Adding '10.1.10.1/24' will allow any ip on that subnet"),
                 Text("Adding '10.1.10.201/32' will only allow 10.1.10.201"),
                 Text(
-                  "Remove these restrictions by running 'ns network unrestrict' via cli",
+                  "Remove these restrictions by running 'ns access unrestrict'",
                 ),
               ],
             ),
