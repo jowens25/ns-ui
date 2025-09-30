@@ -15,6 +15,9 @@ class NetworkApi extends BaseApi {
   Ftp _ftp = Ftp(Action: "Action", Status: "Status");
   Ftp get ftp => _ftp;
 
+  String _response = '';
+  String get response => _response;
+
   Map<String, dynamic> networkInfo = {
     'port_status': '',
     'hostname': '',
@@ -50,13 +53,15 @@ class NetworkApi extends BaseApi {
     if (response.statusCode == 200) {
       _telnet = Telnet.fromJson(jsonDecode(response.body)['info']);
       notifyListeners();
-    } else {
-      throw Exception('Failed to load info');
     }
   }
 
   Future<void> editTelnetInfo(Telnet telnet) async {
-    await patchRequest("telnet", telnet.toJson());
+    final response = await patchRequest("telnet", telnet.toJson());
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+
     readTelnetInfo();
     notifyListeners();
   }
@@ -66,13 +71,14 @@ class NetworkApi extends BaseApi {
     if (response.statusCode == 200) {
       _ssh = Ssh.fromJson(jsonDecode(response.body)['info']);
       notifyListeners();
-    } else {
-      throw Exception('Failed to load info');
     }
   }
 
   Future<void> editSshInfo(Ssh ssh) async {
-    await patchRequest("ssh", ssh.toJson());
+    final response = await patchRequest("ssh", ssh.toJson());
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
     readSshInfo();
     notifyListeners();
   }
@@ -82,13 +88,14 @@ class NetworkApi extends BaseApi {
     if (response.statusCode == 200) {
       _http = Http.fromJson(jsonDecode(response.body)['info']);
       notifyListeners();
-    } else {
-      throw Exception('Failed to load info');
     }
   }
 
   Future<void> editHttpInfo(Http http) async {
-    await patchRequest("http", http.toJson());
+    final response = await patchRequest("http", http.toJson());
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
     readHttpInfo();
     notifyListeners();
   }
@@ -98,13 +105,14 @@ class NetworkApi extends BaseApi {
     if (response.statusCode == 200) {
       _ftp = Ftp.fromJson(jsonDecode(response.body)['info']);
       notifyListeners();
-    } else {
-      throw Exception('Failed to load info');
     }
   }
 
   Future<void> editFtpInfo(Ftp ftp) async {
-    await patchRequest("ftp", ftp.toJson());
+    final response = await patchRequest("ftp", ftp.toJson());
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
     readFtpInfo();
     notifyListeners();
   }
@@ -114,8 +122,6 @@ class NetworkApi extends BaseApi {
     if (response.statusCode == 200) {
       networkInfo = jsonDecode(response.body)['info'];
       notifyListeners();
-    } else {
-      throw Exception('Failed to load info');
     }
   }
 
@@ -123,13 +129,22 @@ class NetworkApi extends BaseApi {
     final response = await postRequest("info/$endpoint", {
       endpoint: networkInfo[endpoint],
     });
-    final decoded = json.decode(response.body);
-    print(decoded);
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+
     notifyListeners();
   }
 
   Future<void> resetNetwork() async {
     final response = await postRequest("reset", {});
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "Network config reset";
+    }
     notifyListeners();
   }
 
@@ -148,15 +163,24 @@ class NetworkApi extends BaseApi {
 
   Future<void> writeNetworkAccess(AllowedNode node) async {
     final response = await postRequest("access", node.toJson());
-    final decoded = json.decode(response.body);
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
     readNetworkAccess();
     notifyListeners();
   }
 
   Future<void> deleteNetworkAccess(AllowedNode node) async {
     final response = await deleteRequest("access/${node.id}", node.toJson());
-    final decoded = json.decode(response.body);
-    _allowedNodes.remove(node);
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+
+    if (response.statusCode == 200) {
+      _response = "Node deleted";
+      _allowedNodes.remove(node);
+    }
+
     readNetworkAccess();
     notifyListeners();
   }

@@ -75,6 +75,9 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                       setState(() {
                         snmpApi.sysDetails.Action = value ? "start" : "stop";
                         snmpApi.editSnmpInfo(snmpApi.sysDetails);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(snmpApi.response)),
+                        );
                       });
                     },
                   ),
@@ -96,6 +99,9 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           onSubmitted: (value) {
                             snmpApi.sysDetails.SysObjId = value;
                             snmpApi.editSnmpInfo(snmpApi.sysDetails);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(snmpApi.response)),
+                            );
                           },
                           controller: sysObjIdController,
                           decoration: InputDecoration(isDense: true),
@@ -119,6 +125,9 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           onSubmitted: (value) {
                             snmpApi.sysDetails.SysContact = value;
                             snmpApi.editSnmpInfo(snmpApi.sysDetails);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(snmpApi.response)),
+                            );
                           },
                           controller: contactController,
                           decoration: InputDecoration(isDense: true),
@@ -142,6 +151,9 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           onSubmitted: (value) {
                             snmpApi.sysDetails.SysLocation = value;
                             snmpApi.editSnmpInfo(snmpApi.sysDetails);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(snmpApi.response)),
+                            );
                           },
                           controller: locationController,
                           decoration: InputDecoration(isDense: true),
@@ -165,6 +177,9 @@ class SnmpStatusCardState extends State<SnmpStatusCard> {
                           onSubmitted: (value) {
                             snmpApi.sysDetails.SysDescription = value;
                             snmpApi.editSnmpInfo(snmpApi.sysDetails);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(snmpApi.response)),
+                            );
                           },
                           controller: descriptionController,
                           decoration: InputDecoration(isDense: true),
@@ -443,19 +458,6 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  //DropdownButtonFormField<String>(
-                  //  value: selectedIpVersion,
-                  //  decoration: InputDecoration(labelText: 'IP Version'),
-                  //  items: [
-                  //    DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
-                  //    DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
-                  //  ],
-                  //  onChanged: (String? newValue) {
-                  //    setDialogState(() {
-                  //      selectedIpVersion = newValue!;
-                  //    });
-                  //  },
-                  //),
                   TextField(
                     controller: ipv4AddressController,
                     decoration: InputDecoration(labelText: 'IP Address'),
@@ -524,7 +526,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
                   },
                   child: Text('Add'),
                 ),
@@ -556,7 +558,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text("deleted i think")));
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
@@ -582,7 +584,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
             ipv4AddressController.text = user.source;
             //ipv6AddressController.text = user.ip6Address;
             communityController.text = user.community;
-            //String selectedIpVersion = user.ipVersion;
+
             String selectedGroup = user.groupName;
             String selectedSnmpVersion = user.version;
 
@@ -592,26 +594,11 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   //DropdownButtonFormField<String>(
-                  //  value: selectedIpVersion,
-                  //  decoration: InputDecoration(labelText: 'IP Version'),
-                  //  items: [
-                  //    DropdownMenuItem(value: "ipv4", child: Text("IPv4")),
-                  //    DropdownMenuItem(value: "ipv6", child: Text("IPv6")),
-                  //  ],
-                  //  onChanged: (String? newValue) {
-                  //    setState(() {
-                  //      selectedIpVersion = newValue!;
-                  //    });
-                  //  },
-                  //),
                   TextField(
                     controller: ipv4AddressController,
                     decoration: InputDecoration(labelText: 'IP Address'),
                   ),
-                  //TextField(
-                  //  controller: ipv6AddressController,
-                  //  decoration: InputDecoration(labelText: 'IPv6 Address'),
-                  //),
+
                   TextField(
                     controller: communityController,
                     decoration: InputDecoration(labelText: 'Community'),
@@ -671,7 +658,7 @@ class _SnmpVersion12CardState extends State<SnmpVersion12Card> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
                   },
                   child: Text('Add'),
                 ),
@@ -959,7 +946,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
                   },
                   child: Text('Add'),
                 ),
@@ -992,7 +979,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text("deleted i think")));
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
@@ -1114,7 +1101,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('SNMP User added')));
+                    ).showSnackBar(SnackBar(content: Text(snmpApi.response)));
                   },
                   child: Text('Submit Edits'),
                 ),

@@ -31,6 +31,8 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
     context.read<NetworkApi>().readTelnetInfo();
     context.read<NetworkApi>().readSshInfo();
     context.read<NetworkApi>().readHttpInfo();
+    context.read<NetworkApi>().readFtpInfo();
+
     context.read<NetworkApi>().readNetworkInfo();
     //context.read<NetworkApi>().readNetworkInfo
 
@@ -93,6 +95,9 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       setState(() {
                         networkApi.http.Action = value ? "start" : "stop";
                         networkApi.editHttpInfo(networkApi.http);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(networkApi.response)),
+                        );
                       });
                     },
                   ),
@@ -104,6 +109,9 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       setState(() {
                         networkApi.telnet.Action = value ? "start" : "stop";
                         networkApi.editTelnetInfo(networkApi.telnet);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(networkApi.response)),
+                        );
                       });
                     },
                   ),
@@ -115,6 +123,9 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       setState(() {
                         networkApi.ssh.Action = value ? "start" : "stop";
                         networkApi.editSshInfo(networkApi.ssh);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(networkApi.response)),
+                        );
                       });
                     },
                   ),
@@ -126,6 +137,9 @@ class _NetworkProtcolCard extends State<NetworkProtcolCard> {
                       setState(() {
                         networkApi.ftp.Action = value ? "start" : "stop";
                         networkApi.editFtpInfo(networkApi.ftp);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(networkApi.response)),
+                        );
                       });
                     },
                   ),
@@ -316,6 +330,9 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                       'address': addressController.text,
                     });
                     networkApi.writeNetworkAccess(node);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(networkApi.response)),
+                    );
 
                     Navigator.pop(context);
                     ScaffoldMessenger.of(
@@ -350,9 +367,9 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                   onPressed: () async {
                     await networkApi.deleteNetworkAccess(node);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text("Node removed")));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(networkApi.response)),
+                    );
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
@@ -472,6 +489,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['hostname'] = value;
                       networkApi.writeNetworkInfo('hostname');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -498,6 +518,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['gateway'] = value;
                       networkApi.writeNetworkInfo('gateway');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -508,6 +531,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['ip_address'] = value;
                       networkApi.writeNetworkInfo('ip_address');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -518,6 +544,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['netmask'] = value;
                       networkApi.writeNetworkInfo('netmask');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -528,6 +557,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['dhcp'] = value;
                       networkApi.writeNetworkInfo('dhcp');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -538,6 +570,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['dns1'] = value;
                       networkApi.writeNetworkInfo('dns1');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -548,6 +583,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['dns2'] = value;
                       networkApi.writeNetworkInfo('dns2');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
 
@@ -558,6 +596,9 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                     onSubmitted: (value) {
                       networkApi.networkInfo['ignore_auto_dns'] = value;
                       networkApi.writeNetworkInfo('ignore_auto_dns');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(networkApi.response)),
+                      );
                     },
                   ),
                   SizedBox(height: 20),
@@ -596,16 +637,14 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.of(context).pop(),
                   child: Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () async {
                     networkApi.resetNetwork();
-
-                    Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Network config reset")),
+                      SnackBar(content: Text(networkApi.response)),
                     );
                   },
                   child: Text('Restore', style: TextStyle(color: Colors.red)),

@@ -42,7 +42,13 @@ class SnmpApi extends BaseApi {
 
   Future<void> editSnmpInfo(SysDetails details) async {
     final response = await patchRequest("info", details.toJson());
-    print(response.body);
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp info updated";
+    }
     readSnmpInfo();
     notifyListeners();
   }
@@ -57,34 +63,43 @@ class SnmpApi extends BaseApi {
 
   Future<void> writeV1v2cUser(V1v2cUser user) async {
     final response = await postRequest("v1v2c_user", user.toJson());
-    final decoded = json.decode(response.body);
-    //_v1v2cUsers.add(V1v2cUser.fromJson(decoded['v1v2c_user']));
-    print(decoded);
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp user updated";
+    }
 
     readV1v2cUsers();
     notifyListeners();
   }
 
   Future<void> deleteV1v2cUser(V1v2cUser user) async {
-    print(user.toJson());
-
     final response = await deleteRequest(
       "v1v2c_user/${user.id}",
       user.toJson(),
     );
-    final decoded = json.decode(response.body);
-    print(decoded);
-    //_v1v2cUsers.remove(user);
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp user deleted";
+    }
+
     readV1v2cUsers();
 
     notifyListeners();
   }
 
   Future<void> editV1v2cUser(V1v2cUser user) async {
-    print(user.toJson());
     final response = await patchRequest("v1v2c_user/${user.id}", user.toJson());
-    final decoded = json.decode(response.body);
-    print(decoded);
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp user edited";
+    }
     readV1v2cUsers();
 
     notifyListeners();
@@ -100,42 +115,58 @@ class SnmpApi extends BaseApi {
   }
 
   Future<void> writeV3User(V3User user) async {
-    print(user.toJson());
     final response = await postRequest("v3_user", user.toJson());
     final decoded = json.decode(response.body);
-    print(decoded['v3_user']);
-    try {
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp user added";
       _v3Users.add(V3User.fromJson(decoded['v3_user']));
-    } catch (e) {}
+    }
+
     notifyListeners();
   }
 
   Future<void> deleteV3User(V3User user) async {
-    print(user.toJson());
-
     final response = await deleteRequest("v3_user/${user.id}", user.toJson());
-    final decoded = json.decode(response.body);
-    print(decoded);
-    _v3Users.remove(user);
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp user deleted";
+      _v3Users.remove(user);
+    }
 
     notifyListeners();
   }
 
   Future<void> editV3User(V3User user) async {
-    print(user.toJson());
     final response = await patchRequest("v3_user/${user.id}", user.toJson());
-    final decoded = json.decode(response.body);
-    print(decoded);
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp user edited";
+    }
     notifyListeners();
   }
 
   Future<void> resetSnmpConfig() async {
-    final response = await getRequest("reset_config");
-    print(response.body);
-    _response = response.body;
-    readSnmpInfo();
-    readV1v2cUsers();
-    readV3Users();
+    final response = await postRequest("reset_config", {});
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "snmp config reset";
+      readSnmpInfo();
+      readV1v2cUsers();
+      readV3Users();
+    }
+
     notifyListeners();
   }
 }

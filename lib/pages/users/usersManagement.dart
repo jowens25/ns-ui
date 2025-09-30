@@ -349,7 +349,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
 
   void _showAddUserDialog() {
     final nameController = TextEditingController();
-    final emailController = TextEditingController();
+    //final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
     final securityApi = context.read<SecurityApi>();
@@ -379,10 +379,10 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                           decoration: InputDecoration(labelText: 'Name'),
                         ),
 
-                        TextField(
-                          controller: emailController,
-                          decoration: InputDecoration(labelText: 'Email'),
-                        ),
+                        // TextField(
+                        //   controller: emailController,
+                        //   decoration: InputDecoration(labelText: 'Email'),
+                        // ),
                         Row(
                           children: [
                             Expanded(
@@ -467,11 +467,10 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        if (nameController.text.isNotEmpty &&
-                            emailController.text.isNotEmpty) {
+                        if (nameController.text.isNotEmpty) {
                           User user = User.fromJson({
                             'username': nameController.text,
-                            'email': emailController.text,
+                            //'email': emailController.text,
                             'password': passwordController.text,
                             'role': selectedRole,
                           });
@@ -528,7 +527,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
 
   void _showEditUserDialog(User user) {
     final nameController = TextEditingController();
-    final emailController = TextEditingController();
+    //final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
     final securityApi = context.read<SecurityApi>();
@@ -541,7 +540,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
         bool _obscurePassword = true; // initially obscure
 
         nameController.text = user.name;
-        emailController.text = user.email;
+        //emailController.text = user.email;
         passwordController.text = '';
         String selectedRole = user.role;
 
@@ -562,10 +561,10 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                           readOnly: true,
                         ),
 
-                        TextField(
-                          controller: emailController,
-                          decoration: InputDecoration(labelText: 'Email'),
-                        ),
+                        //TextField(
+                        //  controller: emailController,
+                        //  decoration: InputDecoration(labelText: 'Email'),
+                        //),
                         Row(
                           children: [
                             Expanded(
@@ -573,7 +572,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                                 controller: passwordController,
                                 obscureText: _obscurePassword,
                                 decoration: InputDecoration(
-                                  labelText: 'Password',
+                                  labelText: 'Password (enter new to change)',
                                 ),
                                 onChanged: (value) {
                                   setDialogState(() {}); // refresh UI if needed
@@ -652,7 +651,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       onPressed: () {
                         User user = User.fromJson({
                           'username': nameController.text,
-                          'email': emailController.text,
+                          // 'email': emailController.text,
                           'password': passwordController.text,
                           'role': selectedRole,
                         });
