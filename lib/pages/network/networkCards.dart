@@ -348,8 +348,8 @@ class _NetworkAccessCard extends State<NetworkAccessCard> {
                   child: Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    await networkApi.deleteNetworkAccess(node);
+                  onPressed: () {
+                    networkApi.deleteNetworkAccess(node);
                     Navigator.pop(context);
                     web.window.location.reload();
                   },
