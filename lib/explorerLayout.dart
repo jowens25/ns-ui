@@ -41,12 +41,12 @@ class _ExplorerLayoutState extends State<ExplorerLayout> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NetworkApi>(
-      builder: (context, networkApi, _) {
+    return Consumer<TimeApi>(
+      builder: (context, timeApi, _) {
         return Stack(
           children: [
             _buildMainLayout(context), // your existing UI layout
-            //if (networkApi.healthy) _buildDisconnectedOverlay(context),
+            //if (timeApi.valid) _buildDisconnectedOverlay(context),
           ],
         );
       },

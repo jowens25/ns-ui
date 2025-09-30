@@ -130,7 +130,7 @@ class UserApi extends BaseApi {
     final payload = json.decode(
       utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
     );
-    print("payme pay load me in the face $payload");
+    //print("payme pay load me in the face $payload");
 
     currentUser = User(
       id: payload['sub'] ?? payload['userId'] ?? payload['id'],

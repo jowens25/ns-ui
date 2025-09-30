@@ -598,6 +598,7 @@ class _NetworkInfoCardState extends State<NetworkInfoCard> {
                 TextButton(
                   onPressed: () async {
                     networkApi.resetNetwork();
+                    Navigator.of(context).pop();
                   },
                   child: Text('Restore', style: TextStyle(color: Colors.red)),
                 ),
