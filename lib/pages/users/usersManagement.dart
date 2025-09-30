@@ -331,11 +331,8 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                   onPressed: () async {
                     policy.MinimumLength = int.parse(minLenCtrl.text);
 
-                    securityApi.editSecurityPolicy(policy);
+                    await securityApi.editSecurityPolicy(policy);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Security Updated')));
                   },
                   child: Text('Submit'),
                 ),
@@ -476,9 +473,6 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                           });
                           userApi.writeUser(user);
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(userApi.response)),
-                          );
                         }
                       },
                       child: Text('Add'),
@@ -511,9 +505,6 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                   onPressed: () async {
                     await userApi.deleteUser(user);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(userApi.response)));
                   },
                   child: Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
@@ -657,9 +648,6 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                         });
                         userApi.editUser(user);
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(userApi.response)),
-                        );
                       },
                       child: Text('Save'),
                     ),

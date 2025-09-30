@@ -62,6 +62,10 @@ class NetworkApi extends BaseApi {
       _response = jsonDecode(response.body)['error'];
     }
 
+    if (response.statusCode == 200) {
+      _response = "telnet updated";
+    }
+
     readTelnetInfo();
     notifyListeners();
   }
@@ -78,6 +82,9 @@ class NetworkApi extends BaseApi {
     final response = await patchRequest("ssh", ssh.toJson());
     if (response.statusCode == 403) {
       _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "ssh updated";
     }
     readSshInfo();
     notifyListeners();
@@ -96,6 +103,9 @@ class NetworkApi extends BaseApi {
     if (response.statusCode == 403) {
       _response = jsonDecode(response.body)['error'];
     }
+    if (response.statusCode == 200) {
+      _response = "http updated";
+    }
     readHttpInfo();
     notifyListeners();
   }
@@ -112,6 +122,9 @@ class NetworkApi extends BaseApi {
     final response = await patchRequest("ftp", ftp.toJson());
     if (response.statusCode == 403) {
       _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "ftp updated";
     }
     readFtpInfo();
     notifyListeners();
@@ -132,6 +145,9 @@ class NetworkApi extends BaseApi {
 
     if (response.statusCode == 403) {
       _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "network updated";
     }
 
     notifyListeners();
@@ -165,6 +181,9 @@ class NetworkApi extends BaseApi {
     final response = await postRequest("access", node.toJson());
     if (response.statusCode == 403) {
       _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "Node added";
     }
     readNetworkAccess();
     notifyListeners();

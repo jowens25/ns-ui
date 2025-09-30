@@ -4,8 +4,8 @@ import 'dart:async';
 import 'BaseApi.dart';
 
 class SecurityApi extends BaseApi {
-  String? _response;
-  String? get response => _response;
+  String _response = '';
+  String get response => _response;
 
   List<String>? _validationErrors;
   List<String>? get validationError => _validationErrors;
@@ -21,14 +21,20 @@ class SecurityApi extends BaseApi {
   Future<void> readSecurityPolicy() async {
     final response = await getRequest("policy");
     final decoded = jsonDecode(response.body);
-    print(decoded);
     _securityPolicy = SecurityPolicy.fromJson(decoded['policy']);
     notifyListeners();
   }
 
   Future<void> editSecurityPolicy(SecurityPolicy policy) async {
     final response = await postRequest("policy", policy.toJson());
-    print("post response ${response.body}");
+
+    if (response.statusCode == 403) {
+      _response = jsonDecode(response.body)['error'];
+    }
+    if (response.statusCode == 200) {
+      _response = "policy updated";
+    }
+
     readSecurityPolicy();
     notifyListeners();
   }
@@ -75,7 +81,6 @@ class SecurityApi extends BaseApi {
       return false;
     }
 
-    _response = null;
     return true;
   }
 }
