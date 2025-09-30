@@ -440,7 +440,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                           decoration: InputDecoration(labelText: 'Role'),
                           items: [
                             DropdownMenuItem(
-                              value: "user",
+                              value: "viewer",
                               child: Text("Viewer"),
                             ),
                             DropdownMenuItem(
