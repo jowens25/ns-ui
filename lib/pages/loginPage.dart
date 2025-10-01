@@ -156,7 +156,7 @@ class LoginCardState extends State<LoginCard> {
                               (context) => AlertDialog(
                                 title: Text('Reset Password'),
                                 content: Text(
-                                  'reset default admin password using the maintenance port on the front of the unit: \nns resetpw',
+                                  'reset default admin password using the maintenance port on the front of the unit: \nsudo ns resetpw',
                                 ),
                                 actions: [
                                   TextButton(
