@@ -17,7 +17,7 @@ import 'package:web/web.dart' as web;
 final String frontendVersion = "1.1.65";
 
 void main() {
-  final bool development = true;
+  final bool development = false;
   String host = "";
 
   if (development) {
