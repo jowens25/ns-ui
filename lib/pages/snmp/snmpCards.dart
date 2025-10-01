@@ -827,6 +827,9 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     String selectedPrivType = "AES";
     String selectedGroup = "roprivgroup";
 
+    String? authPasswordError;
+    String? privPasswordError;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -856,7 +859,10 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   ),
                   TextField(
                     controller: authPassphraseController,
-                    decoration: InputDecoration(labelText: 'Auth Passphrase'),
+                    decoration: InputDecoration(
+                      labelText: 'Auth Passphrase',
+                      errorText: authPasswordError,
+                    ),
                   ),
                   DropdownButtonFormField<String>(
                     value: selectedPrivType,
@@ -873,7 +879,10 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   ),
                   TextField(
                     controller: privPassphraseController,
-                    decoration: InputDecoration(labelText: 'Priv Passphrase'),
+                    decoration: InputDecoration(
+                      labelText: 'Priv Passphrase',
+                      errorText: privPasswordError,
+                    ),
                   ),
                   DropdownButtonFormField<String>(
                     value: selectedGroup,
@@ -903,6 +912,22 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
+                    bool valid = true;
+                    setDialogState(() {
+                      authPasswordError =
+                          authPassphraseController.text.length < 8
+                              ? 'must be at least 8 characters'
+                              : null;
+                      privPasswordError =
+                          privPassphraseController.text.length < 8
+                              ? 'must be at least 8 characters'
+                              : null;
+                      valid =
+                          authPasswordError == null &&
+                          privPasswordError == null;
+                    });
+                    if (!valid) return;
+
                     final snmpApi = context.read<SnmpApi>();
                     V3User snmpV3User = V3User.fromJson({
                       'ID': 0,
@@ -963,12 +988,13 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
     final authPassphraseController = TextEditingController();
     final privPassphraseController = TextEditingController();
 
+    final _formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Consumer<SnmpApi>(
           builder: (context, snmpApi, _) {
-            //
             userNameController.text = user.userName;
             String selectedAuthType = user.authType;
             authPassphraseController.text = user.authPassphase;
@@ -978,67 +1004,91 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
 
             return AlertDialog(
               title: Text('Edit SNMP User'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: userNameController,
-                    decoration: InputDecoration(labelText: 'User Name'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedAuthType,
-                    decoration: InputDecoration(labelText: 'Auth Type'),
-                    items: [
-                      DropdownMenuItem(value: "MD5", child: Text("MD5")),
-                      DropdownMenuItem(value: "SHA", child: Text("SHA")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedAuthType = newValue!;
-                      });
-                    },
-                  ),
-                  TextField(
-                    controller: authPassphraseController,
-                    decoration: InputDecoration(labelText: 'Auth Passphrase'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedPrivType,
-                    decoration: InputDecoration(labelText: 'Priv Type'),
-                    items: [
-                      DropdownMenuItem(value: "AES", child: Text("AES")),
-                      DropdownMenuItem(value: "DES", child: Text("DES")),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedPrivType = newValue!;
-                      });
-                    },
-                  ),
-                  TextField(
-                    controller: privPassphraseController,
-                    decoration: InputDecoration(labelText: 'Priv Passphrase'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedGroup,
-                    decoration: InputDecoration(labelText: 'Permissions'),
-                    items: [
-                      DropdownMenuItem(
-                        value: "roprivgroup",
-                        child: Text("Read Only"),
-                      ),
-                      DropdownMenuItem(
-                        value: "rwprivgroup",
-                        child: Text("Read/Write"),
-                      ),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedGroup = newValue!;
-                      });
-                    },
-                  ),
-                ],
+              content: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: userNameController,
+                      readOnly: true,
+                      decoration: InputDecoration(labelText: 'User Name'),
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedAuthType,
+                      decoration: InputDecoration(labelText: 'Auth Type'),
+                      items: [
+                        DropdownMenuItem(value: "MD5", child: Text("MD5")),
+                        DropdownMenuItem(value: "SHA", child: Text("SHA")),
+                      ],
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedAuthType = newValue!;
+                        });
+                      },
+                    ),
+                    TextFormField(
+                      controller: authPassphraseController,
+
+                      decoration: InputDecoration(labelText: 'Auth Passphrase'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'please enter a passphrase';
+                        }
+                        if (value.length < 8) {
+                          return 'must be at least 8 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedPrivType,
+                      decoration: InputDecoration(labelText: 'Priv Type'),
+                      items: [
+                        DropdownMenuItem(value: "AES", child: Text("AES")),
+                        DropdownMenuItem(value: "DES", child: Text("DES")),
+                      ],
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedPrivType = newValue!;
+                        });
+                      },
+                    ),
+                    TextFormField(
+                      controller: privPassphraseController,
+
+                      decoration: InputDecoration(labelText: 'Priv Passphrase'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'please enter a passphrase';
+                        }
+                        if (value.length < 8) {
+                          return 'must be at least 8 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedGroup,
+                      decoration: InputDecoration(labelText: 'Permissions'),
+                      items: [
+                        DropdownMenuItem(
+                          value: "roprivgroup",
+                          child: Text("Read Only"),
+                        ),
+                        DropdownMenuItem(
+                          value: "rwprivgroup",
+                          child: Text("Read/Write"),
+                        ),
+                      ],
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedGroup = newValue!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -1046,26 +1096,17 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   child: Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    final snmpApi = context.read<SnmpApi>();
-
-                    //user.version = selectedSnmpVersion;
-                    //user.groupName = selectedGroup;
-                    //user.community = communityController.text;
-                    //user.ipVersion = selectedIpVersion;
-                    //user.ip4Address = ipv4AddressController.text;
-                    //user.ip6Address = ipv6AddressController.text;
-
-                    user.userName = userNameController.text;
-                    user.authType = selectedAuthType;
-                    user.authPassphase = authPassphraseController.text;
-                    user.privType = selectedPrivType;
-                    user.privPassphase = privPassphraseController.text;
-                    user.groupName = selectedGroup;
-
-                    snmpApi.editV3User(user);
-                    //snmpApi.readV3Users();
-                    Navigator.pop(context);
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      user.userName = userNameController.text;
+                      user.authType = selectedAuthType;
+                      user.authPassphase = authPassphraseController.text;
+                      user.privType = selectedPrivType;
+                      user.privPassphase = privPassphraseController.text;
+                      user.groupName = selectedGroup;
+                      snmpApi.editV3User(user);
+                      Navigator.pop(context);
+                    }
                   },
                   child: Text('Submit Edits'),
                 ),

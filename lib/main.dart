@@ -21,8 +21,8 @@ void main() {
   //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
   //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
 
-  final host = web.window.location.origin; // official
-  //final host = "http://localhost:5000"; // development
+  //final host = web.window.location.origin; // official
+  final host = "http://localhost:5000"; // development
 
   final snmpApi = SnmpApi(serverHost: host);
   final deviceApi = DeviceApi(serverHost: host);
