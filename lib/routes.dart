@@ -34,7 +34,7 @@ final logoutRoute = RouteConfig(
 
 final usersRoute = RouteConfig(
   path: '/users',
-  name: 'Users',
+  name: 'System Users',
   icon: Icons.people,
   pageBuilder: () => UsersOverviewPage(),
   isAllowed: true,

@@ -859,6 +859,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   ),
                   TextField(
                     controller: authPassphraseController,
+
                     decoration: InputDecoration(
                       labelText: 'Auth Passphrase',
                       errorText: authPasswordError,
@@ -879,6 +880,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                   ),
                   TextField(
                     controller: privPassphraseController,
+
                     decoration: InputDecoration(
                       labelText: 'Priv Passphrase',
                       errorText: privPasswordError,
@@ -1029,7 +1031,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     ),
                     TextFormField(
                       controller: authPassphraseController,
-
+                      obscureText: true,
                       decoration: InputDecoration(labelText: 'Auth Passphrase'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -1056,6 +1058,7 @@ class _SnmpVersion3CardState extends State<SnmpVersion3Card> {
                     ),
                     TextFormField(
                       controller: privPassphraseController,
+                      obscureText: true,
 
                       decoration: InputDecoration(labelText: 'Priv Passphrase'),
                       validator: (value) {

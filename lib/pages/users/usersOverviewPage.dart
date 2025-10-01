@@ -8,7 +8,7 @@ class UsersOverviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      title: 'User Management',
+      title: 'System User Management',
       children: [
         Padding(
           padding: const EdgeInsets.all(16),

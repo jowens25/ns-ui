@@ -52,7 +52,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Users:',
+                        'System Users:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -198,7 +198,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text("User management"),
+            title: const Text("System management"),
             content: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
