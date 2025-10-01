@@ -17,12 +17,14 @@ import 'package:web/web.dart' as web;
 final String frontendVersion = "1.1.65";
 
 void main() {
-  //final ntpServerApi = NtpServerApi(baseUrl: "http://100.127.98.7:8080/api/v1");
-  //final ptpOcApi = PtpOcApi(baseUrl: "http://100.127.98.7:8080/api/v1");
-  //final userApi = UserApi(baseUrl: "http://100.127.98.7:5000");
+  final bool development = false;
+  String host = "";
 
-  //final host = web.window.location.origin; // official
-  final host = "http://localhost:5000"; // development
+  if (development) {
+    host = "http://localhost:5000"; // development
+  } else {
+    host = web.window.location.origin;
+  }
 
   final snmpApi = SnmpApi(serverHost: host);
   final deviceApi = DeviceApi(serverHost: host);
