@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/pages/network/networkCards.dart';
+import 'package:nct/pages/network/networkAccessCard.dart';
 import 'package:nct/pages/network/networkProtocolsCard.dart';
 import 'package:nct/pages/network/networkInfoCard.dart';
 
