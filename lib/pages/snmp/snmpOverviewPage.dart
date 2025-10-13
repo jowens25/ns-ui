@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
-import 'package:nct/pages/snmp/snmpCards.dart';
+import 'package:nct/pages/snmp/snmpV2Card.dart';
+import 'package:nct/pages/snmp/snmpV3Card.dart';
+import 'package:nct/pages/snmp/snmpStatusCard.dart';
 
 class SnmpOverviewPage extends StatelessWidget {
   @override
@@ -30,7 +32,7 @@ class SnmpOverviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SnmpVersion12Card(),
+                    SnmpVersion2Card(),
                     SnmpVersion3Card(),
                     //SnmpTrapsCard(),
                   ],

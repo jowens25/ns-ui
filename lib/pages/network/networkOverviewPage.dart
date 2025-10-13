@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nct/pages/basePage.dart';
 import 'package:nct/pages/network/networkCards.dart';
+import 'package:nct/pages/network/networkProtocolsCard.dart';
+import 'package:nct/pages/network/networkInfoCard.dart';
 
 class NetworkOverviewPage extends StatelessWidget {
   @override
@@ -19,28 +21,14 @@ class NetworkOverviewPage extends StatelessWidget {
                 width: 450,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    //NetworkActionsCard(),
-                    //SizedBox(height: 16),
-                    //NetworkStatusCard(),
-                    NetworkInfoCard(),
-
-                    //NetworkSettingsCard(),
-                  ],
+                  children: [NetworkInfoCard()],
                 ),
               ),
               SizedBox(
                 width: 350,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    NetworkProtcolCard(),
-                    NetworkAccessCard(),
-                    //NetworkAccessCard(),
-                    //SizedBox(height: 16),
-                    //NetworkVersion3Card(),
-                    //SizedBox(height: 16),
-                  ],
+                  children: [NetworkProtocolsCard(), NetworkAccessCard()],
                 ),
               ),
             ],
