@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nct/api/NetworkApi.dart';
+import 'package:nct/api/NtpApi.dart';
 import 'package:nct/api/SecurityApi.dart';
 import 'package:nct/api/TimeApi.dart';
 import 'package:provider/provider.dart';
@@ -14,10 +15,10 @@ import 'package:nct/routes.dart';
 import 'package:web/web.dart' as web;
 
 //import 'package:web/web.dart' as web;
-final String frontendVersion = "1.1.65";
+final String frontendVersion = "1.2.87";
 
 void main() {
-  final bool development = false;
+  final bool development = true;
   String host = "";
 
   if (development) {
@@ -34,6 +35,8 @@ void main() {
   final networkApi = NetworkApi(serverHost: host);
   final securityApi = SecurityApi(serverHost: host);
 
+  final ntpApi = NtpApi(serverHost: host);
+
   runApp(
     MultiProvider(
       providers: [
@@ -43,6 +46,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => userApi),
         ChangeNotifierProvider(create: (_) => networkApi),
         ChangeNotifierProvider(create: (_) => securityApi),
+        ChangeNotifierProvider(create: (_) => ntpApi),
       ],
       child: MyApp(),
     ),

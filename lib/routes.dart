@@ -8,6 +8,7 @@ import 'package:nct/explorerLayout.dart';
 import 'package:nct/pages/loginPage.dart';
 import 'package:nct/pages/logoutPage.dart';
 import 'package:nct/models.dart';
+import 'package:nct/pages/ntp/ntpOverviewPage.dart';
 import 'package:nct/pages/snmp/snmpOverviewPage.dart';
 import 'package:nct/pages/supportPage.dart';
 
@@ -60,6 +61,13 @@ final networkRoute = RouteConfig(
   name: 'Network',
   icon: Icons.assessment,
   pageBuilder: () => NetworkOverviewPage(),
+);
+
+final ntpRoute = RouteConfig(
+  path: '/ntp',
+  name: 'Ntp',
+  icon: Icons.assessment,
+  pageBuilder: () => NtpOverviewPage(),
 );
 
 final supportRoute = RouteConfig(
@@ -126,6 +134,7 @@ class AppRoutes {
   static final List<RouteConfig> routes = [
     //deviceRoute,
     networkRoute,
+    ntpRoute,
     loginRoute,
     snmpRoute,
     usersRoute,

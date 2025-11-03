@@ -35,9 +35,9 @@ class NtpOverviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    NtpServerConfigCard(),
+                    //NtpServerConfigCard(),
                     SizedBox(height: 16),
-                    NtpUtcConfigCard(),
+                    //NtpUtcConfigCard(),
                   ],
                 ),
               ),
@@ -45,7 +45,9 @@ class NtpOverviewPage extends StatelessWidget {
                 width: 600,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [NtpNetworkCard()],
+                  children: [
+                    //NtpNetworkCard()
+                  ],
                 ),
               ),
             ],
