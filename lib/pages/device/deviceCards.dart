@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:nct/pages/basePage.dart';
+//import 'package:nct/pages/basePage.dart';
 import 'package:nct/custom/custom.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/api/DeviceApi.dart';
 
-import 'package:flutter/material.dart';
 // ... other imports
 
 class DeviceConfigCard extends StatefulWidget {
