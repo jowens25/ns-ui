@@ -7,10 +7,8 @@ class DeviceApi extends BaseApi {
   @override
   String get baseUrl => '$serverHost/api/v1/device';
 
-
   String? _serialResponse;
-  String? get serialResponse => _serialResponse; 
-
+  String? get serialResponse => _serialResponse;
 
   DeviceApi({required super.serverHost});
 
@@ -76,8 +74,7 @@ class DeviceApi extends BaseApi {
   }
 
   Future<void> writeCommand(String command) async {
-
-    final response = await postRequest("serial/$command", {"":""});
+    final response = await postRequest("serial/$command", {"": ""});
     final decoded = json.decode(response.body);
     _serialResponse = decoded[command] ?? '';
     print(_serialResponse);

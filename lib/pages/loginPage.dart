@@ -1,47 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:nct/api/UserApi.dart';
-import 'package:nct/pages/basePage.dart';
+import 'package:nct/api/PublicApi.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class LoginPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BasePage(
-      title: 'Login',
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            alignment: WrapAlignment.start,
-            children: [
-              SizedBox(
-                width: 450,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [LoginCard()],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class LoginCard extends StatefulWidget {
+class LoginPage extends StatefulWidget {
   @override
   LoginCardState createState() => LoginCardState();
 }
 
-class LoginCardState extends State<LoginCard> {
+class LoginCardState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    //context.read<UserApi>().getCurrentUserFromToken(UserApi.getToken());
+    //context.read<PublicApi>().getCurrentUserFromToken(PublicApi.getToken());
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -59,9 +30,9 @@ class LoginCardState extends State<LoginCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserApi>(
+    return Consumer<PublicApi>(
       builder: (context, userApi, _) {
-        return Card(
+        return Container(
           child: SizedBox(
             width: double.infinity,
             child: Padding(
@@ -79,28 +50,49 @@ class LoginCardState extends State<LoginCard> {
                       ),
                     ),
                     SizedBox(height: 16),
+
                     TextFormField(
                       controller: _usernameController,
                       decoration: InputDecoration(labelText: 'Username'),
                       validator: (value) => value!.isEmpty ? 'Required' : null,
                     ),
+
                     SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
+                      onFieldSubmitted: (value) async {
+                        if (_formKey.currentState!.validate()) {
+                          try {
+                            User user = User.fromJson({
+                              'username': _usernameController.text,
+                              'password': _passwordController.text,
+                            });
+                            await userApi.login(user);
+
+                            userApi.getCurrentUserFromToken(
+                              PublicApi.getToken(),
+                            );
+
+                            context.go('/');
+                          } catch (e) {}
+                        }
+                      },
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        suffixIcon: IconButton(
-                          iconSize: 16,
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                        suffixIcon: ExcludeFocus(
+                          child: IconButton(
+                            iconSize: 16,
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
                         ),
                       ),
                       obscureText: _obscurePassword,
@@ -123,13 +115,15 @@ class LoginCardState extends State<LoginCard> {
                             });
                             await userApi.login(user);
 
-                            userApi.getCurrentUserFromToken(UserApi.getToken());
+                            userApi.getCurrentUserFromToken(
+                              PublicApi.getToken(),
+                            );
 
                             //await userApi.login(
                             //  _usernameController.text,
                             //  _passwordController.text,
                             //);
-                            context.go('/dashboard');
+                            context.go('/');
 
                             //print("error: $_errorMessage");
                             //print("is logged in???? ${userApi.isLoggedIn}");
@@ -152,23 +146,21 @@ class LoginCardState extends State<LoginCard> {
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder:
-                              (context) => AlertDialog(
-                                title: Text('Reset Password'),
-                                content: Text(
-                                  'reset default admin password using the maintenance port on the front of the unit: \nsudo ns resetpw',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.of(context).pop(),
-                                    child: Text('OK'),
-                                  ),
-                                ],
+                          builder: (context) => AlertDialog(
+                            title: Text('Reset Password'),
+                            content: Text(
+                              'reset default admin password using the maintenance port on the front of the unit: \nsudo ns resetpw',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text('OK'),
                               ),
+                            ],
+                          ),
                         );
                       },
-                      child: Text('Forgot Username / Password'),
+                      child: Text('Reset Password'),
                     ),
                     SizedBox(height: 8),
 
@@ -179,7 +171,7 @@ class LoginCardState extends State<LoginCard> {
                       },
                       child: Text('Contact'),
                     ),
-                  ],
+                  ], ////////////////////////
                 ),
               ),
             ),

@@ -1,288 +1,228 @@
-import 'dart:convert';
-import 'dart:async';
-import 'BaseApi.dart';
+import 'package:flutter/material.dart';
+import 'BaseApi2.dart';
+import 'package:nct/models.dart';
 
-class NetworkApi extends BaseApi {
-  Telnet _telnet = Telnet(Action: "Action", Status: "Status");
-  Telnet get telnet => _telnet;
+class NetworkApi extends ChangeNotifier {
+  final BaseApi2 api;
 
-  Ssh _ssh = Ssh(Action: "Action", Status: "Status");
-  Ssh get ssh => _ssh;
+  // Service states
+  ServiceStatus telnet = ServiceStatus.empty();
+  ServiceStatus ssh = ServiceStatus.empty();
+  ServiceStatus httpInfo = ServiceStatus.empty();
+  ServiceStatus ftp = ServiceStatus.empty();
 
-  Http _http = Http(Action: "Action", Status: "Status");
-  Http get http => _http;
+  // Network info
+  NetworkInfo networkInfo = NetworkInfo.empty();
 
-  Ftp _ftp = Ftp(Action: "Action", Status: "Status");
-  Ftp get ftp => _ftp;
+  // Allowed nodes
+  List<AllowedNode> allowedNodes = [];
 
-  String _response = '';
-  String get response => _response;
+  // Last message
+  String responseMessage = "";
 
-  Map<String, dynamic> networkInfo = {
-    'port_status': '',
-    'hostname': '',
-    'gateway': '',
-    'interface': '',
-    'speed': '',
-    'mac': '',
-    'ip_address': '',
-    'netmask': '',
-    'dhcp': '',
-    'dns1': '',
-    'dns2': '',
+  NetworkApi({required this.api});
 
-    'ignore_auto_dns': '',
-    'connection_status': '',
-  };
+  // -------------------------------
+  // Telnet
+  // -------------------------------
 
-  List<AllowedNode> _allowedNodes = [];
-  List<AllowedNode> get allowedNodes => _allowedNodes;
+  Future<ServiceStatus?> readTelnetInfo() async {
+    final result = await api.getRequest("telnet");
 
-  @override
-  String get baseUrl => '$serverHost/api/v1/network';
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  NetworkApi({required super.serverHost});
-
-  Future<void> readTelnetInfo() async {
-    final response = await getRequest("telnet");
-    if (response.statusCode == 200) {
-      _telnet = Telnet.fromJson(jsonDecode(response.body)['info']);
+    if (result.isSuccess && result.data?['info'] != null) {
+      telnet = ServiceStatus.fromJson(result.data!['info']);
       notifyListeners();
-    }
-  }
-
-  Future<void> editTelnetInfo(Telnet telnet) async {
-    final response = await patchRequest("telnet", telnet.toJson());
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
+      return telnet;
     }
 
-    if (response.statusCode == 200) {
-      _response = "telnet updated";
-    }
-
-    readTelnetInfo();
+    responseMessage = result.error ?? "Failed to load telnet info";
     notifyListeners();
+    return null;
   }
 
-  Future<void> readSshInfo() async {
-    final response = await getRequest("ssh");
-    if (response.statusCode == 200) {
-      _ssh = Ssh.fromJson(jsonDecode(response.body)['info']);
+  Future<bool> editTelnetInfo(ServiceStatus newStatus) async {
+    final result = await api.patchRequest("telnet", newStatus.toJson());
+
+    responseMessage = result.isSuccess
+        ? "Telnet updated"
+        : result.error ?? "Error updating telnet";
+
+    await readTelnetInfo();
+    return result.isSuccess;
+  }
+
+  // -------------------------------
+  // SSH
+  // -------------------------------
+
+  Future<ServiceStatus?> readSshInfo() async {
+    final result = await api.getRequest("ssh");
+
+    if (result.isSuccess && result.data?['info'] != null) {
+      ssh = ServiceStatus.fromJson(result.data!['info']);
       notifyListeners();
+      return ssh;
     }
-  }
 
-  Future<void> editSshInfo(Ssh ssh) async {
-    final response = await patchRequest("ssh", ssh.toJson());
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
-    }
-    if (response.statusCode == 200) {
-      _response = "ssh updated";
-    }
-    readSshInfo();
+    responseMessage = result.error ?? "Failed to load SSH info";
     notifyListeners();
+    return null;
   }
 
-  Future<void> readHttpInfo() async {
-    final response = await getRequest("http");
-    if (response.statusCode == 200) {
-      _http = Http.fromJson(jsonDecode(response.body)['info']);
+  Future<bool> editSshInfo(ServiceStatus newStatus) async {
+    final result = await api.patchRequest("ssh", newStatus.toJson());
+
+    responseMessage = result.isSuccess
+        ? "SSH updated"
+        : result.error ?? "Error updating ssh";
+
+    await readSshInfo();
+    return result.isSuccess;
+  }
+
+  // -------------------------------
+  // HTTP
+  // -------------------------------
+
+  Future<ServiceStatus?> readHttpInfo() async {
+    final result = await api.getRequest("http");
+
+    if (result.isSuccess && result.data?['info'] != null) {
+      httpInfo = ServiceStatus.fromJson(result.data!['info']);
       notifyListeners();
+      return httpInfo;
     }
-  }
 
-  Future<void> editHttpInfo(Http http) async {
-    final response = await patchRequest("http", http.toJson());
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
-    }
-    if (response.statusCode == 200) {
-      _response = "http updated";
-    }
-    readHttpInfo();
+    responseMessage = result.error ?? "Failed to load HTTP info";
     notifyListeners();
+    return null;
   }
 
-  Future<void> readFtpInfo() async {
-    final response = await getRequest("ftp");
-    if (response.statusCode == 200) {
-      _ftp = Ftp.fromJson(jsonDecode(response.body)['info']);
+  Future<bool> editHttpInfo(ServiceStatus newStatus) async {
+    final result = await api.patchRequest("http", newStatus.toJson());
+
+    responseMessage = result.isSuccess
+        ? "HTTP updated"
+        : result.error ?? "Error updating HTTP";
+
+    await readHttpInfo();
+    return result.isSuccess;
+  }
+
+  // -------------------------------
+  // FTP
+  // -------------------------------
+
+  Future<ServiceStatus?> readFtpInfo() async {
+    final result = await api.getRequest("ftp");
+
+    if (result.isSuccess && result.data?['info'] != null) {
+      ftp = ServiceStatus.fromJson(result.data!['info']);
       notifyListeners();
+      return ftp;
     }
-  }
 
-  Future<void> editFtpInfo(Ftp ftp) async {
-    final response = await patchRequest("ftp", ftp.toJson());
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
-    }
-    if (response.statusCode == 200) {
-      _response = "ftp updated";
-    }
-    readFtpInfo();
+    responseMessage = result.error ?? "Failed to load FTP info";
     notifyListeners();
+    return null;
   }
 
-  Future<void> readNetworkInfo() async {
-    final response = await getRequest("info");
-    if (response.statusCode == 200) {
-      networkInfo = jsonDecode(response.body)['info'];
+  Future<bool> editFtpInfo(ServiceStatus newStatus) async {
+    final result = await api.patchRequest("ftp", newStatus.toJson());
+
+    responseMessage = result.isSuccess
+        ? "FTP updated"
+        : result.error ?? "Error updating FTP";
+
+    await readFtpInfo();
+    return result.isSuccess;
+  }
+
+  // -------------------------------
+  // NETWORK INFO
+  // -------------------------------
+
+  Future<NetworkInfo?> readNetworkInfo() async {
+    final result = await api.getRequest("info");
+
+    if (result.isSuccess && result.data?['info'] != null) {
+      networkInfo = NetworkInfo.fromJson(result.data!['info']);
       notifyListeners();
+      return networkInfo;
     }
+
+    responseMessage = result.error ?? "Error loading network info";
+    notifyListeners();
+    return null;
   }
 
-  Future<void> writeNetworkInfo(String endpoint) async {
-    final response = await postRequest("info/$endpoint", {
-      endpoint: networkInfo[endpoint],
-    });
+  Future<bool> writeNetworkField(String fieldName, String value) async {
+    // Create a new NetworkInfo object with the updated field
+    NetworkInfo updatedInfo = networkInfo.copyWith(
+      hostname: fieldName == 'hostname' ? value : null,
+      gateway: fieldName == 'gateway' ? value : null,
+      ip: fieldName == 'ip_address' ? value : null,
+      netmask: fieldName == 'netmask' ? value : null,
+      dhcp: fieldName == 'dhcp' ? value : null,
+      dns1: fieldName == 'dns1' ? value : null,
+      dns2: fieldName == 'dns2' ? value : null,
+      ignoreAutoDns: fieldName == 'ignore_auto_dns' ? value : null,
+    );
 
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
+    final jsonBody = {fieldName: value};
+
+    final result = await api.postRequest("info/$fieldName", jsonBody);
+
+    if (result.isSuccess) {
+      networkInfo = updatedInfo; // assign updated object
     }
-    if (response.statusCode == 200) {
-      _response = "network updated";
-    }
+
+    responseMessage = result.isSuccess
+        ? "Network updated"
+        : result.error ?? "Error updating network";
 
     notifyListeners();
+    return result.isSuccess;
   }
 
-  Future<void> resetNetwork() async {
-    final response = await postRequest("reset", {});
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
+  // -------------------------------
+  // ALLOWED NODES
+  // -------------------------------
+
+  Future<List<AllowedNode>?> readNetworkAccess() async {
+    final result = await api.getRequest("access");
+
+    if (result.isSuccess) {
+      final list = result.data?['allowed_nodes'] as List? ?? [];
+      allowedNodes = list.map((e) => AllowedNode.fromJson(e)).toList();
+      notifyListeners();
+      return allowedNodes;
     }
-    if (response.statusCode == 200) {
-      _response = "Network config reset";
-    }
+
+    responseMessage = result.error ?? "Failed to load access list";
     notifyListeners();
+    return null;
   }
 
-  Future<void> readNetworkAccess() async {
-    final response = await getRequest("access");
-    final decoded = jsonDecode(response.body);
-    if (decoded['allowed_nodes'] != null) {
-      _allowedNodes =
-          (decoded['allowed_nodes'] as List)
-              .map((userJson) => AllowedNode.fromJson(userJson))
-              .toList();
-    }
+  Future<bool> writeNetworkAccess(AllowedNode node) async {
+    final result = await api.postRequest("access", node.toJson());
 
-    notifyListeners();
+    responseMessage = result.isSuccess
+        ? "Node added"
+        : result.error ?? "Error adding node";
+
+    await readNetworkAccess();
+    return result.isSuccess;
   }
 
-  Future<void> writeNetworkAccess(AllowedNode node) async {
-    final response = await postRequest("access", node.toJson());
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
-    }
-    if (response.statusCode == 200) {
-      _response = "Node added";
-    }
-    readNetworkAccess();
-    notifyListeners();
-  }
+  Future<bool> deleteNetworkAccess(AllowedNode node) async {
+    final result = await api.deleteRequest("access/${node.id}");
 
-  Future<void> deleteNetworkAccess(AllowedNode node) async {
-    final response = await deleteRequest("access/${node.id}", node.toJson());
-    if (response.statusCode == 403) {
-      _response = jsonDecode(response.body)['error'];
-    }
+    responseMessage = result.isSuccess
+        ? "Node deleted"
+        : result.error ?? "Error deleting node";
 
-    if (response.statusCode == 200) {
-      _response = "Node deleted";
-      _allowedNodes.remove(node);
-    }
-
-    readNetworkAccess();
-    notifyListeners();
-  }
-
-  //
-  //
-}
-
-class Telnet {
-  String Action;
-  String Status;
-
-  Telnet({required this.Action, required this.Status});
-
-  factory Telnet.fromJson(Map<String, dynamic> json) {
-    return Telnet(Action: json['action'] ?? '', Status: json['status'] ?? '');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'action': Action, 'status': Status};
-  }
-}
-
-class Ssh {
-  String Action;
-  String Status;
-
-  Ssh({required this.Action, required this.Status});
-
-  factory Ssh.fromJson(Map<String, dynamic> json) {
-    return Ssh(Action: json['action'] ?? '', Status: json['status'] ?? '');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'action': Action, 'status': Status};
-  }
-}
-
-class Http {
-  String Action;
-  String Status;
-
-  Http({required this.Action, required this.Status});
-
-  factory Http.fromJson(Map<String, dynamic> json) {
-    return Http(Action: json['action'] ?? '', Status: json['status'] ?? '');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'action': Action, 'status': Status};
-  }
-}
-
-class Ftp {
-  String Action;
-  String Status;
-
-  Ftp({required this.Action, required this.Status});
-
-  factory Ftp.fromJson(Map<String, dynamic> json) {
-    return Ftp(Action: json['action'] ?? '', Status: json['status'] ?? '');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'action': Action, 'status': Status};
-  }
-}
-
-class AllowedNode {
-  int? id;
-  String address;
-
-  AllowedNode({this.id, required this.address});
-
-  factory AllowedNode.fromJson(Map<String, dynamic> json) {
-    return AllowedNode(id: json['ID'], address: json['address'] ?? '');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'ID': id, 'address': address};
-  }
-
-  static List<String> getHeader() {
-    return ['Address', 'Remove'];
+    await readNetworkAccess();
+    return result.isSuccess;
   }
 }

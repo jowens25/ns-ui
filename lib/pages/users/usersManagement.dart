@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nct/api/SecurityApi.dart';
-import 'package:nct/api/UserApi.dart';
+import 'package:nct/api/PublicApi.dart';
 import 'package:provider/provider.dart';
 import 'package:nct/custom/custom.dart';
 
@@ -17,7 +17,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userApi = context.read<UserApi>();
+      final userApi = context.read<PublicApi>();
       context.read<SecurityApi>().readSecurityPolicy();
 
       userApi.readUsers();
@@ -52,7 +52,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'System Users:',
+                        'Users:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -120,7 +120,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
   }
 
   Widget _buildUsersList() {
-    return Consumer<UserApi>(
+    return Consumer<PublicApi>(
       builder: (context, userApi, _) {
         if (userApi.filteredUsers.isEmpty) {
           return Center(
@@ -360,7 +360,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return Consumer<UserApi>(
+            return Consumer<PublicApi>(
               builder: (context, userApi, _) {
                 String selectedRole = "admin";
 
@@ -462,21 +462,26 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       onPressed: () => Navigator.pop(context),
                       child: Text('Cancel'),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (nameController.text.isNotEmpty) {
-                          User user = User.fromJson({
-                            'username': nameController.text,
-                            //'email': emailController.text,
-                            'password': passwordController.text,
-                            'role': selectedRole,
-                          });
-                          userApi.writeUser(user);
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Text('Add'),
-                    ),
+                    if (securityApi.validatePassword(
+                      passwordController.text,
+                      nameController.text,
+                      policy,
+                    ))
+                      ElevatedButton(
+                        onPressed: () {
+                          if (nameController.text.isNotEmpty) {
+                            User user = User.fromJson({
+                              'username': nameController.text,
+                              //'email': emailController.text,
+                              'password': passwordController.text,
+                              'role': selectedRole,
+                            });
+                            userApi.writeUser(user);
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Text('Add'),
+                      ),
                   ],
                 );
               },
@@ -491,7 +496,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<UserApi>(
+        return Consumer<PublicApi>(
           builder: (context, userApi, _) {
             return AlertDialog(
               title: Text('Delete User'),
@@ -537,7 +542,7 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return Consumer<UserApi>(
+            return Consumer<PublicApi>(
               builder: (context, userApi, _) {
                 return AlertDialog(
                   title: Text('Edit User'),
@@ -638,19 +643,24 @@ class _UsersManagementCardState extends State<UsersManagementCard> {
                       onPressed: () => Navigator.pop(context),
                       child: Text('Cancel'),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        User user = User.fromJson({
-                          'username': nameController.text,
-                          // 'email': emailController.text,
-                          'password': passwordController.text,
-                          'role': selectedRole,
-                        });
-                        userApi.editUser(user);
-                        Navigator.pop(context);
-                      },
-                      child: Text('Save'),
-                    ),
+                    if (securityApi.validatePassword(
+                      passwordController.text,
+                      nameController.text,
+                      policy,
+                    ))
+                      ElevatedButton(
+                        onPressed: () {
+                          User user = User.fromJson({
+                            'username': nameController.text,
+                            // 'email': emailController.text,
+                            'password': passwordController.text,
+                            'role': selectedRole,
+                          });
+                          userApi.editUser(user);
+                          Navigator.pop(context);
+                        },
+                        child: Text('Save'),
+                      ),
                   ],
                 );
               },

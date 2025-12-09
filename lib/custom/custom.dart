@@ -89,11 +89,13 @@ class LabeledText extends StatelessWidget {
           width: myGap,
           child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           ),
         ),
         Expanded(
           child: TextField(
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+
             controller: controller,
             onSubmitted: onSubmitted,
             decoration: InputDecoration(isDense: true),
@@ -190,14 +192,14 @@ class ReadOnlyLabeledText extends StatelessWidget {
           width: myGap,
           child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           ),
         ),
         Expanded(
           child: TextField(
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             readOnly: true,
             controller: controller,
-
             decoration: InputDecoration(isDense: true),
           ),
         ),
@@ -242,13 +244,12 @@ class LabeledDropdown<T> extends StatelessWidget {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<T>(
                 value: value,
-                items:
-                    items.map<DropdownMenuItem<T>>((T item) {
-                      return DropdownMenuItem<T>(
-                        value: item,
-                        child: Text(item.toString()),
-                      );
-                    }).toList(),
+                items: items.map<DropdownMenuItem<T>>((T item) {
+                  return DropdownMenuItem<T>(
+                    value: item,
+                    child: Text(item.toString()),
+                  );
+                }).toList(),
                 onChanged: onChanged,
                 isExpanded: true,
                 dropdownColor: Theme.of(context).cardColor,
@@ -259,6 +260,47 @@ class LabeledDropdown<T> extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class DragBar extends StatelessWidget {
+  final ValueChanged<double> onDragUpdate;
+  final Color? backgroundColor;
+  final Color? handleColor;
+
+  const DragBar({
+    Key? key,
+    required this.onDragUpdate,
+    this.backgroundColor,
+    this.handleColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragUpdate: (details) {
+        onDragUpdate(details.delta.dy);
+      },
+      child: Container(
+        height: 8,
+        //color: backgroundColor ?? Colors.grey[300],
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+          ),
+        ),
+
+        child: Center(
+          child: Container(
+            height: 12,
+            width: 40,
+            color: handleColor ?? Colors.grey[600],
+          ),
+        ),
       ),
     );
   }

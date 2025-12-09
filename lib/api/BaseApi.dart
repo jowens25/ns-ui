@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'UserApi.dart';
+import 'PublicApi.dart';
 
 class BaseApi extends ChangeNotifier {
   final String serverHost;
@@ -17,7 +17,7 @@ class BaseApi extends ChangeNotifier {
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${UserApi.getToken()}',
+            'Authorization': 'Bearer ${PublicApi.getToken()}',
           },
         )
         .timeout(const Duration(seconds: 5));
@@ -37,7 +37,7 @@ class BaseApi extends ChangeNotifier {
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${UserApi.getToken()}',
+            'Authorization': 'Bearer ${PublicApi.getToken()}',
           },
           body: json.encode(body),
         )
@@ -58,7 +58,7 @@ class BaseApi extends ChangeNotifier {
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${UserApi.getToken()}',
+            'Authorization': 'Bearer ${PublicApi.getToken()}',
           },
           body: json.encode(body),
         )
@@ -78,7 +78,7 @@ class BaseApi extends ChangeNotifier {
           Uri.parse('$baseUrl/$endpoint'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${UserApi.getToken()}',
+            'Authorization': 'Bearer ${PublicApi.getToken()}',
           },
           body: json.encode(body),
         )

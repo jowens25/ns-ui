@@ -1,17 +1,11 @@
 import 'dart:convert';
 import 'dart:async';
-
 import 'BaseApi.dart';
-
-import 'dart:convert';
-
-import 'package:nct/api/BaseApi.dart';
-import 'package:provider/provider.dart';
 import 'package:web/web.dart';
-import 'dart:async';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:http/http.dart' as http;
 
-class UserApi extends BaseApi {
+class PublicApi extends BaseApi {
   @override
   String get baseUrl => '$serverHost/api/v1';
 
@@ -27,14 +21,19 @@ class UserApi extends BaseApi {
   String _response = "response";
   String get response => _response;
 
+  String _log = "";
+  String get log => _log;
+
   bool _loggedIn = false;
   bool get isLoggedIn => _loggedIn;
 
   Timer? _sessionTimer;
 
-  UserApi({required super.serverHost}) {
+  PublicApi({required super.serverHost}) {
     isTokenValid();
+    readLog();
     _startSessionTimer();
+    streamLog();
   }
 
   Future<void> login(User user) async {
@@ -96,9 +95,12 @@ class UserApi extends BaseApi {
 
   void isTokenValid() {
     try {
+      if (getToken() == '') {
+        throw JWTException("missing token");
+      }
       JWT.verify(getToken(), SecretKey("your-secret-key"));
       _loggedIn = true;
-      //final userApi = Provider.of<UserApi>(context, listen: false);
+      //final userApi = Provider.of<PublicApi>(context, listen: false);
       //userApi.getCurrentUserFromToken(getToken());
     } on JWTExpiredException {
       print('JWT expired');
@@ -191,6 +193,27 @@ class UserApi extends BaseApi {
     print(decoded);
     readUsers();
     notifyListeners();
+  }
+
+  Future<void> readLog() async {
+    final response = await getRequest("log");
+    final decoded = jsonDecode(response.body);
+    //print(decoded);
+    _log = decoded["log"];
+    notifyListeners();
+  }
+
+  void streamLog() async {
+    final client = http.Client();
+    final request = http.Request('GET', Uri.parse(baseUrl + "/log"));
+
+    final response = await client.send(request);
+
+    response.stream.transform(utf8.decoder).transform(LineSplitter()).listen((
+      line,
+    ) {
+      print(line);
+    });
   }
 }
 

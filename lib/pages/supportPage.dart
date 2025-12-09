@@ -101,12 +101,11 @@ class SupportCard extends StatelessWidget {
           ),
           SizedBox(height: 10),
 
-          StaticLabeledText(
-            label: "  Version",
-            myGap: 150,
-            myText: frontendVersion,
-          ),
-
+          // StaticLabeledText(
+          //   label: "  Version",
+          //   myGap: 150,
+          //   myText: frontendVersion,
+          // ),
           SizedBox(height: 10),
         ],
       ),
@@ -116,21 +115,20 @@ class SupportCard extends StatelessWidget {
   void _showInfo(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: Text("Host"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text(web.window.location.origin)],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text("Close"),
-              ),
-            ],
+      builder: (dialogContext) => AlertDialog(
+        title: Text("Host"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [Text(web.window.location.origin)],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text("Close"),
           ),
+        ],
+      ),
     );
   }
 }
