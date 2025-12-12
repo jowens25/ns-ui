@@ -33,23 +33,26 @@ void main() {
   final snmpApi = SnmpApi(serverHost: host);
   final deviceApi = DeviceApi(serverHost: host);
   final timeApi = TimeApi(serverHost: host);
-  final userApi = PublicApi(serverHost: host);
+  final publicApi = PublicApi(serverHost: host);
   final networkApi = NetworkApi(api: baseApi2);
   final securityApi = SecurityApi(serverHost: host);
   final ntpApi = NtpApi(serverHost: host);
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => deviceApi),
-        ChangeNotifierProvider(create: (_) => timeApi),
-        ChangeNotifierProvider(create: (_) => snmpApi),
-        ChangeNotifierProvider(create: (_) => userApi),
-        ChangeNotifierProvider(create: (_) => networkApi),
-        ChangeNotifierProvider(create: (_) => securityApi),
-        ChangeNotifierProvider(create: (_) => ntpApi),
-      ],
-      child: MyApp(),
+    PublicApiScope(
+      publicApi: publicApi,
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => deviceApi),
+          ChangeNotifierProvider(create: (_) => timeApi),
+          ChangeNotifierProvider(create: (_) => snmpApi),
+          ChangeNotifierProvider(create: (_) => publicApi),
+          ChangeNotifierProvider(create: (_) => networkApi),
+          ChangeNotifierProvider(create: (_) => securityApi),
+          ChangeNotifierProvider(create: (_) => ntpApi),
+        ],
+        child: MyApp(),
+      ),
     ),
   );
 }
@@ -59,8 +62,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userApi = Provider.of<PublicApi>(context, listen: false);
-
     return MaterialApp.router(
       title: 'Novus Configuration Tool',
       theme: ThemeData(
@@ -95,7 +96,16 @@ class MyApp extends StatelessWidget {
           size: 20.0, // Set your desired icon size
         ),
 
-        textTheme: GoogleFonts.robotoMonoTextTheme(Theme.of(context).textTheme),
+        textTheme: GoogleFonts.robotoMonoTextTheme(
+          ThemeData.light().textTheme.copyWith(
+            bodySmall: GoogleFonts.robotoMono(fontSize: 12),
+            bodyMedium: GoogleFonts.robotoMono(fontSize: 12),
+            bodyLarge: GoogleFonts.robotoMono(fontSize: 12), // text controller
+            labelLarge: GoogleFonts.robotoMono(fontSize: 12),
+            titleMedium: GoogleFonts.robotoMono(fontSize: 12),
+            titleLarge: GoogleFonts.robotoMono(fontSize: 12),
+          ),
+        ),
 
         cardTheme: CardThemeData(
           color: Colors.grey[200], // Slightly lighter than surface
@@ -114,7 +124,7 @@ class MyApp extends StatelessWidget {
           shadowColor: Colors.black12,
         ),
       ),
-      routerConfig: AppRouter.createRouter(userApi),
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
   }

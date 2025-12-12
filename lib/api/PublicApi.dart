@@ -1,5 +1,9 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:provider/provider.dart';
+
 import 'BaseApi.dart';
 import 'package:web/web.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
@@ -117,11 +121,10 @@ class PublicApi extends BaseApi {
       _filteredUsers = List.from(_users);
     } else {
       final lowerQuery = query.toLowerCase();
-      _filteredUsers =
-          _users.where((user) {
-            return user.name.toLowerCase().contains(lowerQuery) ||
-                user.email.toLowerCase().contains(lowerQuery);
-          }).toList();
+      _filteredUsers = _users.where((user) {
+        return user.name.toLowerCase().contains(lowerQuery) ||
+            user.email.toLowerCase().contains(lowerQuery);
+      }).toList();
     }
     notifyListeners();
   }
@@ -155,10 +158,9 @@ class PublicApi extends BaseApi {
     final response = await getRequest("users");
     final decoded = jsonDecode(response.body);
     print(decoded);
-    _users =
-        (decoded['system_users'] as List)
-            .map((userJson) => User.fromJson(userJson))
-            .toList();
+    _users = (decoded['system_users'] as List)
+        .map((userJson) => User.fromJson(userJson))
+        .toList();
     _filteredUsers = List.from(_users);
     notifyListeners();
   }
@@ -252,5 +254,22 @@ class User {
       'email': email,
       'password': password,
     };
+  }
+}
+
+class PublicApiScope extends InheritedNotifier<PublicApi> {
+  /// Creates a [PublicApiScope].
+  const PublicApiScope({
+    super.key,
+    required PublicApi publicApi,
+    required super.child,
+  }) : super(notifier: publicApi);
+
+  /// Gets the [PublicApi] and creates a dependency so GoRouter will
+  /// re-evaluate redirects when auth state changes.
+  static PublicApi of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<PublicApiScope>()!
+        .notifier!;
   }
 }
