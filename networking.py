@@ -2,7 +2,13 @@ from nicegui import ui, app
 from theme import init_colors
 from api import APIClient
 
+#from network_manager import NM
+
 api = APIClient(base_url="http://localhost:5000")
+
+#nm = NM()
+
+
 
 
 def update_dhcp_mode(dhcp_value):  # Receives the selected value
@@ -26,27 +32,28 @@ async def get_interfaces() -> list:
         return format_interfaces(result)
 
 
-# Correct async handler:
 async def on_row_selected(event):
     row = event.args[1] if event.args[1] else None
     if row:
-        ui.notify(f"Selected interface: {row['name']}")
-
         with ui.dialog() as interface_dialog, ui.card():
             ui.label(f"Interface Details: {row['name']}").classes("text-h6 mb-4")
-            interface_card(row["name"])
+            await interface_card(row["name"])
             ui.button("Close", on_click=interface_dialog.close).classes("bg-secondary")
 
         interface_dialog.open()
-
+        
 
 async def network_page():
-    init_colors()
+
+    #await nm.connect()
+
     with ui.column():
         interfaces = await get_interfaces()
-    
+
+        #res = await nm.getNetworkManger()
+        #print(res)
         ui.label("Networking").classes("text-h5")
-    
+
         interface_table = ui.table(
             title="Interfaces",
             rows=interfaces,
@@ -55,13 +62,38 @@ async def network_page():
                 "headerClasses": "uppercase text-primary",
             },
         )
-    
-        # Important: Don't call the function directly — pass the reference
-        interface_table.on("rowClick", on_row_selected)
 
 
-def interface_card(iface):
-    """Reusable interface card component"""
+        interface_table.add_slot('body-cell-name', '''
+            <q-td :props="props">
+                <a :href="'/networking/' + props.row.name" 
+                   class="text-accent cursor-pointer hover:underline"
+                   >
+                    {{ props.value }}
+                </a>
+            </q-td>
+        ''')
+
+
+async def interface_page(interface_name: str):
+
+    with ui.row():
+        ui.link('Networking', '/networking')
+        ui.label('>')
+        ui.label(interface_name)
+
+
+
+        await interface_card(interface_name)
+
+
+
+async def interface_card(iface :str ):
+
+    result = await api.get(f"/api/v1/network/interfaces/{iface}")
+    #if result and "interface" in result:
+        #print(result['interface'])
+
     with ui.card().classes("w-full"):
         # Header row
         with ui.row().classes("w-full items-center justify-between"):

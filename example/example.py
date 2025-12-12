@@ -5,7 +5,9 @@ from nicegui import app, ui
 
 
 @ui.page('/')
-@ui.page('/{_:path}')
+#@ui.page('/{_:path}')
+@ui.page('/secret')
+@ui.page('error')
 def main_page():
     with ui.header().classes('items-center bg-blue-100'):
         ui.button('Home', on_click=lambda: ui.navigate.to('/')).props('flat')
@@ -24,6 +26,13 @@ def main_page():
         '/error': error,
     }).classes('flex-grow p-4')
 
+
+
+@ui.page('/login')
+def login_page():
+    with ui.column():
+        with ui.card():
+            ui.label("login?")
 
 def home():
     ui.markdown('''

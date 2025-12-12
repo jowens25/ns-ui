@@ -15,6 +15,8 @@ def init_colors():
     )
     dark = ui.dark_mode()
     dark.enable()
+    ui.query("body").classes("bg-secondary")
+
 
 
 # background #191a1a

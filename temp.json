@@ -1,0 +1,45 @@
+{'AvailableConnections': [
+        {'802-3-ethernet': {'auto-negotiate': False, 'mac-address': 'dFY8tvhu', 'mac-address-blacklist': [], 's390-options': {}
+            }, 'connection': {'id': 'enp3s0', 'interface-name': 'enp3s0', 'permissions': [], 'timestamp': 1765577327, 'type': '802-3-ethernet', 'uuid': 'af77847d-af4c-466b-9614-6d12634d1dd2'
+            }, 'ipv4': {'address-data': [
+                    {'address': '10.1.10.205', 'prefix': 32
+                    },
+                    {'address': '10.1.10.206', 'prefix': 32
+                    }
+                ], 'addresses': [
+                    [
+                        3439984906,
+                        32,
+                        17432842
+                    ],
+                    [
+                        3456762122,
+                        32,
+                        0
+                    ]
+                ], 'dns': [
+                    67373064,
+                    134744072
+                ], 'dns-data': ['8.8.4.4', '8.8.8.8'
+                ], 'gateway': '10.1.10.1', 'method': 'manual', 'route-data': None, 'routes': []
+            }, 'ipv6': {'address-data': None, 'addresses': [], 'method': 'auto', 'route-data': None, 'routes': []
+            }, 'proxy': {}
+        }
+    ], 'Carrier': True, 'DHCP4Config': None, 'DeviceType': 'NmDeviceTypeEthernet', 'HwAddress': '74: 56: 3C:B6:F8:6E', 'IP interface': 'enp3s0', 'IP4Config': {'Addresses': [
+            {'Address': '10.1.10.206', 'Prefix': 32
+            },
+            {'Address': '10.1.10.205', 'Prefix': 32
+            }
+        ], 'Domains': [], 'Nameservers': [
+            {'Address': '8.8.4.4'
+            },
+            {'Address': '8.8.8.8'
+            }
+        ], 'Routes': [
+            {'Destination': '10.1.10.1', 'Prefix': 32, 'NextHop': '', 'Metric': 100, 'AdditionalAttributes': None
+            },
+            {'Destination': '0.0.0.0', 'Prefix': 0, 'NextHop': '10.1.10.1', 'Metric': 100, 'AdditionalAttributes': None
+            }
+        ]
+    }, 'Interface': 'enp3s0', 'PermHwAddress': '74: 56: 3C:B6:F8:6E', 'S390Subchannels': [], 'Speed': 1000, 'State': 'NmDeviceStateActivated'
+}
