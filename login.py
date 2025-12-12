@@ -13,7 +13,6 @@ async def try_login(_username: str, _password: str) -> None:
     )
 
     if response and "token" in response:
-
         app.storage.user.update(
             {
                 "username": _username,

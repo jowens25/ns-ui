@@ -1,6 +1,3 @@
-"""
-main.py - Single Page Application with dynamic content switching
-"""
 
 import datetime
 from nicegui import ui, app
@@ -16,18 +13,20 @@ from login import login_page
 api = APIClient(base_url="http://localhost:5000")
 
 
-async def select_main_content(page_name: str, content_container: ui.column):
-    """Switch to a different page by clearing and rebuilding content"""
 
-    content_container.clear()
-    with content_container:
-
-        if page_name == "networking":
+async def select_main_content(page_name: str):
+  
+    match page_name:
+        case "networking":
             await network_page()
-
-        elif page_name == "user":
+        case "accounts":
             await accounts_page()
+        case _:
+            await page_not_found()
 
+
+def main_content():
+    select_main_content(page)
 
 async def get_date(_label: ui.label):
     result = await api.get("/api/v1/network/date")
@@ -44,7 +43,9 @@ async def main_page():
         ui.navigate.to("/login")
         return
 
-    ui.query("body").classes("bg-secondary")
+    with ui.column():
+        ui.query("body").classes("bg-secondary")
+        await  network_page()
 
     left_drawer = ui.left_drawer(bordered=True).classes("bg-dark")
 
@@ -62,25 +63,25 @@ async def main_page():
 
         ui.timer(1.0, update_date)
 
-    content_container = ui.column()
+    
 
     with left_drawer:
 
         ui.button(
             "Networking",
-            on_click=lambda: select_main_content("networking", content_container),
+            on_click=lambda: select_main_content("networking"),
             icon="settings_ethernet",
         ).props("flat color=white align=left").classes("full-width")
 
         ui.button(
             "SNMP",
-            on_click=lambda: select_main_content("networking", content_container),
+            on_click=lambda: select_main_content("networking"),
             icon="settings_applications",
         ).props("flat color=white align=left").classes("full-width")
 
         ui.button(
             "Users",
-            on_click=lambda: select_main_content("user", content_container),
+            on_click=lambda: select_main_content("accounts"),
             icon="group",
         ).props("flat color=white align=left").classes("full-width")
 
@@ -96,7 +97,7 @@ async def main_page():
     with ui.footer().classes("bg-dark"):
         ui.label("FOOTER")
 
-    await select_main_content("networking", content_container)
+    #await select_main_content("networking")
 
 
 if __name__ in {"__main__", "__mp_main__"}:

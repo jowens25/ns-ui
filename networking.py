@@ -42,22 +42,22 @@ async def on_row_selected(event):
 
 async def network_page():
     init_colors()
-
-    interfaces = await get_interfaces()
-
-    ui.label("Networking").classes("text-h5")
-
-    interface_table = ui.table(
-        title="Interfaces",
-        rows=interfaces,
-        column_defaults={
-            "align": "left",
-            "headerClasses": "uppercase text-primary",
-        },
-    )
-
-    # Important: Don't call the function directly — pass the reference
-    interface_table.on("rowClick", on_row_selected)
+    with ui.column():
+        interfaces = await get_interfaces()
+    
+        ui.label("Networking").classes("text-h5")
+    
+        interface_table = ui.table(
+            title="Interfaces",
+            rows=interfaces,
+            column_defaults={
+                "align": "left",
+                "headerClasses": "uppercase text-primary",
+            },
+        )
+    
+        # Important: Don't call the function directly — pass the reference
+        interface_table.on("rowClick", on_row_selected)
 
 
 def interface_card(iface):
