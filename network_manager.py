@@ -1,109 +1,110 @@
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
+import asyncio
 
 
-class NM:
 
+#class Device:
+#
+#    def __init__(self):
+#        self.path = '/org/freedesktop/NetworkManager/Device'
+#
+    #intr = await self.bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+    #obj = self.bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', intr)
+    #self.interface = obj.get_interface('org.freedesktop.NetworkManager')
+
+    #def Reapply(self):
+#
+    #def GetAppliedConnection(self):
+#
+    #def Disconnect(self):
+#
+    #def Delete(self):
+
+class NetworkManager2:
     def __init__(self):
-        self.bus = MessageBus(bus_type=BusType.SYSTEM)
+        self.bus = None
+        self.introspection =  None
+        self.object =  None
+        self.interface = None
+        self.properties_interface = None # implements
+        self.properties = None
+
 
     async def connect(self):
-        await self.bus.connect()
+        loop = asyncio.get_running_loop()
+        self.bus = MessageBus(bus_type=BusType.SYSTEM)
+        self.bus._loop = loop
+        self.bus = await self.bus.connect()
+
+    async def setup(self):
+        self.introspection = await self.bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        self.object = self.bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', self.introspection)
+        self.interface = self.object.get_interface('org.freedesktop.NetworkManager')
+        self.properties_interface = self.object.get_interface('org.freedesktop.DBus.Properties')
+        self.properties = await self.properties_interface.call_get_all('org.freedesktop.NetworkManager')
 
 
-    async def disconnect(self):
-        await self.bus.disconnect()
+
+    def disconnect(self):
+        self.bus.disconnect()
+
+    
+    #async def print_props(self):
+    #    introspection = await self.bus.introspect('org.freedesktop.NetworkManager.Device', '/org/freedesktop/NetworkManager')
+#
+    #    device_object = self.bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager/Device', introspection)
+#
+    #    device_interface = self.object.get_interface('org.freedesktop.NetworkManager.Device')
+    #    print(await device_interface.call_get_all('org.freedesktop.NetworkManager.Devices'))
+           
+    
+    #async def GetAllDevices(self, ):            
+    #async def GetDeviceByIpIface(self, ):                             
+    #async def ActivateConnection(self, ):                                              
+    #async def AddAndActivateConnection(self, ):                                             
+    #async def DeactivateConnection(self, ):     
+    #async def Sleep(self, ):                    
+    #async def Enable(self, ):                   
+    #async def GetPermissions(self, ):               
+    #async def SetLogging(self, ):                                     
+    #async def GetLogging(self, ):                                      
+    #async def CheckConnectivity(self, ):        
+    #async def state(self, ):                    
 
 
-    async def getNetworkManger(self):
+class NetworkManager:
+
+    def __init__(self):
+        self.bus = None
+        self.networkmanager = None
+        self.properties = None
+
+
+    async def connect(self):
+        loop = asyncio.get_running_loop()
+        self.bus = MessageBus(bus_type=BusType.SYSTEM)
+        self.bus._loop = loop
+        self.bus = await self.bus.connect()
+
+
+    def disconnect(self):
+        self.bus.disconnect()
+
+
+    '''exposes the methods'''
+    async def getNetworkMangerMethods(self):
         intr = await self.bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
         obj = self.bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', intr)
-        interface = obj.get_interface('org.freedesktop.DBus.Properties')
-        ret = await interface.call_get('org.freedesktop.NetworkManager')
+        self.interface = obj.get_interface('org.freedesktop.NetworkManager')
+        # await interface.call_get('org.freedesktop.NetworkManager')
+        #return ret
 
-        return ret
-
-    #async def getProperties(self, path, selected_interface):
-    #    introspection = await self.dbus.introspect('org.freedesktop.NetworkManager', path)
-    #    obj = self.dbus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    #    interface = obj.get_interface('org.freedesktop.DBus.Properties')
-    #    ret = await interface.call_get(f'org.freedesktop.NetworkManager.{selected_interface}', prop)
-#
-#
-#
-    #async def nmGetProp(self, iface :str, path :str, prop :str) -> str:
-    #    introspection = await self.bus.introspect('org.freedesktop.NetworkManager', path)
-    #    obj = self.bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    #    interface = obj.get_interface('org.freedesktop.DBus.Properties')
-    #    ret = await interface.call_get(f'org.freedesktop.NetworkManager.{iface}', prop)
-    #    return ret.value
-#
-#
-    #async def getDevices(self, path :str):
-    #    introspection = await self.dbus.introspect('org.freedesktop.NetworkManager', path)
-    #    obj = self.dbus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    #    interface = obj.get_interface('org.freedesktop.NetworkManager')
-    #    ret = await interface.call_get_devices()
-    #    return ret
-#
-#
-    #async def getInterfaces(self):
-    #    interfaces = []
-    #    devices = await self.getDevices('/org/freedesktop/NetworkManager')
-    #    for device in devices:
-    #        i = await nmGetProp("Device", device, "Interface")
-    #        interfaces.append(i)
-    #    return interfaces
-#
-
-#async def main():
-#
-#    print(await getInterfaces())
-    
-   # bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
-   # devices = await getDevices('/org/freedesktop/NetworkManager')
-#
-   # for device in devices:
-   #     if await nmGetProp("Device", device, "Interface") == 'enp3s0':
-   #         
-   #         Udi = await nmGetProp("Device", device, "Udi")
-   #         Interface = await nmGetProp("Device", device, "Interface")
-   #         IpInterface = await nmGetProp("Device", device, "IpInterface")
-   #         Driver = await nmGetProp("Device", device, "Driver")
-   #         DriverVersion = await nmGetProp("Device", device, "DriverVersion")
-   #         FirmwareVersion = await nmGetProp("Device", device, "FirmwareVersion")
-   #         Capabilities = await nmGetProp("Device", device, "Capabilities")
-   #         Ip4Address = await nmGetProp("Device", device, "Ip4Address")
-   #         State = await nmGetProp("Device", device, "State")
-   #         StateReason = await nmGetProp("Device", device, "StateReason")
-   #         ActiveConnection = await nmGetProp("Device", device, "ActiveConnection")
-   #         Ip4Config = await nmGetProp("Device", device, "Ip4Config")
-   #         Dhcp4Config = await nmGetProp("Device", device, "Dhcp4Config")
-   #         Ip6Config = await nmGetProp("Device", device, "Ip6Config")
-   #         Dhcp6Config = await nmGetProp("Device", device, "Dhcp6Config")
-   #         Managed = await nmGetProp("Device", device, "Managed")
-   #         Autoconnect = await nmGetProp("Device", device, "Autoconnect")
-   #         FirmwareMissing = await nmGetProp("Device", device, "FirmwareMissing")
-   #         NmPluginMissing = await nmGetProp("Device", device, "NmPluginMissing")
-   #         DeviceType = await nmGetProp("Device", device, "DeviceType")
-   #         AvailableConnections = await nmGetProp("Device", device, "AvailableConnections")
-   #         PhysicalPortId = await nmGetProp("Device", device, "PhysicalPortId")
-   #         Mtu = await nmGetProp("Device", device, "Mtu")
-   #         Metered = await nmGetProp("Device", device, "Metered")
-   #         LldpNeighbors = await nmGetProp("Device", device, "LldpNeighbors")
-   #         Real = await nmGetProp("Device", device, "Real")
-#
-   #         print(Interface)
-#
-   #         #for cfg in Ip4Config:
-   #             #print(cfg)
-   #         ipv4s = await nmGetProp("IP4Config", Ip4Config, "AddressData")
-#
-   #         print(ipv4s[0].values)
+    async def getNetworkManagerProperties(self):
+        intr =  await self.bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        obj = self.bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', intr)
+        self.props = obj.get_interface('org.freedesktop.DBus.Properties')
 
 
-
-
-
-
+nm = NetworkManager2()
 

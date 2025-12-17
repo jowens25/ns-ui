@@ -64,3 +64,17 @@ class APIClient:
         except httpx.HTTPError as e:
             ui.notify(f"API Error: {str(e)}", color="negative")
             return None
+
+
+api = APIClient(base_url="http://localhost:5000")
+
+
+async def get_date(_label: ui.label):
+    result = await api.get("/api/v1/network/date")
+    if result and "date" in result:
+        _label.set_text(result["date"])
+
+async def get_pps_ave_diff():
+    result = await api.get("/api/v1/pps")
+    if result and "pps" in result:
+        return result["pps"]

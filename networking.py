@@ -1,13 +1,10 @@
 from nicegui import ui, app
 from theme import init_colors
 from api import APIClient
-
-#from network_manager import NM
-
-api = APIClient(base_url="http://localhost:5000")
-
-#nm = NM()
-
+from dbus_next.aio import MessageBus
+from dbus_next import BusType
+from network_manager import nm
+from network_manager import NetworkManager2
 
 
 
@@ -25,11 +22,94 @@ def format_interfaces(result):
     return table_rows
 
 
-async def get_interfaces() -> list:
-    result = await api.get("/api/v1/network/interfaces")
-    if result and "interfaces" in result:
+async def get_interfaces_and_addresses() -> list:
 
-        return format_interfaces(result)
+    table_rows = []
+    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', nm.introspection)
+    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager')
+    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+
+    dp = await nm.interface.call_get_devices()
+
+    for path in dp:
+        address_data = []
+
+        nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', path)
+        nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', path, nm.introspection)
+        nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.Device')
+        nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+
+
+        interface_name = await nm.properties_interface.call_get(
+        "org.freedesktop.NetworkManager.Device",  # Interface name
+        "Interface"                               # Property name
+        )
+
+
+        ipv4_conf = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device",   
+            "Ip4Config")    
+        
+        ipv6_conf = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device",   
+            "Ip6Config")   
+
+        nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', ipv4_conf.value)
+        nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', ipv4_conf.value, nm.introspection)
+        nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.IP4Config')
+        nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+
+        ip4_address_data = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.IP4Config",   
+            "AddressData")    
+        
+
+        address_data.extend(ip4_address_data.value)
+
+
+
+
+        nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', ipv6_conf.value)
+        nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', ipv6_conf.value, nm.introspection)
+        nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.IP6Config')
+        nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+
+        ip6_address_data = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.IP6Config",   
+            "AddressData")    
+        
+        address_data.extend(ip6_address_data.value)
+        
+        address_string = ", ".join(
+            f"{item['address'].value}/{item['prefix'].value}" 
+            for item in address_data
+        )
+
+        table_rows.append({"name": interface_name.value, "addresses": address_string})
+
+
+
+
+
+        nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', path)
+        nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', path, nm.introspection)
+        nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.Device')
+        nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+
+
+        bytes = await nm.properties_interface.call_get(        
+                "org.freedesktop.NetworkManager.Device.Statistics",   
+                "TxBytes")  
+        print("bytes", bytes.value)
+
+
+
+
+    return table_rows
+
+
+
 
 
 async def on_row_selected(event):
@@ -45,10 +125,10 @@ async def on_row_selected(event):
 
 async def network_page():
 
-    #await nm.connect()
+
 
     with ui.column():
-        interfaces = await get_interfaces()
+        interfaces = await get_interfaces_and_addresses()
 
         #res = await nm.getNetworkManger()
         #print(res)
@@ -90,39 +170,127 @@ async def interface_page(interface_name: str):
 
 async def interface_card(iface :str ):
 
-    result = await api.get(f"/api/v1/network/interfaces/{iface}")
-    #if result and "interface" in result:
-        #print(result['interface'])
+
+
+    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager")
+    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager", nm.introspection)
+    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager')
+    device = await nm.interface.call_get_device_by_ip_iface(iface)
+
+
+
+
+
+    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', device)
+    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', device, nm.introspection)
+    #nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.Device')
+    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+
+
+    hwaddr = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device.Wired",   
+            "HwAddress")  
+
+
+    hwaddr = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device.Wired",   
+            "HwAddress")  
+    
+    carrier = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device.Wired",   
+            "Carrier")  
+    print((carrier.value))
+    speed = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device.Wired",   
+            "Speed")  
+   
+    print(speed)
+    driver = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device",   
+            "Driver")  
+    
+
+    id = await nm.properties_interface.call_get(        
+            "org.freedesktop.NetworkManager.Device",   
+            "PhysicalPortId")  
+
+    print(driver.value)
+
+    print(id.value)
+
+
+    
+
+
+    address_data = []
+    ipv4_conf = await nm.properties_interface.call_get(        
+        "org.freedesktop.NetworkManager.Device",   
+        "Ip4Config")    
+    
+    ipv6_conf = await nm.properties_interface.call_get(        
+        "org.freedesktop.NetworkManager.Device",   
+        "Ip6Config")   
+    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', ipv4_conf.value)
+    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', ipv4_conf.value, nm.introspection)
+    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.IP4Config')
+    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+    ip4_address_data = await nm.properties_interface.call_get(        
+        "org.freedesktop.NetworkManager.IP4Config",   
+        "AddressData")    
+    
+    address_data.extend(ip4_address_data.value)
+    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', ipv6_conf.value)
+    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', ipv6_conf.value, nm.introspection)
+    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.IP6Config')
+    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
+    ip6_address_data = await nm.properties_interface.call_get(        
+        "org.freedesktop.NetworkManager.IP6Config",   
+        "AddressData")    
+    
+    address_data.extend(ip6_address_data.value)
+    
+    address_string = ", ".join(
+        f"{item['address'].value}/{item['prefix'].value}" 
+        for item in address_data
+    )
+
+
+
 
     with ui.card().classes("w-full"):
         # Header row
         with ui.row().classes("w-full items-center justify-between"):
             ui.label(iface).classes("text-h6")
-            ui.label("driver info").classes("text-caption")
-            ui.label("control info").classes("text-caption")
-            ui.link("mac address", "#")
+            ui.label(f"{driver.value}").classes("text-h6")
+            ui.label(f"{hwaddr.value}").classes("text-h6")
             ui.switch("Connected").props("disable")
 
         ui.separator()
+        
 
-        # Main content
-        with ui.column().classes("w-full gap-2"):
-            with ui.row().classes("items-center gap-4"):
-                ui.label("Status:").classes("font-bold")
-                ui.label("Active").classes("text-positive")
 
-            with ui.row().classes("items-center gap-4"):
-                ui.label("IP Address:").classes("font-bold")
-                ui.label("192.168.1.100")
+        with ui.row().classes("w-full gap-4"):
+            with ui.column().classes("w-32 items-start"):  # Fixed width for labels
+               ui.label("Status").classes("font-bold")
+               ui.label("Carrier").classes("font-bold")
+               ui.label("General").classes("font-bold")
+               ui.label("IPv4").classes("font-bold")
+               ui.label("IPv6").classes("font-bold")
+               ui.label("MTU").classes("font-bold")
+    
+            with ui.column().classes("flex-1 gap-4"):  # Flexible width for values
+                ui.label(address_string)
 
-            with ui.row().classes("items-center gap-4"):
-                ui.label("Connection:").classes("font-bold")
-                ui.select(
-                    ["DHCP", "MANUAL", "Static"],
-                    value="DHCP",
-                    on_change=update_dhcp_mode,
-                )
+                ui.label(f"{speed.value/1000} Gbps")
+               
+                ui.checkbox('Connect automatically').props("flat color=accent align=left").classes("w-full").props("dense")
 
-            with ui.row().classes("items-center gap-4"):
-                ui.label("DNS:").classes("font-bold")
-                ui.input(placeholder="8.8.8.8").classes("flex-grow")
+                with ui.row():
+                    ui.label(address_string), ui.link("edit")
+
+                with ui.row():
+                    ui.label(address_string), ui.link("edit")
+                
+                with ui.row():
+                    ui.label(address_string), ui.link("edit")
+         

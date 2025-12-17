@@ -29,6 +29,7 @@ def main_page():
 
 
 @ui.page('/login')
+@protected
 def login_page():
     with ui.column():
         with ui.card():

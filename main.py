@@ -1,44 +1,37 @@
 
-import datetime
 from nicegui import ui, app
-
-from dbus_next.aio import MessageBus
-from dbus_next import BusType
-
-from api import APIClient
-
+import time
+from api import get_date
+from network_manager import nm
 
 from networking import network_page, interface_page
 from accounts import accounts_page
 from theme import init_colors
 from login import login_page
-from home import home_page
-from snmp import snmp_page
-
-api = APIClient(base_url="http://localhost:5000")
-
+from root import root_page
+from snmp import snmp_page, snmp_user_page
+from ntp import ntp_page
 
 
 
 
-
-
-async def get_date(_label: ui.label):
-    result = await api.get("/api/v1/network/date")
-    if result and "date" in result:
-        _label.set_text(result["date"])
-
-
-@ui.page('/networking/{interface_name}')
 @ui.page('/networking')
+@ui.page('/networking/{interface_name}')
+
 @ui.page('/snmp')
-#@ui.page('/accounts')
+@ui.page('/snmp/{user}')
+
+@ui.page('/ntp')
+
+
 @ui.page('/')
-async def main_page():
+async def root():
+    
 
     init_colors()
-
+        
     if not app.storage.user.get("authenticated", False):
+        
         ui.navigate.to("/login")
         return
 
@@ -58,11 +51,16 @@ async def main_page():
         ui.timer(1.0, update_date)
 
 
+
+
+
+
+
     with ui.left_drawer(bordered=True).classes("bg-dark") as left_drawer:
 
 
         ui.button(
-            "Overview",
+            "Overview - root",
             on_click=lambda: ui.navigate.to('/'),
             icon="dashboard",
         ).props("flat color=white align=left").classes("full-width")
@@ -70,6 +68,26 @@ async def main_page():
         ui.button(
             "Networking",
             on_click=lambda: ui.navigate.to('/networking'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
+
+
+        ui.button(
+            "NTP",
+            on_click=lambda: ui.navigate.to('/ntp'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
+
+
+        ui.button(
+            "Protocols",
+            on_click=lambda: ui.navigate.to('/protocols'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
+
+        ui.button(
+            "Access",
+            on_click=lambda: ui.navigate.to('/access'),
             icon="settings_ethernet",
         ).props("flat color=white align=left").classes("full-width")
 
@@ -98,12 +116,28 @@ async def main_page():
         ui.label("FOOTER")
 
 
-    ui.sub_pages({'/': home_page, '/networking': network_page, '/snmp': snmp_page, '/accounts': accounts_page, '/networking/{interface_name}': interface_page})
+    ui.sub_pages({
+                    '/': root_page, 
+                  '/networking': network_page, 
+                  '/networking/{interface_name}': interface_page,
+                  '/ntp' : ntp_page,
+                  '/snmp': snmp_page, 
+                  '/snmp/{user}': snmp_user_page,
+                  '/accounts': accounts_page, 
+                  })
 
 
 
 
 
+@app.on_startup
+async def startup():
+    await nm.connect()
+
+@app.on_shutdown
+async def shutdown():
+    if nm:
+        nm.disconnect()
 
 
 if __name__ in {"__main__", "__mp_main__"}:

@@ -3,8 +3,9 @@ from nicegui import ui, app
 
 from theme import init_colors
 from api import APIClient
-
+import time
 api = APIClient(base_url="http://localhost:5000")
+
 
 
 async def try_login(_username: str, _password: str) -> None:
@@ -18,6 +19,7 @@ async def try_login(_username: str, _password: str) -> None:
                 "username": _username,
                 "authenticated": True,
                 "token": response["token"],
+                "login_time": time.time()
             }
         )
         ui.notify(f"Welcome, {_username}!", color="positive")
