@@ -2,6 +2,8 @@
 from nicegui import ui, app
 import time
 from api import get_date
+
+
 from network_manager import nm
 
 from networking import network_page, interface_page
@@ -13,7 +15,9 @@ from snmp import snmp_page, snmp_user_page
 from ntp import ntp_page
 
 
-
+from dbus_next.aio import MessageBus
+from dbus_next import BusType
+import asyncio
 
 @ui.page('/networking')
 @ui.page('/networking/{interface_name}')
@@ -132,12 +136,14 @@ async def root():
 
 @app.on_startup
 async def startup():
-    await nm.connect()
+    bus = MessageBus(bus_type=BusType.SYSTEM)
+    bus._loop = asyncio.get_running_loop()
+    await nm.connect(bus)
+
 
 @app.on_shutdown
 async def shutdown():
-    if nm:
-        nm.disconnect()
+    nm.disconnect()
 
 
 if __name__ in {"__main__", "__mp_main__"}:
