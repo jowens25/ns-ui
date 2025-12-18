@@ -5,6 +5,44 @@ import asyncio
 
 
 
+#/org/freedesktop/NetworkManager
+#/org/freedesktop/NetworkManager/AgentManage
+#/org/freedesktop/NetworkManager/DnsManage
+#/org/freedesktop/NetworkManager/Setting
+#/org/freedesktop/NetworkManager/Settings/*
+#/org/freedesktop/NetworkManager/Devices/*
+#/org/freedesktop/NetworkManager/ActiveConnection/*
+#/org/freedesktop/NetworkManager/IP4Config/*
+#/org/freedesktop/NetworkManager/IP6Config/*
+#/org/freedesktop/NetworkManager/DHCP4Config/*
+#/org/freedesktop/NetworkManager/DHCP4Config/*
+#/org/freedesktop/NetworkManager/AccessPoint/*
+#/org.freedesktop.NetworkManager.WifiP2PPeer/*
+#/org/freedesktop/NetworkManager/Checkpoint/*
+
+
+
+
+
+class device:
+    def __init__(self):
+        self._
+    async def method( _path, _method, *args):
+        return await nm.call(_path, 'org.freedesktop.NetworkManager.Device',  _method, *args)
+    async def property(_path, _property):
+        return await nm.get_prop(_path,'org.freedesktop.NetworkManager.Device', _property)
+    
+class ipv4config:
+    async def method( _path, _method, *args):
+        return await nm.call(_path, 'org.freedesktop.NetworkManager.IP4Config',  _method, *args)
+    async def property(_path, _property):
+        return await nm.get_prop(_path,'org.freedesktop.NetworkManager.IP4Config', _property)
+
+class ipv6config:
+    async def method( _path, _method, *args):
+        return await nm.call(_path, 'org.freedesktop.NetworkManager.IP6Config',  _method, *args)
+    async def property(_path, _property):
+        return await nm.get_prop(_path,'org.freedesktop.NetworkManager.IP6Config', _property)
 
 
 class NetworkManager:
@@ -35,11 +73,8 @@ class NetworkManager:
         self.interface = self.object.get_interface(name)
 
 
-    '''get a value'''
-    async def property(self, _bus_path, _name, _property):
-
-        #_bus_path = "/org/freedesktop/"+_bus_path
-        #_name = "org.freedesktop."+_name
+    '''get a prop'''
+    async def get_prop(self, _bus_path, _name, _property):
 
         await self.introspect(_bus_path)
         self.get_object(_bus_path)
@@ -49,32 +84,20 @@ class NetworkManager:
     
     async def call(self, _bus_path, _name, _method, *args):
 
-        #_bus_path = "/org/freedesktop/"+_bus_path
-        #_name = "org.freedesktop."+_name
-
         await self.introspect(_bus_path)
         self.get_object(_bus_path)
         self.get_interface(_name)
         method = getattr(self.interface, _method)
         return await method(*args)
 
-    async def nm_method(self, _method, *args):
+    async def method(self, _method, *args):
         return await nm.call('/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager',  _method, *args)
 
-    async def nm_property(self, _property):
-        return await nm.property('/org/freedesktop/NetworkManager','org.freedesktop.NetworkManager', _property)
-    
-    async def device_method(self, _path, _method, *args):
-        return await nm.call(_path, 'org.freedesktop.NetworkManager.Device',  _method, *args)
+    async def property(self, _property):
+        return await nm.get_prop('/org/freedesktop/NetworkManager','org.freedesktop.NetworkManager', _property)
     
 
-    async def device_property(self,_path, _property):
-        return await nm.property(_path,'org.freedesktop.NetworkManager.Device', _property)
+
     
-    #async def device_property(self,_path, _property):
-    #    return await nm.property(_path,'org.freedesktop.NetworkManager', _property)
-#
-    #async def device(self, _path, _method, *args):
-    #    return await nm.call(_path, 'org.freedesktop.NetworkManager.Device',  _method, *args)
     
 nm = NetworkManager()
