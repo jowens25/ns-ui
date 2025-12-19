@@ -1,7 +1,7 @@
 
 from nicegui import ui, app
 import time
-from api import get_date
+from lib.date import get_date
 
 
 from network_manager import nm

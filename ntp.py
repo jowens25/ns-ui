@@ -1,4 +1,4 @@
-from api import APIClient
+from rest_api import APIClient
 from nicegui import ui, app
 
 api = APIClient(base_url="http://localhost:5000")

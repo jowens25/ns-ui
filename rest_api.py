@@ -4,6 +4,7 @@ from nicegui import ui, app
 
 from typing import Optional
 
+from datetime import datetime
 
 class APIClient:
     """Centralized API client for making requests"""
@@ -69,10 +70,7 @@ class APIClient:
 api = APIClient(base_url="http://localhost:5000")
 
 
-async def get_date(_label: ui.label):
-    result = await api.get("/api/v1/network/date")
-    if result and "date" in result:
-        _label.set_text(result["date"])
+
 
 async def get_pps_ave_diff():
     result = await api.get("/api/v1/pps")

@@ -2,7 +2,7 @@ import datetime
 from nicegui import ui, app
 
 from theme import init_colors
-from api import APIClient
+from rest_api import APIClient
 import time
 api = APIClient(base_url="http://localhost:5000")
 

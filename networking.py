@@ -1,6 +1,6 @@
 from nicegui import ui, app
 from theme import init_colors
-from api import APIClient
+from rest_api import APIClient
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
 from network_manager import  nm
