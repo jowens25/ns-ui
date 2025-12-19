@@ -11,7 +11,7 @@ from accounts import accounts_page
 from theme import init_colors
 from login import login_page
 from root import root_page
-from snmp import snmp_page, snmp_user_page
+from snmp.snmp import snmp_page, snmp_user_page
 from ntp import ntp_page
 
 
@@ -63,37 +63,37 @@ async def root():
     with ui.left_drawer(bordered=True).classes("bg-dark") as left_drawer:
 
 
-        ui.button(
-            "Overview - root",
-            on_click=lambda: ui.navigate.to('/'),
-            icon="dashboard",
-        ).props("flat color=white align=left").classes("full-width")
-
-        ui.button(
-            "Networking",
-            on_click=lambda: ui.navigate.to('/networking'),
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
-
-
-        ui.button(
-            "NTP",
-            on_click=lambda: ui.navigate.to('/ntp'),
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
-
-
-        ui.button(
-            "Protocols",
-            on_click=lambda: ui.navigate.to('/protocols'),
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
-
-        ui.button(
-            "Access",
-            on_click=lambda: ui.navigate.to('/access'),
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
+        #ui.button(
+        #    "Overview - root",
+        #    on_click=lambda: ui.navigate.to('/'),
+        #    icon="dashboard",
+        #).props("flat color=white align=left").classes("full-width")
+#
+        #ui.button(
+        #    "Networking",
+        #    on_click=lambda: ui.navigate.to('/networking'),
+        #    icon="settings_ethernet",
+        #).props("flat color=white align=left").classes("full-width")
+#
+#
+        #ui.button(
+        #    "NTP",
+        #    on_click=lambda: ui.navigate.to('/ntp'),
+        #    icon="settings_ethernet",
+        #).props("flat color=white align=left").classes("full-width")
+#
+#
+        #ui.button(
+        #    "Protocols",
+        #    on_click=lambda: ui.navigate.to('/protocols'),
+        #    icon="settings_ethernet",
+        #).props("flat color=white align=left").classes("full-width")
+#
+        #ui.button(
+        #    "Access",
+        #    on_click=lambda: ui.navigate.to('/access'),
+        #    icon="settings_ethernet",
+        #).props("flat color=white align=left").classes("full-width")
 
         ui.button(
             "SNMP",
@@ -101,12 +101,12 @@ async def root():
             icon="settings_applications",
         ).props("flat color=white align=left").classes("full-width")
 
-        ui.button(
-            "Accounts",
-            on_click=lambda: ui.navigate.to('/accounts'),
-            icon="group",
-        ).props("flat color=white align=left").classes("full-width")
-
+        #ui.button(
+        #    "Accounts",
+        #    on_click=lambda: ui.navigate.to('/accounts'),
+        #    icon="group",
+        #).props("flat color=white align=left").classes("full-width")
+#
         ui.separator()
 
         ui.button(
