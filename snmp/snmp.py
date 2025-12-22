@@ -266,6 +266,23 @@ def IsActiveSnmpd() -> bool:
 def EditV3User(user: V3User):
     '''edit v3 user'''
 
+    existingUser = GetV3UserByUsername(user)
+
+    if not existingUser:
+        print("USER NOT FOUND")
+        sys.exit()
+
+    StopSnmpd()
+
+    DeleteV3UserFromStorage(existingUser)
+
+    WriteV3User(user)
+    
+    StartSnmpd()
+    
+    DeleteV3UserFromConfig(user)
+
+
 def DeleteV2User(user: V2User):
     '''delete v2 user'''
 
