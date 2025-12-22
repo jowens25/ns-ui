@@ -9,40 +9,42 @@ from commands import runCmd
 
 from typing import Optional
 
+from .snmp_v2 import *
+from .snmp_v3 import *
+
 
 snmp_config_file = "/etc/snmp/snmpd.conf"
+snmp_storage_file = "/var/lib/snmp/snmpd.conf"
+
+
+
+USM_OID_MAP = {
+    # Authentication Protocols (RFC 3414)
+    "1.3.6.1.6.3.10.1.1.1": "NoAuth",
+    ".1.3.6.1.6.3.10.1.1.2": "MD5", 
+    ".1.3.6.1.6.3.10.1.1.3": "SHA",
+    "1.3.6.1.6.3.10.1.1.4": "HMAC-SHA2-224",
+    "1.3.6.1.6.3.10.1.1.5": "HMAC-SHA2-256",
+    
+    # Privacy Protocols (RFC 3414 + 3826)
+    "1.3.6.1.6.3.10.1.2.1": "NoPriv",
+    ".1.3.6.1.6.3.10.1.2.2": "DES",
+    ".1.3.6.1.6.3.10.1.2.4": "AES",
+    "1.3.6.1.6.3.10.1.2.5": "AES-192", 
+    "1.3.6.1.6.3.10.1.2.6": "AES-256"
+}
+
 
 @dataclass
 class Group:
-    GroupName: Optional[str] = None
+    Permissions: Optional[str] = None
     Version: Optional[str] = None
     SecName: Optional[str] = None
 
-@dataclass
-class V3User:
-    UserName: Optional[str] = None
 
-    Version: Optional[str] = None
-    AuthType: Optional[str] = None
-    AuthPassphrase: Optional[str] = None
-    PrivType: Optional[str] = None
-    PrivPassphrase: Optional[str] = None
-    GroupName: Optional[str] = None
-
-@dataclass
-class V2User:
-    Community:Optional[str] = None
-    ComNumber:Optional[str] = None
-    Version:Optional[str] = None
-    GroupName:Optional[str] = None
-    Source:Optional[str] = None
-    SecName:Optional[str] = None
-
-def ReadSnmpUsers() -> tuple[list[V2User], list[V3User]]:
+def ReadSnmpGroupsFromFile() -> list[Group]:
 
     groups = []
-    v2s = []
-    v3s = []
 
     with open(snmp_config_file, "r") as f:
         content = f.readlines()
@@ -53,58 +55,84 @@ def ReadSnmpUsers() -> tuple[list[V2User], list[V3User]]:
             g = Group()
             fields = line.split(" ")
             if len(fields) == 4:
-                g.GroupName = fields[1]
+                g.Permissions = fields[1]
                 g.Version = fields[2]
                 g.SecName = fields[3]
                 groups.append(g)
-      
-        if line.startswith("com2sec"):
-            v2 = V2User()
-            fields = line.split(" ")
-            if len(fields) == 4:
-                v2.SecName = fields[1]
-                v2.Source = fields[2]
-                v2.Community = fields[3]
-                v2s.append(v2)
+    pass #endfor  
 
-        if line.startswith("createUser"):
+    return groups
+
+
+
+
+def ReadV3UsersFromFile() -> list[V3User]:
+
+    v3s = []
+    with open(snmp_storage_file, "r") as f:
+        content = f.readlines()
+
+    for line in content:
+        line = line.strip("\n")
+        if line.startswith("usmUser"):
             v3 = V3User()
             fields = line.split(" ")
-            if len(fields) == 6:
-                v3.UserName = fields[1]
-                v3.AuthType = fields[2]
-                v3.AuthPassphrase = fields[3]
-                v3.PrivType = fields[4]
-                v3.PrivPassphrase = fields[5]
-                v3s.append(v3)
-    pass # for
+            if len(fields) == 12:
+     
+                v3.UserName = fields[4].strip('"')
 
+                v3.AuthType = USM_OID_MAP.get(fields[7], f"Unknown")
+                #v3.AuthPassphrase = fields[3]
+                v3.PrivType = USM_OID_MAP.get(fields[9], f"Unknown")
+                #v3.PrivPassphrase = fields[5]
+                v3s.append(v3)
+    pass # endfor
+    return v3s
+
+
+
+
+def ReadV2Users() -> list[V2User]:
+    groups = ReadSnmpGroupsFromFile()
+    v2s = ReadV2UsersFromFile()
     g: Group
     for g in groups:
         v2: V2User
         for v2 in v2s:
             if g.SecName == v2.SecName:
                 v2.SecName = g.SecName
-                v2.GroupName = g.GroupName
+                v2.Permissions = g.Permissions
                 v2.Version = g.Version
-        
+        pass #endfor
+    pass #endfor
+    return v2s
+
+
+def ReadV3Users() -> list[V3User]:
+    groups = ReadSnmpGroupsFromFile()
+    v3s = ReadV3UsersFromFile()
+    g: Group
+    for g in groups:
         v3: V3User
         for v3 in v3s:
             if g.SecName == v3.UserName:
-                v3.GroupName = g.GroupName
+                v3.Permissions = g.Permissions
                 v3.Version = g.Version
-    pass
+        pass #endfor
+    pass #endfor
 
-    return v2s, v3s
+    return v3s
+
 
 
 def WriteV2User(user :V2User):
     '''add v2 user to file'''
+    print("write v2 user")
     lineCount = 0
     userIndex = -1
     groupIndex = -1
 
-    user.ComNumber = len(ReadSnmpUsers()[0])
+    user.ComNumber = len(ReadV2Users())
 
     with open(snmp_config_file, "r") as f:
         content = f.readlines()
@@ -121,7 +149,7 @@ def WriteV2User(user :V2User):
 
 
     newUserLine = f"com2sec comuser_{user.ComNumber} {user.Source} {user.Community}\n"
-    newGroupLine = f"group {user.GroupName} {user.Version} comuser_{user.ComNumber}\n"
+    newGroupLine = f"group {user.Permissions} {user.Version} comuser_{user.ComNumber}\n"
 
 
     if userIndex < 0:
@@ -154,6 +182,8 @@ def WriteV3User(user: V3User):
 
 def AddV2User(user: V2User):
     '''add v2 user'''
+
+    print("add a v2 user")
     StopSnmpd()
 
     WriteV2User(user)
@@ -164,6 +194,7 @@ def AddV2User(user: V2User):
 def EditV2User(user: V2User):
     '''edit v2 user'''
 
+    print("edit a v2 user")
 
     existingUser = GetV2UserBySecurityName(user)
 
@@ -202,8 +233,11 @@ def EditV3User(user: V3User):
 def DeleteV2User(user: V2User):
     '''delete v2 user'''
 
+    print("del a v2 user")
+
+
     userLineToDelete = f"com2sec {user.SecName} {user.Source} {user.Community}\n"
-    groupLineToDelete = f"group {user.GroupName} {user.Version} {user.SecName}\n"
+    groupLineToDelete = f"group {user.Permissions} {user.Version} {user.SecName}\n"
 
 
     with open(snmp_config_file, "r") as f:
@@ -223,7 +257,7 @@ def DeleteV3User(user: V3User):
 def GetV2UserBySecurityName(user :V2User) -> V2User:
     '''look up v2 user'''
     u :V2User
-    for u in GetV2Users():
+    for u in ReadV2Users():
         if u.SecName == user.SecName:
             return u
     return None
@@ -249,42 +283,38 @@ def IsValidNetworkOrIp(v :str) -> bool:
     return IsValidIp(v) or IsValidNetwork(v)
 
 
-def GetV3Users():
-    _, v3s = ReadSnmpUsers()
-    return v3s
 
-def GetV2Users():
-    v2s, _ = ReadSnmpUsers()
-    return v2s
 
 def GetUsersDict(users):
     return [asdict(i) for i in users]
 
 
-def GetV3UsersDict():
-    return GetUsersDict(GetV3Users())
-
 def GetV2UsersDict():
-    return GetUsersDict(GetV2Users())
+    return GetUsersDict(ReadV2Users())
+
+def GetV3UsersDict():
+    return GetUsersDict(ReadV3Users())
+
+
 
 
 def IsV2User(community: str) -> bool:
-    return any(u.Community == community for u in GetV2Users())
+    return any(u.Community == community for u in ReadV2Users())
 
 def IsV3User(username: str) -> bool:
-    return any(u.UserName == username for u in GetV3Users())
+    return any(u.UserName == username for u in ReadV3Users())
 
 
 def GetV2UserByCommunity(community: str) -> V2User:
     u :V2User
-    for u in GetV2Users():
+    for u in ReadV2Users():
         if u.Community == community:
             return u
     return None
 
 def GetV3UserByUsername(username: str) -> V3User:
     u :V3User
-    for u in GetV3Users():
+    for u in ReadV3Users():
         if u.UserName == username:
             return u
     return None
@@ -309,7 +339,7 @@ def add_v2_dialog():
                     def on_save_cb():
                         user = V2User()
                         user.Version = version.value
-                        user.GroupName = permissions.value
+                        user.Permissions = permissions.value
                         user.Source = source.value
                         user.Community = community.value
                         if all(validate_group([version, permissions, community, source])):
@@ -336,7 +366,7 @@ def add_v3_dialog():
             ui.label("add a v3 dude")
     return dialog
 
-def table(tab_title :str, row_elements, col_param, dialog):
+def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str):
 
     table = ui.table(
             title=tab_title,
@@ -357,6 +387,8 @@ def table(tab_title :str, row_elements, col_param, dialog):
             </q-td>
         ''')
     
+    table.props(f'visible-columns={visible_cols}')  # Only show these
+    
     with table.add_slot('top-right'):
         ui.button(icon="add", on_click = dialog.open).props(
             "flat color=accent align=left").classes("w-full").props("dense")
@@ -371,9 +403,9 @@ async def snmp_page():
 
         ui.label("SNMP").classes("text-h5")
      
-        table("V2 Users", GetV2UsersDict(), "Community", add_v2_dialog())
+        table("V2 Users", GetV2UsersDict(), "Community", add_v2_dialog(), "Community,Version,Source,GroupName")  # Only show these
      
-        table("V3 Users", GetV3UsersDict(), "UserName", add_v3_dialog())
+        table("V3 Users", GetV3UsersDict(), "UserName", add_v3_dialog(), "UserName,Version,GroupName,AuthType,PrivType")
 
 
 
@@ -389,7 +421,8 @@ async def snmp_user_page(user: str):
             await edit_delete_v2_user_card(user)
         
         if IsV3User(user):
-            await user_card(user, "v3")
+            #await user_card(user, "v3")
+            await edit_delete_v3_user_card(user)
 
 
 
@@ -414,10 +447,9 @@ async def edit_delete_v2_user_card(community):
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
             version = ui.select(label="Version", options=["v2c", "v1"], value=user.Version).classes("w-full")
-            permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup'], value=user.GroupName).classes("w-full")
-            community = ui.input("Community", value=user.Community).classes("w-full")
-            source = ui.input("Source / IP Address", value=user.Source).classes("w-full")
-
+            permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup'], value=user.Permissions).classes("w-full")
+            community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}, value=user.Community).classes("w-full")
+            source = ui.input("Source / IP Address", validation={"Please enter a valid ip address or valid cidr address": lambda value: IsValidNetworkOrIp(value)}, value=user.Source).classes("w-full")
             with ui.row().classes("items-center justify-between gap-4 w-full"):
 
                 def on_save_cb():
@@ -426,7 +458,7 @@ async def edit_delete_v2_user_card(community):
                     edit_button.enabled = True
                     user.Community = community.value
                     user.Version = version.value
-                    user.GroupName = permissions.value
+                    user.Permissions = permissions.value
                     user.Source = source.value
                     EditV2User(user)
                     ui.navigate.back()
@@ -436,11 +468,9 @@ async def edit_delete_v2_user_card(community):
                     edit_button.enabled = False
                     save_button.enabled = True
 
-
-
                 async def on_delete_cb():
                     with ui.dialog() as dialog, ui.card():
-                        ui.label(f'Are you sure you want to delete {user.Community}')
+                        ui.label(f'Are you sure you want to delete {user.Community}?')
                         with ui.row():
                             ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
                             ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
@@ -451,10 +481,7 @@ async def edit_delete_v2_user_card(community):
                         ui.notify(f'User {user.Community} deleted...')
                     else:
                         dialog.close()
-                    #i.notify(f'You chose {result}')
 
-
-                            
                 edit_button = ui.button("edit", on_click= on_edit_cb).props("flat color=accent align=left")
                 save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
                 delete_button = ui.button(icon="delete", on_click=on_delete_cb).props("flat color=accent align=left")
@@ -465,6 +492,57 @@ async def edit_delete_v2_user_card(community):
                 edit_button.enabled = True
                 save_button.enabled = False
 
+
+
+async def edit_delete_v3_user_card(username):
+    user = GetV3UserByUsername(username)
+    with ui.card().classes("w-full"):
+        with ui.column().classes("w-full"):
+            version = ui.select(label="Version", value=user.Version).classes("w-full")
+            permissions = ui.select(label="Permissions", options=['roauthgroup','rwauthgroup','roprivgroup','rwprivgroup'], value=user.Permissions).classes("w-full")
+            community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}, value=user.Community).classes("w-full")
+            source = ui.input("Source / IP Address", validation={"Please enter a valid ip address or valid cidr address": lambda value: IsValidNetworkOrIp(value)}, value=user.Source).classes("w-full")
+            with ui.row().classes("items-center justify-between gap-4 w-full"):
+
+                def on_save_cb():
+                    disable_group(group)
+                    save_button.enabled = False
+                    edit_button.enabled = True
+                    user.Community = community.value
+                    user.Version = version.value
+                    user.Permissions = permissions.value
+                    user.Source = source.value
+                    EditV2User(user)
+                    ui.navigate.back()
+
+                def on_edit_cb():
+                    enable_group(group)
+                    edit_button.enabled = False
+                    save_button.enabled = True
+
+                async def on_delete_cb():
+                    with ui.dialog() as dialog, ui.card():
+                        ui.label(f'Are you sure you want to delete {user.Community}?')
+                        with ui.row():
+                            ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
+                            ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
+                    result = await dialog
+                    if result:
+                        DeleteV2User(user)
+                        ui.navigate.back()
+                        ui.notify(f'User {user.Community} deleted...')
+                    else:
+                        dialog.close()
+
+                edit_button = ui.button("edit", on_click= on_edit_cb).props("flat color=accent align=left")
+                save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
+                delete_button = ui.button(icon="delete", on_click=on_delete_cb).props("flat color=accent align=left")
+
+                group = [community, source, version, permissions]
+
+                disable_group(group)
+                edit_button.enabled = True
+                save_button.enabled = False
 
 
 
