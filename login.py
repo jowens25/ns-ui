@@ -4,7 +4,11 @@ from nicegui import ui, app
 from theme import init_colors
 from rest_api import APIClient
 import time
+
+import pam
 api = APIClient(base_url="http://localhost:5000")
+
+p = pam.pam()
 
 
 
@@ -13,12 +17,12 @@ async def try_login(_username: str, _password: str) -> None:
         "/api/v1/login", {"username": _username, "password": _password}
     )
 
-    if response and "token" in response:
+    if p.authenticate(_username, _password):
         app.storage.user.update(
             {
                 "username": _username,
                 "authenticated": True,
-                "token": response["token"],
+                #"token": response["token"],
                 "login_time": time.time()
             }
         )
