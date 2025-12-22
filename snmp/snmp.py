@@ -152,11 +152,11 @@ def ReadV3Users() -> list[V3User]:
         v3: V3User
         for v3 in v3s:
             if g.SecName == v3.UserName:
+                print(g.SecName)
                 v3.Permissions = g.Permissions
                 v3.Version = g.Version
         pass #endfor
     pass #endfor
-
     return v3s
 
 
@@ -530,43 +530,46 @@ async def edit_delete_v2_user_card(community):
 
 
 
+
+    
 async def edit_delete_v3_user_card(username):
     user = GetV3UserByUsername(username)
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
-            version = ui.select(label="Version", value=user.Version).classes("w-full")
-            permissions = ui.select(label="Permissions", options=['roauthgroup','rwauthgroup','roprivgroup','rwprivgroup'], value=user.Permissions).classes("w-full")
-            community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}, value=user.Community).classes("w-full")
-            source = ui.input("Source / IP Address", validation={"Please enter a valid ip address or valid cidr address": lambda value: IsValidNetworkOrIp(value)}, value=user.Source).classes("w-full")
+            version = ui.input(label="Version", value=user.Version).classes("w-full").disable()
+            permissions = ui.input(label="Permissions", value=user.Permissions).classes("w-full").disable()
+            auth_type = ui.select(label="Auth Alg", options=['SHA', 'MD5'], value=user.AuthType).classes("w-full")
+            auth_pass = ui.input(label="Auth Passphrase", value=None, validation=lambda value: value!=None).classes("w-full")
+            priv_type = ui.select(label="Priv Alg", options=["AES", "DES"], value=user.PrivType).classes("w-full")
+            priv_pass = ui.input(label="Auth Passphrase", value=None, validation=lambda value: value!=None).classes("w-full")
+
             with ui.row().classes("items-center justify-between gap-4 w-full"):
 
                 def on_save_cb():
                     disable_group(group)
                     save_button.enabled = False
                     edit_button.enabled = True
-                    user.Community = community.value
-                    user.Version = version.value
-                    user.Permissions = permissions.value
-                    user.Source = source.value
-                    EditV2User(user)
+                    EditV3User(user)
                     ui.navigate.back()
-
+                    
+                
                 def on_edit_cb():
                     enable_group(group)
                     edit_button.enabled = False
                     save_button.enabled = True
 
+
                 async def on_delete_cb():
                     with ui.dialog() as dialog, ui.card():
-                        ui.label(f'Are you sure you want to delete {user.Community}?')
+                        ui.label(f'Are you sure you want to delete {user.UserName}?')
                         with ui.row():
                             ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
                             ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
                     result = await dialog
                     if result:
-                        DeleteV2User(user)
+                        DeleteV3User(user)
                         ui.navigate.back()
-                        ui.notify(f'User {user.Community} deleted...')
+                        ui.notify(f'User {user.UserName} deleted...')
                     else:
                         dialog.close()
 
@@ -574,49 +577,10 @@ async def edit_delete_v3_user_card(username):
                 save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
                 delete_button = ui.button(icon="delete", on_click=on_delete_cb).props("flat color=accent align=left")
 
-                group = [community, source, version, permissions]
+                group = [auth_type,auth_pass,priv_type,priv_pass]
 
                 disable_group(group)
                 edit_button.enabled = True
                 save_button.enabled = False
 
 
-
-
-async def user_card(user :str, label: str):
-
-
-    with ui.card().classes("w-full"):
-        # Header row
-        with ui.row().classes("w-full items-center justify-between"):
-            ui.label(user).classes("text-h6")
-            ui.label("driver info").classes("text-caption")
-            ui.label("control info").classes("text-caption")
-            ui.link("mac address", "#")
-            ui.switch("Connected").props("disable")
-
-            ui.label(label)
-
-        ui.separator()
-
-        # Main content
-        with ui.column().classes("w-full gap-2"):
-            with ui.row().classes("items-center gap-4"):
-                ui.label("Status:").classes("font-bold")
-                ui.label("Active").classes("text-positive")
-
-            with ui.row().classes("items-center gap-4"):
-                ui.label("IP Address:").classes("font-bold")
-                ui.label("192.168.1.100")
-
-            with ui.row().classes("items-center gap-4"):
-                ui.label("Connection:").classes("font-bold")
-                ui.select(
-                    ["DHCP", "MANUAL", "Static"],
-                    value="DHCP",
-                    #on_change=update_dhcp_mode,
-                )
-
-            with ui.row().classes("items-center gap-4"):
-                ui.label("DNS:").classes("font-bold")
-                ui.input(placeholder="8.8.8.8").classes("flex-grow")
