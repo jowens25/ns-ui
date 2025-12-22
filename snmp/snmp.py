@@ -1,6 +1,11 @@
+import ipaddress
 import json
+import os
+import sys
 from nicegui import ui, app
 from dataclasses import dataclass, asdict
+
+from commands import runCmd
 
 from typing import Optional
 
@@ -33,7 +38,7 @@ class V2User:
     Source:Optional[str] = None
     SecName:Optional[str] = None
 
-def GetUsers() -> tuple[list[V2User], list[V3User]]:
+def ReadSnmpUsers() -> tuple[list[V2User], list[V3User]]:
 
     groups = []
     v2s = []
@@ -93,12 +98,163 @@ def GetUsers() -> tuple[list[V2User], list[V3User]]:
     return v2s, v3s
 
 
+def WriteV2User(user :V2User):
+    '''add v2 user to file'''
+    lineCount = 0
+    userIndex = -1
+    groupIndex = -1
+
+    user.ComNumber = len(ReadSnmpUsers()[0])
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+    
+    for i, line in enumerate(content):
+        line = line.strip("\n")
+        if line.startswith("#com2sec"):
+            userIndex = lineCount + 2
+        if line.startswith("#group"):
+            groupIndex = lineCount + 3
+        
+        lineCount = lineCount + 1
+    pass # endfor 
+
+
+    newUserLine = f"com2sec comuser_{user.ComNumber} {user.Source} {user.Community}\n"
+    newGroupLine = f"group {user.GroupName} {user.Version} comuser_{user.ComNumber}\n"
+
+
+    if userIndex < 0:
+        content.append("#-------------------------------------------------------------------------------")
+        content.append("#com2sec sec.name source community")
+        content.append("#-------------------------------------------------------------------------------")
+        content.append(newUserLine)
+    else:
+        content.insert(userIndex, newUserLine)
+
+    if groupIndex < 0:
+        content.append("#-------------------------------------------------------------------------------")
+        content.append("#group  group name      sec.model  sec.name")
+        content.append("#-------------------------------------------------------------------------------")
+        content.append(newGroupLine)
+    else:
+        content.insert(groupIndex, newGroupLine)
+
+
+    with open(snmp_config_file, "w") as f:
+        f.writelines(content)
+        #content = f.readlines()
+    
+
+
+def WriteV3User(user: V3User):
+    '''add v3 user to file'''
+
+
+
+def AddV2User(user: V2User):
+    '''add v2 user'''
+    StopSnmpd()
+
+    WriteV2User(user)
+
+    StartSnmpd()
+
+
+def EditV2User(user: V2User):
+    '''edit v2 user'''
+
+
+    existingUser = GetV2UserBySecurityName(user)
+
+    if not existingUser:
+        print("USER NOT FOUND")
+        sys.exit()
+
+    StopSnmpd()
+
+    DeleteV2User(existingUser)
+
+    WriteV2User(user)
+
+    StartSnmpd()
+    
+def StopSnmpd():
+    runCmd(["sudo", "systemctl", "stop", "snmpd"])
+
+def StartSnmpd():
+    runCmd(["sudo", "systemctl", "start", "snmpd"])
+
+def RestartSnmpd():
+    runCmd(["sudo", "systemctl", "restart", "snmpd"])
+
+def IsActiveSnmpd() -> bool:
+    status = runCmd(["sudo", "systemctl", "is-active", "snmpd"])
+    if status.strip("\n") == "active":
+        return True
+    else:
+        return False
+
+
+def EditV3User(user: V3User):
+    '''edit v3 user'''
+
+def DeleteV2User(user: V2User):
+    '''delete v2 user'''
+
+    userLineToDelete = f"com2sec {user.SecName} {user.Source} {user.Community}\n"
+    groupLineToDelete = f"group {user.GroupName} {user.Version} {user.SecName}\n"
+
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+
+    content.remove(userLineToDelete)
+    content.remove(groupLineToDelete)
+
+    with open(snmp_config_file, "w") as f:
+        f.writelines(content)
+
+
+def DeleteV3User(user: V3User):
+    '''delete v3 user'''
+
+
+def GetV2UserBySecurityName(user :V2User) -> V2User:
+    '''look up v2 user'''
+    u :V2User
+    for u in GetV2Users():
+        if u.SecName == user.SecName:
+            return u
+    return None
+
+
+
+
+def IsValidNetwork(v :str) -> bool:
+    try:
+        ipaddress.ip_network(v)
+        return True
+    except ValueError:
+        return False
+
+def IsValidIp(v: str) -> bool:
+    try:
+        ipaddress.ip_address(v)
+        return True
+    except ValueError:
+        return False
+    
+def IsValidNetworkOrIp(v :str) -> bool:
+    return IsValidIp(v) or IsValidNetwork(v)
+
+
 def GetV3Users():
-    _, v3s = GetUsers()
+    _, v3s = ReadSnmpUsers()
     return v3s
 
 def GetV2Users():
-    v2s, _ = GetUsers()
+    v2s, _ = ReadSnmpUsers()
     return v2s
 
 def GetUsersDict(users):
@@ -119,14 +275,14 @@ def IsV3User(username: str) -> bool:
     return any(u.UserName == username for u in GetV3Users())
 
 
-def GetV2User(community: str) -> V2User:
+def GetV2UserByCommunity(community: str) -> V2User:
     u :V2User
     for u in GetV2Users():
         if u.Community == community:
             return u
     return None
 
-def GetV3User(username: str) -> V3User:
+def GetV3UserByUsername(username: str) -> V3User:
     u :V3User
     for u in GetV3Users():
         if u.UserName == username:
@@ -134,10 +290,43 @@ def GetV3User(username: str) -> V3User:
     return None
 
 
+def validate_group(group: list):
+    return [x.validate() for x in group]
+
 def add_v2_dialog():
+
     with ui.dialog() as dialog:
-        with ui.card():
-            ui.label("add a v2 dude")
+
+        with ui.card().classes("w-full"):
+            with ui.column().classes("w-full"):
+                version = ui.select(label="Version", options=["v2c", "v1"], value="v2c").classes("w-full")
+                permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup'], value="rwnoauthgroup").classes("w-full")
+                community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}).classes("w-full")
+                source = ui.input("Source / IP Address", value=None, validation={"Please enter a valid ip address or valid cidr address": lambda value: IsValidNetworkOrIp(value)}).classes("w-full")
+
+                with ui.row().classes("items-center justify-between gap-4 w-full"):
+
+                    def on_save_cb():
+                        user = V2User()
+                        user.Version = version.value
+                        user.GroupName = permissions.value
+                        user.Source = source.value
+                        user.Community = community.value
+                        if all(validate_group([version, permissions, community, source])):
+                            AddV2User(user)
+                            dialog.close()
+                        else:
+                            ui.notify("Please correct the errors", type='negative')
+                            
+
+                    def on_cancel_cb():
+                        dialog.close()
+
+                    save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
+                    cancel_button = ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
+
+
+
     return dialog
 
 
@@ -204,12 +393,24 @@ async def snmp_user_page(user: str):
 
 
 
-def enable_group(flag :bool, fields):
+def enable_group(fields):
     for f in fields:
-        f.enabled = flag
+        f.enabled = True
+
+def disable_group(fields):
+    for f in fields:
+        f.enabled = False
+
+
+
+
+
+
+
+
 
 async def edit_delete_v2_user_card(community):
-    user = GetV2User(community)
+    user = GetV2UserByCommunity(community)
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
             version = ui.select(label="Version", options=["v2c", "v1"], value=user.Version).classes("w-full")
@@ -217,14 +418,52 @@ async def edit_delete_v2_user_card(community):
             community = ui.input("Community", value=user.Community).classes("w-full")
             source = ui.input("Source / IP Address", value=user.Source).classes("w-full")
 
-            with ui.row():
-                edit_button = ui.button("edit", on_click=lambda: enable_group(True, fields)).props("flat color=accent align=left")
+            with ui.row().classes("items-center justify-between gap-4 w-full"):
 
-                save_button = ui.button("save", on_click=lambda: enable_group(False, fields)).props("flat color=accent align=left")
+                def on_save_cb():
+                    disable_group(group)
+                    save_button.enabled = False
+                    edit_button.enabled = True
+                    user.Community = community.value
+                    user.Version = version.value
+                    user.GroupName = permissions.value
+                    user.Source = source.value
+                    EditV2User(user)
+                    ui.navigate.back()
 
-            fields = [community, source, version, permissions, save_button]
+                def on_edit_cb():
+                    enable_group(group)
+                    edit_button.enabled = False
+                    save_button.enabled = True
 
-            enable_group(False, fields)
+
+
+                async def on_delete_cb():
+                    with ui.dialog() as dialog, ui.card():
+                        ui.label(f'Are you sure you want to delete {user.Community}')
+                        with ui.row():
+                            ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
+                            ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
+                    result = await dialog
+                    if result:
+                        DeleteV2User(user)
+                        ui.navigate.back()
+                        ui.notify(f'User {user.Community} deleted...')
+                    else:
+                        dialog.close()
+                    #i.notify(f'You chose {result}')
+
+
+                            
+                edit_button = ui.button("edit", on_click= on_edit_cb).props("flat color=accent align=left")
+                save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
+                delete_button = ui.button(icon="delete", on_click=on_delete_cb).props("flat color=accent align=left")
+
+                group = [community, source, version, permissions]
+
+                disable_group(group)
+                edit_button.enabled = True
+                save_button.enabled = False
 
 
 
