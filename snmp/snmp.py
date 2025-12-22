@@ -9,9 +9,6 @@ from commands import runCmd
 
 from typing import Optional
 
-from .snmp_v2 import *
-from .snmp_v3 import *
-
 
 snmp_config_file = "/etc/snmp/snmpd.conf"
 snmp_storage_file = "/var/lib/snmp/snmpd.conf"
@@ -41,6 +38,25 @@ class Group:
     Version: Optional[str] = None
     SecName: Optional[str] = None
 
+@dataclass
+class V3User:
+    UserName: Optional[str] = None
+    Version: Optional[str] = None
+    AuthType: Optional[str] = None
+    AuthPassphrase: Optional[str] = None
+    PrivType: Optional[str] = None
+    PrivPassphrase: Optional[str] = None
+    Permissions: Optional[str] = None
+
+@dataclass
+class V2User:
+    Community:Optional[str] = None
+    ComNumber:Optional[str] = None
+    Version:Optional[str] = None
+    Permissions:Optional[str] = None
+    Source:Optional[str] = None
+    SecName:Optional[str] = None
+
 
 def ReadSnmpGroupsFromFile() -> list[Group]:
 
@@ -63,6 +79,26 @@ def ReadSnmpGroupsFromFile() -> list[Group]:
 
     return groups
 
+def ReadV2UsersFromFile() -> list[V2User]:
+
+    v2s = []
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+
+    for line in content:
+        line = line.strip("\n")
+        if line.startswith("com2sec"):
+            v2 = V2User()
+            fields = line.split(" ")
+            if len(fields) == 4:
+                v2.SecName = fields[1]
+                v2.Source = fields[2]
+                v2.Community = fields[3]
+                v2s.append(v2)
+    pass #endfor
+
+    return v2s
 
 
 
