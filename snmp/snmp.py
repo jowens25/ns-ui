@@ -2,6 +2,7 @@ import ipaddress
 import json
 import os
 import sys
+import time
 from nicegui import ui, app
 from dataclasses import dataclass, asdict
 
@@ -11,7 +12,7 @@ from typing import Optional
 
 
 snmp_config_file = "/etc/snmp/snmpd.conf"
-snmp_storage_file = "/var/lib/snmp/snmpd.conf"
+default_persistent_dir_path = "/var/lib/snmp"
 
 
 
@@ -100,33 +101,31 @@ def ReadV2UsersFromFile() -> list[V2User]:
 
     return v2s
 
-
-
 def ReadV3UsersFromFile() -> list[V3User]:
 
     v3s = []
-    with open(snmp_storage_file, "r") as f:
-        content = f.readlines()
+    try:
+        with open(GetPersistentConfPath(), "r") as f:
+            content = f.readlines()
 
-    for line in content:
-        line = line.strip("\n")
-        if line.startswith("usmUser"):
-            v3 = V3User()
-            fields = line.split(" ")
-            if len(fields) == 12:
-     
-                v3.UserName = fields[4].strip('"')
+        for line in content:
+            line = line.strip("\n")
+            if line.startswith("usmUser"):
+                v3 = V3User()
+                fields = line.split(" ")
+                if len(fields) == 12:
+                
+                    v3.UserName = fields[4].strip('"')
 
-                v3.AuthType = USM_OID_MAP.get(fields[7], f"Unknown")
-                #v3.AuthPassphrase = fields[3]
-                v3.PrivType = USM_OID_MAP.get(fields[9], f"Unknown")
-                #v3.PrivPassphrase = fields[5]
-                v3s.append(v3)
-    pass # endfor
+                    v3.AuthType = USM_OID_MAP.get(fields[7], f"Unknown")
+                    #v3.AuthPassphrase = fields[3]
+                    v3.PrivType = USM_OID_MAP.get(fields[9], f"Unknown")
+                    #v3.PrivPassphrase = fields[5]
+                    v3s.append(v3)
+        pass # endfor
+    except FileNotFoundError:
+        return v3s
     return v3s
-
-
-
 
 def ReadV2Users() -> list[V2User]:
     groups = ReadSnmpGroupsFromFile()
@@ -143,7 +142,6 @@ def ReadV2Users() -> list[V2User]:
     pass #endfor
     return v2s
 
-
 def ReadV3Users() -> list[V3User]:
     groups = ReadSnmpGroupsFromFile()
     v3s = ReadV3UsersFromFile()
@@ -158,8 +156,6 @@ def ReadV3Users() -> list[V3User]:
         pass #endfor
     pass #endfor
     return v3s
-
-
 
 def WriteV2User(user :V2User):
     '''add v2 user to file'''
@@ -209,8 +205,6 @@ def WriteV2User(user :V2User):
         f.writelines(content)
         #content = f.readlines()
     
-
-
 def WriteV3UserCreateDirective(user: V3User):
     '''add v3 user to file'''
     print("write v3 user")
@@ -257,8 +251,6 @@ def WriteV3UserCreateDirective(user: V3User):
         f.writelines(content)
         #content = f.readlines()
     
-
-
 def AddV3User(user: V3User):
     '''add v3 user'''
     print('add v3 dude')
@@ -270,10 +262,6 @@ def AddV3User(user: V3User):
     StartSnmpd() # real user created
 
     DeleteV3UserCreateDirective(user)
-
-
-
-
 
 def AddV2User(user: V2User):
     '''add v2 user'''
@@ -305,21 +293,7 @@ def EditV2User(user: V2User):
 
     StartSnmpd()
     
-def StopSnmpd():
-    runCmd(["sudo", "systemctl", "stop", "snmpd"])
 
-def StartSnmpd():
-    runCmd(["sudo", "systemctl", "start", "snmpd"])
-
-def RestartSnmpd():
-    runCmd(["sudo", "systemctl", "restart", "snmpd"])
-
-def IsActiveSnmpd() -> bool:
-    status = runCmd(["sudo", "systemctl", "is-active", "snmpd"])
-    if status.strip("\n") == "active":
-        return True
-    else:
-        return False
 
 
 def EditV3User(inituser :V3User, finaluser: V3User):
@@ -344,28 +318,29 @@ def EditV3User(inituser :V3User, finaluser: V3User):
 
 def DeleteV2User(user: V2User):
     '''delete v2 user'''
-
     print("del a v2 user")
-
-
-    userLineToDelete = f"com2sec {user.SecName} {user.Source} {user.Community}\n"
-    groupLineToDelete = f"group {user.Permissions} {user.Version} {user.SecName}\n"
-
+    
+    _user = [ user.SecName, user.Source, user.Community]
+    _group = [ user.Permissions, user.Version, user.SecName]
 
     with open(snmp_config_file, "r") as f:
         content = f.readlines()
 
-    content.remove(userLineToDelete)
-    content.remove(groupLineToDelete)
+    for i, line in enumerate(content):
+        if line.startswith("com2sec") and all(p in line for p in _user):
+            content.remove(line)
+        if line.startswith("group") and all(p in line for p in _group):
+            content.remove(line)
 
     with open(snmp_config_file, "w") as f:
         f.writelines(content)
 
 
+
 def DeleteV3UserFromStorage(user: V3User):
     '''delete v3 user from persistent storgage'''
 
-    with open(snmp_storage_file) as f:
+    with open(GetPersistentConfPath()) as f:
         content = f.readlines()
 
     for i, line in enumerate(content):
@@ -378,30 +353,35 @@ def DeleteV3UserFromStorage(user: V3User):
             if user.UserName in line and temp_auth_type == user.AuthType and temp_priv_type == user.PrivType:
                 content.remove(line)
 
-    with open(snmp_storage_file, "w") as f:
+    with open(GetPersistentConfPath(), "w") as f:
         f.writelines(content)
 
 
 def DeleteV3UserCreateDirective(user: V3User):
-    userLineToDelete = f"createUser {user.UserName} {user.AuthType} {user.AuthPassphrase} {user.PrivType} {user.PrivPassphrase}\n"
+    _props  = [user.UserName, user.AuthType, user.AuthPassphrase, user.PrivType, user.PrivPassphrase]
 
     with open(snmp_config_file, "r") as f:
         content = f.readlines()
 
-    content.remove(userLineToDelete)
+    for i, line in enumerate(content):
+        if line.startswith("createUser") and all(p in line for p in _props):
+            content.remove(line)
 
     with open(snmp_config_file, "w") as f:
         f.writelines(content)
+        
 
 def DeleteV3UserFromConfig(user: V3User):
     '''delete v3 user from /etc/snmp/snmpd.conf'''
 
-    groupLineToDelete = f"group {user.Permissions} {user.Version} {user.UserName}\n"
+    _props = [user.Permissions, user.Version, user.UserName]
 
     with open(snmp_config_file, "r") as f:
         content = f.readlines()
-
-    content.remove(groupLineToDelete)
+        
+        for i, line in enumerate(content):
+            if line.startswith("group") and all(p in line for p in _props):
+                content.remove(line)
 
     with open(snmp_config_file, "w") as f:
         f.writelines(content)
@@ -421,6 +401,96 @@ def GetV2UserBySecurityName(user :V2User) -> V2User:
 
 
 
+def GetPersistentDir() -> str:
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+        
+    for i, line in enumerate(content):
+        if line.startswith("persistentDir"): 
+            fields = line.split(" ")
+            if len(fields) == 2:
+                return fields[1].strip("\n")
+    pass #endfor
+
+    return None
+
+def SetPersistentDir(path):
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+    
+    for i, line in enumerate(content):
+        if line.startswith("persistentDir"): 
+            content[i] = f"persistentDir {path}\n"
+            break
+    with open(snmp_config_file, "w") as f:
+        f.writelines(content)
+
+        
+def GetPersistentConfPath() -> str:
+    persistentDir = GetPersistentDir()
+    return os.path.join(persistentDir, "snmpd.conf")    
+        
+def DeletePersistentDir():
+    runCmd(['rm', '-rf', GetPersistentDir()])
+    
+def MakeEmptyPersistentDirConf():
+    perDir = GetPersistentDir()
+    runCmd(['touch', os.path.join(perDir, "snmpd.conf")])
+
+    
+def OverWriteWithDefaultSnmpConf():
+    runCmd(['cp', './configs/snmpd.conf', '/etc/snmp/snmpd.conf'])
+
+def StopSnmpd():
+    print("stoping... snmpd")
+
+    runCmd(["systemctl", "stop", "snmpd"])
+
+def StartSnmpd():
+    print("starting... snmpd")
+    runCmd(["systemctl", "start", "snmpd"])
+
+def RestartSnmpd():
+    print("restarting... snmpd")
+
+    runCmd(["systemctl", "restart", "snmpd"])
+    
+    
+def ResetSnmpd():
+    
+    # 1. Stop Snmp
+    StopSnmpd()
+    # 2. Remove Persistent Dir
+    DeletePersistentDir()
+    # 3. Reset Main Config
+    OverWriteWithDefaultSnmpConf()
+    # 4. Set Tmp Path for Persistent Dir
+    SetPersistentDir("/var/lib/tmp")
+    # 5. Start Snmp
+    StartSnmpd()
+    # 6. Stop Snmp
+    StopSnmpd()
+    # 7. Remove Temp Persistent Dir
+    DeletePersistentDir()
+    # 8. Set Real Path for Persistent Dir
+    SetPersistentDir("/var/lib/snmp")
+    # 9. Start Snmp
+    StartSnmpd()
+
+
+    
+    
+    
+    
+    
+
+def IsActiveSnmpd() -> bool:
+    status = runCmd(["sudo", "systemctl", "is-active", "snmpd"])
+    if status.strip("\n") == "active":
+        return True
+    else:
+        return False
 
 def IsValidNetwork(v :str) -> bool:
     try:
@@ -513,6 +583,8 @@ def add_v2_dialog():
     return dialog
 
 
+
+        
 def add_v3_dialog():
     with ui.dialog() as dialog:
         with ui.card().classes("w-full"):
@@ -560,7 +632,7 @@ def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str):
                 "align": "left",
                 "headerClasses": "uppercase text-primary",
             },
-        )
+        ).classes("w-full")
     
     table.add_slot(f'body-cell-{col_param}', f'''
             <q-td :props="props">
@@ -587,10 +659,47 @@ async def snmp_page():
     with ui.column():
 
         ui.label("SNMP").classes("text-h5")
+        
+        async def snmp_switch_cb(e):
+            action = "enable" if  e.sender.value else "disable"
+            with ui.dialog() as dialog, ui.card():
+                ui.label(f'Are you sure you want to {action} snmp?')
+                with ui.row():
+                    ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
+                    ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
+        
+            result = await dialog
+            
+            if result == "enable" and not IsActiveSnmpd():
+                StartSnmpd()
+            
+            if result == "disable" and IsActiveSnmpd():
+                StopSnmpd()
+            
+            e.sender.value = IsActiveSnmpd()
+
+        async def snmp_reset_cb(e):
+            with ui.dialog() as dialog, ui.card():
+                ui.label(f'Are you sure you want to reset snmp?')
+                with ui.row():
+                    ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
+                    ui.button('Reset', on_click=lambda: dialog.submit("reset")).props("flat color=accent align=left")    
+            if await dialog == "reset":
+                ResetSnmpd()
+            
+
+            
+        
+        with ui.card().classes("w-full"):
+            snmp_service_switch = ui.switch("SNMPD Status").on('click', lambda e: snmp_switch_cb(e)).props("flat color=accent align=left dense")
+            snmp_service_switch.value = IsActiveSnmpd()
+            ui.button("Reset SNMPD Config", on_click=snmp_reset_cb).props("flat color=accent align=left dense")
      
         table("V2 Users", GetV2UsersDict(), "Community", add_v2_dialog(), "Community,Version,Source,GroupName")  # Only show these
      
         table("V3 Users", GetV3UsersDict(), "UserName", add_v3_dialog(), "UserName,Version,GroupName,AuthType,PrivType")
+        
+        #ui.button("Reset SNMP Config", on_click=ResetSnmpConfig)
 
 
 

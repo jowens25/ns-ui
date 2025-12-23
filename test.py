@@ -2,6 +2,7 @@
 from commands import runCmd
 
 
+from snmp.snmp import ResetSnmpd
 
-status = runCmd(["sudo", "systemctl", "is-active", "snmpd"])
-print(status)
+
+print(ResetSnmpd())
