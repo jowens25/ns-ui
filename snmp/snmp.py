@@ -211,8 +211,67 @@ def WriteV2User(user :V2User):
     
 
 
-def WriteV3User(user: V3User):
+def WriteV3UserCreateDirective(user: V3User):
     '''add v3 user to file'''
+    print("write v3 user")
+
+    lineCount = 0
+    createUserIndex = -1
+    groupIndex = -1
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+    
+    for i, line in enumerate(content):
+        line = line.strip("\n")
+        if line.startswith("#createUser"):
+            createUserIndex = lineCount + 2
+        if line.startswith("#group"):
+            groupIndex = lineCount + 3
+        
+        lineCount = lineCount + 1
+    pass # endfor 
+
+    newUserLine = f"createUser {user.UserName} {user.AuthType} {user.AuthPassphrase} {user.PrivType} {user.PrivPassphrase}\n"
+    newGroupLine = f"group {user.Permissions} {user.Version} {user.UserName}\n"
+
+
+    if createUserIndex < 0:
+        content.append("#-------------------------------------------------------------------------------")
+        content.append("#createUser username [MD5|SHA] [passphrase] [DES] [passphrase]")
+        content.append("#-------------------------------------------------------------------------------")
+        content.append(newUserLine)
+    else:
+        content.insert(createUserIndex, newUserLine)
+
+    if groupIndex < 0:
+        content.append("#-------------------------------------------------------------------------------")
+        content.append("#group  group name      sec.model  sec.name")
+        content.append("#-------------------------------------------------------------------------------")
+        content.append(newGroupLine)
+    else:
+        content.insert(groupIndex, newGroupLine)
+
+
+    with open(snmp_config_file, "w") as f:
+        f.writelines(content)
+        #content = f.readlines()
+    
+
+
+def AddV3User(user: V3User):
+    '''add v3 user'''
+    print('add v3 dude')
+
+    StopSnmpd()
+
+    WriteV3UserCreateDirective(user)
+
+    StartSnmpd() # real user created
+
+    DeleteV3UserCreateDirective(user)
+
+
 
 
 
@@ -263,24 +322,24 @@ def IsActiveSnmpd() -> bool:
         return False
 
 
-def EditV3User(user: V3User):
+def EditV3User(inituser :V3User, finaluser: V3User):
     '''edit v3 user'''
 
-    existingUser = GetV3UserByUsername(user)
 
-    if not existingUser:
-        print("USER NOT FOUND")
+    if not inituser:
+        print("v3 USER NOT FOUND")
         sys.exit()
 
     StopSnmpd()
 
-    DeleteV3UserFromStorage(existingUser)
+    DeleteV3UserFromStorage(inituser) # remove actual
+    DeleteV3UserFromConfig(inituser) # remove group
 
-    WriteV3User(user)
+    WriteV3UserCreateDirective(finaluser) # add grup and create
     
-    StartSnmpd()
+    StartSnmpd() # create
     
-    DeleteV3UserFromConfig(user)
+    DeleteV3UserCreateDirective(finaluser) # remove create dir
 
 
 def DeleteV2User(user: V2User):
@@ -303,8 +362,53 @@ def DeleteV2User(user: V2User):
         f.writelines(content)
 
 
+def DeleteV3UserFromStorage(user: V3User):
+    '''delete v3 user from persistent storgage'''
+
+    with open(snmp_storage_file) as f:
+        content = f.readlines()
+
+    for i, line in enumerate(content):
+        if line.startswith("usmUser"):
+
+            fields = line.split(" ")
+            temp_auth_type = USM_OID_MAP.get(fields[7], f"Unknown")
+            temp_priv_type = USM_OID_MAP.get(fields[9], f"Unknown")
+
+            if user.UserName in line and temp_auth_type == user.AuthType and temp_priv_type == user.PrivType:
+                content.remove(line)
+
+    with open(snmp_storage_file, "w") as f:
+        f.writelines(content)
+
+
+def DeleteV3UserCreateDirective(user: V3User):
+    userLineToDelete = f"createUser {user.UserName} {user.AuthType} {user.AuthPassphrase} {user.PrivType} {user.PrivPassphrase}\n"
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+
+    content.remove(userLineToDelete)
+
+    with open(snmp_config_file, "w") as f:
+        f.writelines(content)
+
+def DeleteV3UserFromConfig(user: V3User):
+    '''delete v3 user from /etc/snmp/snmpd.conf'''
+
+    groupLineToDelete = f"group {user.Permissions} {user.Version} {user.UserName}\n"
+
+    with open(snmp_config_file, "r") as f:
+        content = f.readlines()
+
+    content.remove(groupLineToDelete)
+
+    with open(snmp_config_file, "w") as f:
+        f.writelines(content)
+
 def DeleteV3User(user: V3User):
-    '''delete v3 user'''
+    DeleteV3UserFromConfig(user)
+    DeleteV3UserFromStorage(user)
 
 
 def GetV2UserBySecurityName(user :V2User) -> V2User:
@@ -379,7 +483,6 @@ def validate_group(group: list):
 def add_v2_dialog():
 
     with ui.dialog() as dialog:
-
         with ui.card().classes("w-full"):
             with ui.column().classes("w-full"):
                 version = ui.select(label="Version", options=["v2c", "v1"], value="v2c").classes("w-full")
@@ -407,16 +510,45 @@ def add_v2_dialog():
 
                     save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
                     cancel_button = ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
-
-
-
     return dialog
 
 
 def add_v3_dialog():
     with ui.dialog() as dialog:
-        with ui.card():
-            ui.label("add a v3 dude")
+        with ui.card().classes("w-full"):
+            with ui.column().classes("w-full"):
+                version = ui.input(label="Version", value="usm").classes("w-full")
+                username = ui.input(label="Username", validation={"Please enter a username": lambda value: len(value) > 0}).classes("w-full")
+                permissions = ui.select(label="Permissions", options=["roprivgroup", "rwprivgroup"], value="rwprivgroup").classes("w-full")
+                auth_type = ui.select(label="Auth Alg", options=['SHA', 'MD5'], value="SHA").classes("w-full")
+                auth_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
+                priv_type = ui.select(label="Priv Alg", options=["AES", "DES"], value="AES").classes("w-full")
+                priv_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
+
+                with ui.row().classes("items-center justify-between gap-4 w-full"):
+
+                    def on_save_cb():
+                        user = V3User(
+                            Version=version.value,
+                            UserName=username.value,
+                            Permissions=permissions.value,
+                            AuthType=auth_type.value,
+                            AuthPassphrase=auth_pass.value,
+                            PrivType=priv_type.value,
+                            PrivPassphrase=priv_pass.value
+                        )
+                
+                        if all(validate_group([version, username, permissions, auth_type, auth_pass, priv_type, priv_pass])):
+                            AddV3User(user)
+                            dialog.close()
+                        else:
+                            ui.notify("Please correct the errors", type='negative')
+
+                    def on_cancel_cb():
+                        dialog.close()
+
+                    save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
+                    cancel_button = ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
     return dialog
 
 def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str):
@@ -550,26 +682,42 @@ async def edit_delete_v2_user_card(community):
 
     
 async def edit_delete_v3_user_card(username):
-    user = GetV3UserByUsername(username)
+    inituser = GetV3UserByUsername(username)
+
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
-            version = ui.input(label="Version", value=user.Version).classes("w-full").disable()
-            permissions = ui.input(label="Permissions", value=user.Permissions).classes("w-full").disable()
-            auth_type = ui.select(label="Auth Alg", options=['SHA', 'MD5'], value=user.AuthType).classes("w-full")
-            auth_pass = ui.input(label="Auth Passphrase", value=None, validation=lambda value: value!=None).classes("w-full")
-            priv_type = ui.select(label="Priv Alg", options=["AES", "DES"], value=user.PrivType).classes("w-full")
-            priv_pass = ui.input(label="Auth Passphrase", value=None, validation=lambda value: value!=None).classes("w-full")
+
+            version = ui.input(label="Version", value="usm").classes("w-full")
+            username = ui.input(label="Username", value=inituser.UserName, validation={"Please enter a username": lambda value: len(value) > 0}).classes("w-full")
+            permissions = ui.select(label="Permissions", value=inituser.Permissions, options=["roprivgroup", "rwprivgroup"]).classes("w-full")
+            auth_type = ui.select(label="Auth Alg", value=inituser.AuthType, options=['SHA', 'MD5']).classes("w-full")
+            auth_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
+            priv_type = ui.select(label="Priv Alg", value=inituser.PrivType, options=["AES", "DES"]).classes("w-full")
+            priv_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
 
             with ui.row().classes("items-center justify-between gap-4 w-full"):
 
                 def on_save_cb():
-                    disable_group(group)
-                    save_button.enabled = False
-                    edit_button.enabled = True
-                    EditV3User(user)
-                    ui.navigate.back()
-                    
-                
+                        disable_group(group)
+                        save_button.enabled = False
+                        edit_button.enabled = True
+                        finaluser = V3User(
+                            Version=version.value,
+                            UserName=username.value,
+                            Permissions=permissions.value,
+                            AuthType=auth_type.value,
+                            AuthPassphrase=auth_pass.value,
+                            PrivType=priv_type.value,
+                            PrivPassphrase=priv_pass.value
+                            )
+
+                        if all(validate_group([version, username, permissions, auth_type, auth_pass, priv_type, priv_pass])):
+                            EditV3User(inituser, finaluser)
+                            ui.navigate.back()
+                        else:
+                            ui.notify("Please correct the errors", type='negative')
+
+
                 def on_edit_cb():
                     enable_group(group)
                     edit_button.enabled = False
@@ -578,15 +726,15 @@ async def edit_delete_v3_user_card(username):
 
                 async def on_delete_cb():
                     with ui.dialog() as dialog, ui.card():
-                        ui.label(f'Are you sure you want to delete {user.UserName}?')
+                        ui.label(f'Are you sure you want to delete {inituser.UserName}?')
                         with ui.row():
                             ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
                             ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
                     result = await dialog
                     if result:
-                        DeleteV3User(user)
+                        DeleteV3User(inituser)
                         ui.navigate.back()
-                        ui.notify(f'User {user.UserName} deleted...')
+                        ui.notify(f'User {inituser.UserName} deleted...')
                     else:
                         dialog.close()
 
@@ -594,7 +742,7 @@ async def edit_delete_v3_user_card(username):
                 save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
                 delete_button = ui.button(icon="delete", on_click=on_delete_cb).props("flat color=accent align=left")
 
-                group = [auth_type,auth_pass,priv_type,priv_pass]
+                group = [permissions, username, auth_type,auth_pass,priv_type,priv_pass]
 
                 disable_group(group)
                 edit_button.enabled = True
