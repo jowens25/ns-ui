@@ -76,11 +76,11 @@ async def root():
         #).props("flat color=white align=left").classes("full-width")
 #
 #
-        #ui.button(
-        #    "NTP",
-        #    on_click=lambda: ui.navigate.to('/ntp'),
-        #    icon="settings_ethernet",
-        #).props("flat color=white align=left").classes("full-width")
+        ui.button(
+            "NTP",
+            on_click=lambda: ui.navigate.to('/ntp'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
 #
 #
         #ui.button(
@@ -101,11 +101,11 @@ async def root():
             icon="settings_applications",
         ).props("flat color=white align=left").classes("full-width")
 
-        #ui.button(
-        #    "Accounts",
-        #    on_click=lambda: ui.navigate.to('/accounts'),
-        #    icon="group",
-        #).props("flat color=white align=left").classes("full-width")
+        ui.button(
+            "Accounts",
+            on_click=lambda: ui.navigate.to('/accounts'),
+            icon="group",
+        ).props("flat color=white align=left").classes("full-width")
 #
         ui.separator()
 

@@ -1,8 +1,6 @@
-
-from commands import runCmd
-
-
-from snmp.snmp import ResetSnmpd
+from mysocket.mysocket import ReadWriteSocket, ReadNtlProperty, pps, ntp, LoadConfig
 
 
-print(ResetSnmpd())
+#oadConfig("./configs/PtpGmNtpServer.ucm")
+    
+print(ReadNtlProperty(ntp.Index, ntp.ipaddress))

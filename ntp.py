@@ -76,7 +76,7 @@ async def load_ntp_properties():
 async def ntp_page():
 
 
-    await load_ntp_properties()
+    #await load_ntp_properties()
 
 
     with ui.column():
@@ -84,34 +84,34 @@ async def ntp_page():
         ui.label("NTP").classes("text-h5")
 
         with ui.card():
-
-            #async def update_broadcasts():
-            #    await get_ntp_property("broadcastsvalue")
-#
-            #ui.timer(1.0, update_broadcasts)
-
-
             ui.label(f"version: {ntp.version}")
-            ui.label(f"status: {ntp.status}")
-            ui.label(f"ipmode: {ntp.ipmode}")
-            ui.label(f"ipaddress: {ntp.ipaddress}")
-            ui.label(f"macaddress: {ntp.macaddress}")
+            ui.select(label="Status", options=["Enabled", "Disabled"], value="Enabled").classes('w-full')
+        
+        ui.select(label="Ip Mode", options=["IPv4", "IPv6"], value="IPv4").classes('w-full')
+        ui.input(f"ip address: {ntp.ipaddress}")
+        ui.input(f"mac address: {ntp.macaddress}")
+        
+        with ui.card():
             ui.label(f"vlanstatus: {ntp.vlanstatus}")
             ui.label(f"vlanaddress: {ntp.vlanaddress}")
-            ui.label(f"unicastmode: {ntp.unicastmode}")
-            ui.label(f"multicastmode: {ntp.multicastmode}")
-            ui.label(f"broadcastmode: {ntp.broadcastmode}")
-            ui.label(f"precisionvalue: {ntp.precisionvalue}")
-            ui.label(f"pollintervalvalue: {ntp.pollintervalvalue}")
-            ui.label(f"stratumvalue: {ntp.stratumvalue}")
-            ui.label(f"referenceid: {ntp.referenceid}")
-            ui.label(f"smearingstatus: {ntp.smearingstatus}")
-            ui.label(f"leap61inprogress: {ntp.leap61inprogress}")
-            ui.label(f"leap59inprogress: {ntp.leap59inprogress}")
-            ui.label(f"leap61status: {ntp.leap61status}")
-            ui.label(f"leap59status: {ntp.leap59status}")
-            ui.label(f"utcoffsetstatus: {ntp.utcoffsetstatus}")
-            ui.label(f"utcoffsetvalue: {ntp.utcoffsetvalue}")
+            
+        ui.label(f"unicastmode: {ntp.unicastmode}")
+        ui.label(f"multicastmode: {ntp.multicastmode}")
+        ui.label(f"broadcastmode: {ntp.broadcastmode}")
+        
+        ui.label(f"precisionvalue: {ntp.precisionvalue}")
+        ui.label(f"pollintervalvalue: {ntp.pollintervalvalue}")
+        ui.label(f"stratumvalue: {ntp.stratumvalue}")
+        ui.label(f"referenceid: {ntp.referenceid}")
+        ui.label(f"smearingstatus: {ntp.smearingstatus}")
+        ui.label(f"leap61inprogress: {ntp.leap61inprogress}")
+        ui.label(f"leap59inprogress: {ntp.leap59inprogress}")
+        ui.label(f"leap61status: {ntp.leap61status}")
+        ui.label(f"leap59status: {ntp.leap59status}")
+        ui.label(f"utcoffsetstatus: {ntp.utcoffsetstatus}")
+        ui.label(f"utcoffsetvalue: {ntp.utcoffsetvalue}")
+        
+        with ui.card():
             ui.label(f"requestsvalue: {ntp.requestsvalue}")
             ui.label(f"responsesvalue: {ntp.responsesvalue}")
             ui.label(f"requestsdroppedvalue: {ntp.requestsdroppedvalue}")
