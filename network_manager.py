@@ -5,6 +5,24 @@ import asyncio
 
 
 
+
+from dasbus.connection import SystemMessageBus
+
+def test_network():
+    bus = SystemMessageBus()
+
+    proxy = bus.get_proxy(
+        "org.freedesktop.NetworkManager",
+        "/org/freedesktop/NetworkManager"
+    )
+
+
+
+    devices = proxy.GetDevices()
+    
+    print(devices)
+
+
 #/org/freedesktop/NetworkManager
 #/org/freedesktop/NetworkManager/AgentManage
 #/org/freedesktop/NetworkManager/DnsManage
