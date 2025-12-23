@@ -64,7 +64,7 @@ def ReadSnmpGroupsFromFile() -> list[Group]:
 
     with open(snmp_config_file, "r") as f:
         content = f.readlines()
-
+        
     for line in content:
         line = line.strip("\n")
         if line.startswith("group"):
