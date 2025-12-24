@@ -150,11 +150,10 @@ async def shutdown():
 if __name__ in {"__main__", "__mp_main__"}:
 
     ui.run(
-        reload=True,
+        reload=False,
         storage_secret="your-secret-key",
         title="Novus Configuration Tool",
         favicon="assets/favicon.png",
-        port=7070,
     )
 
 
