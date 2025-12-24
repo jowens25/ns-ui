@@ -37,22 +37,24 @@ async def get_interfaces_and_addresses() -> list:
         ipv4_conf = await nm.device.property(path, "Ip4Config")
         ipv6_conf = await nm.device.property(path, "Ip6Config")
 
+        print(ipv4_conf)
+
         ip4_address_data = await nm.ipv4config.property(ipv4_conf, "AddressData")
-        ip6_address_data = await nm.ipv6config.property(ipv6_conf, "AddressData")
-
-        print(ip4_address_data)
-
-        address_data.extend(ip4_address_data)
-
-        
-        address_data.extend(ip6_address_data)
-        
-        address_string = ", ".join(
-            f"{item['address'].value}/{item['prefix'].value}" 
-            for item in address_data
-        )
-
-        table_rows.append({"name": interface_name, "addresses": address_string})
+        #ip6_address_data = await nm.ipv6config.property(ipv6_conf, "AddressData")
+#
+        #print(ip4_address_data)
+#
+        #address_data.extend(ip4_address_data)
+#
+        #
+        #address_data.extend(ip6_address_data)
+        #
+        #address_string = ", ".join(
+        #    f"{item['address'].value}/{item['prefix'].value}" 
+        #    for item in address_data
+        #)
+#
+        #table_rows.append({"name": interface_name, "addresses": address_string})
 
 
 
@@ -66,7 +68,7 @@ async def get_interfaces_and_addresses() -> list:
 #
 #
 
-        bytes = await nm.device.property(path, "Statistics")
+        #bytes = await nm.device.property(path, "Statistics")
 
         #bytes = await nm.properties_interface.call_get(        
         #        "org.freedesktop.NetworkManager.Device.Statistics",   
@@ -74,7 +76,7 @@ async def get_interfaces_and_addresses() -> list:
         
 
 
-        print("bytes", bytes.value)
+       # print("bytes", bytes.value)
 
     
 

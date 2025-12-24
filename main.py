@@ -27,6 +27,7 @@ import asyncio
 
 @ui.page('/ntp')
 
+@ui.page('/accounts')
 
 @ui.page('/')
 async def root():
@@ -69,11 +70,11 @@ async def root():
         #    icon="dashboard",
         #).props("flat color=white align=left").classes("full-width")
 #
-        #ui.button(
-        #    "Networking",
-        #    on_click=lambda: ui.navigate.to('/networking'),
-        #    icon="settings_ethernet",
-        #).props("flat color=white align=left").classes("full-width")
+        ui.button(
+            "Networking",
+            on_click=lambda: ui.navigate.to('/networking'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
 #
 #
         ui.button(
@@ -153,6 +154,7 @@ if __name__ in {"__main__", "__mp_main__"}:
         storage_secret="your-secret-key",
         title="Novus Configuration Tool",
         favicon="assets/favicon.png",
+        port=7070,
     )
 
 

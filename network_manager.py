@@ -42,28 +42,14 @@ def test_network():
 
 
 
-class device:
-    def __init__(self):
-        self._
-    async def method( _path, _method, *args):
-        return await nm.call(_path, 'org.freedesktop.NetworkManager.Device',  _method, *args)
-    async def property(_path, _property):
-        return await nm.get_prop(_path,'org.freedesktop.NetworkManager.Device', _property)
-    
-class ipv4config:
-    async def method( _path, _method, *args):
-        return await nm.call(_path, 'org.freedesktop.NetworkManager.IP4Config',  _method, *args)
-    async def property(_path, _property):
-        return await nm.get_prop(_path,'org.freedesktop.NetworkManager.IP4Config', _property)
 
-class ipv6config:
-    async def method( _path, _method, *args):
-        return await nm.call(_path, 'org.freedesktop.NetworkManager.IP6Config',  _method, *args)
-    async def property(_path, _property):
-        return await nm.get_prop(_path,'org.freedesktop.NetworkManager.IP6Config', _property)
 
 
 class NetworkManager:
+
+
+
+
     def __init__(self):
         self.bus = None
         self.root = '/org/freedesktop/NetworkManager'
@@ -113,7 +99,26 @@ class NetworkManager:
 
     async def property(self, _property):
         return await nm.get_prop('/org/freedesktop/NetworkManager','org.freedesktop.NetworkManager', _property)
-    
+
+
+    class device:
+        async def method( _path, _method, *args):
+            return await nm.call(_path, 'org.freedesktop.NetworkManager.Device',  _method, *args)
+        async def property(_path, _property):
+            return await nm.get_prop(_path,'org.freedesktop.NetworkManager.Device', _property)
+
+    class ipv4config:
+        async def method( _path, _method, *args):
+            return await nm.call(_path, 'org.freedesktop.NetworkManager.IP4Config',  _method, *args)
+        async def property(_path, _property):
+            return await nm.get_prop(_path,'org.freedesktop.NetworkManager.IP4Config', _property)
+
+    class ipv6config:
+        async def method( _path, _method, *args):
+            return await nm.call(_path, 'org.freedesktop.NetworkManager.IP6Config',  _method, *args)
+        async def property(_path, _property):
+            return await nm.get_prop(_path,'org.freedesktop.NetworkManager.IP6Config', _property)
+
 
 
     
