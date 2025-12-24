@@ -3,9 +3,14 @@ from theme import init_colors
 from rest_api import APIClient
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
-from network_manager import  nm
+from org_freedesktop_NetworkManager import NetworkManager
+from org_freedesktop_NetworkManager_Devices import Device
 
+from org_freedesktop_NetworkManager import NetworkManager
+from jeepney.wrappers import Properties
+from jeepney.io.asyncio import Proxy
 
+from dbus import dbus
 
 def update_dhcp_mode(dhcp_value):  # Receives the selected value
     print(f"Selected DHCP mode: {dhcp_value}")
@@ -24,22 +29,30 @@ def format_interfaces(result):
 async def get_interfaces_and_addresses() -> list:
 
 
+    proxy_object = Proxy(NetworkManager(), dbus.Router)
+    device_paths = await proxy_object.GetDevices()
+    for path in device_paths[0]:
+        
+        prop_prox = Proxy(Properties(Device(path)), dbus.Router)
+    
+        other_devices = await prop_prox.get("Ip4Config")
+        print(other_devices)
 
     table_rows = []
 
-    devices = await nm.method("get_devices")
-
-    for path in devices:
-        address_data = []
-
-        interface_name = await nm.device.property(path, "Interface")
-
-        ipv4_conf = await nm.device.property(path, "Ip4Config")
-        ipv6_conf = await nm.device.property(path, "Ip6Config")
-
-        print(ipv4_conf)
-
-        ip4_address_data = await nm.ipv4config.property(ipv4_conf, "AddressData")
+    #devices = await nm.method("get_devices")
+#
+    #for path in devices:
+    #    address_data = []
+#
+    #    interface_name = await nm.device.property(path, "Interface")
+#
+    #    ipv4_conf = await nm.device.property(path, "Ip4Config")
+    #    ipv6_conf = await nm.device.property(path, "Ip6Config")
+#
+    #    print(ipv4_conf)
+#
+    #    ip4_address_data = await nm.ipv4config.property(ipv4_conf, "AddressData")
         #ip6_address_data = await nm.ipv6config.property(ipv6_conf, "AddressData")
 #
         #print(ip4_address_data)
@@ -146,7 +159,7 @@ async def interface_page(interface_name: str):
 
 async def interface_card(iface :str ):
 
-    
+    '''
 
     nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager")
     nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager", nm.introspection)
@@ -269,4 +282,4 @@ async def interface_card(iface :str ):
                 
                 with ui.row():
                     ui.label(address_string), ui.link("edit")
-         
+         '''

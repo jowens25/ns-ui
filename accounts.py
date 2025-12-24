@@ -5,7 +5,6 @@ from theme import init_colors
 
 from snmp.snmp import table
 
-
 @dataclass
 class SystemAccount:
     Name: Optional[str] = None
