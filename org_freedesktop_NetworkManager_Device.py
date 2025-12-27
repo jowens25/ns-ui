@@ -6,9 +6,11 @@ Object path: /org/freedesktop/NetworkManager/Devices/2
 Bus name   : org.freedesktop.NetworkManager
 """
 
+import asyncio
 from dataclasses import dataclass, fields
 from typing import Any, Optional, Self
 from jeepney.wrappers import MessageGenerator, new_method_call
+from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
 
 class Statistics(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Device.Statistics'
@@ -70,6 +72,7 @@ class DeviceProperties:
 
 
 class Device(MessageGenerator):
+
     interface = 'org.freedesktop.NetworkManager.Device'
 
     def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
@@ -89,6 +92,11 @@ class Device(MessageGenerator):
 
     def Delete(self):
         return new_method_call(self, 'Delete')
+    
+
+    
+
+
     
 
 class Wired(MessageGenerator):

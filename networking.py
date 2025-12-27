@@ -15,6 +15,37 @@ from dbus import dbus
 
 
 
+async def GetDevices() -> list[str]:
+    nm_prox = Proxy(NetworkManager(), dbus.Router)
+
+    return (await nm_prox.GetDevices())[0]
+
+
+async def GetInterfaces() ->list[str]:
+
+    interfaces = []
+
+    for path in await GetDevices():
+        device_prox = Proxy(Properties(Device(path)), dbus.Router)
+
+        i = (await device_prox.get("Interface"))[0][1]
+
+        interfaces.append(i)
+
+    return interfaces
+
+async def GetInterfaceAddressData(interfaces :list[str]) -> list[str]:
+
+    nm = Proxy(NetworkManager(), dbus.Router)
+
+    for i in interfaces:
+        device = nm.GetDeviceByIpIface(i)
+
+
+
+
+
+
 
 def update_dhcp_mode(dhcp_value):  # Receives the selected value
     print(f"Selected DHCP mode: {dhcp_value}")
@@ -32,89 +63,17 @@ def format_interfaces(result):
 
 async def get_interfaces_and_addresses() -> list:
 
-    device_prox = Proxy(Properties(Device(path)), dbus.Router)
-
-    all_device_props = (await device_prox.get_all())[0]
-
-    dev = DeviceProperties.from_dict(all_device_props)
+    rows = []
 
 
-    config_prox = Proxy(Properties(IP4Config(path)), dbus.Router)
+    interfaces = await GetInterfaces()
 
-    all_config_data = (await config_prox.get_all())[0]
+    for i in interfaces:
 
-    dev = IP4ConfigProperties.from_dict(all_config_data)
-
-
-    await GetInterfaces()
+        rows.append({"name": i})
 
 
-    proxy_object = Proxy(NetworkManager(), dbus.Router)
-    device_paths = await proxy_object.GetDevices()
-    for path in device_paths[0]:
-        
-        prop_prox = Proxy(Properties(Device(path)), dbus.Router)
-    
-        other_devices = await prop_prox.get("Ip4Config")
-        print(other_devices)
-
-    table_rows = []
-
-    #devices = await nm.method("get_devices")
-#
-    #for path in devices:
-    #    address_data = []
-#
-    #    interface_name = await nm.device.property(path, "Interface")
-#
-    #    ipv4_conf = await nm.device.property(path, "Ip4Config")
-    #    ipv6_conf = await nm.device.property(path, "Ip6Config")
-#
-    #    print(ipv4_conf)
-#
-    #    ip4_address_data = await nm.ipv4config.property(ipv4_conf, "AddressData")
-        #ip6_address_data = await nm.ipv6config.property(ipv6_conf, "AddressData")
-#
-        #print(ip4_address_data)
-#
-        #address_data.extend(ip4_address_data)
-#
-        #
-        #address_data.extend(ip6_address_data)
-        #
-        #address_string = ", ".join(
-        #    f"{item['address'].value}/{item['prefix'].value}" 
-        #    for item in address_data
-        #)
-#
-        #table_rows.append({"name": interface_name, "addresses": address_string})
-
-
-
-
-
-
-        #nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', path)
-        #nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', path, nm.introspection)
-        #nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.Device')
-        #nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
-#
-#
-
-        #bytes = await nm.device.property(path, "Statistics")
-
-        #bytes = await nm.properties_interface.call_get(        
-        #        "org.freedesktop.NetworkManager.Device.Statistics",   
-        #        "TxBytes")  
-        
-
-
-       # print("bytes", bytes.value)
-
-    
-
-
-    return table_rows
+    return rows
 
 
 
@@ -132,8 +91,6 @@ async def on_row_selected(event):
         
 
 async def network_page():
-
-
 
     with ui.column():
         interfaces = await get_interfaces_and_addresses()

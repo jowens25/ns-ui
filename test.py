@@ -14,6 +14,18 @@ from typing import Self # Recommended for type hinting in Python 3.11+
 
 
 
+async def GetProperties(proxy):
+    data = (await proxy.get_all())[0]
+    for f in fields(proxy):
+        if f.name in data:
+            prop_data = data[f.name]
+            if isinstance(prop_data, tuple) and len(prop_data) == 2:
+               setattr(proxy, f.name, prop_data[1])
+            else:
+                setattr(proxy, f.name, prop_data)
+
+
+
 async def getAllProperties(cls :dataclass, router, path: str = ''):
     prox = Proxy(Properties(cls(path)), router)
     all_properties = (await prox.get_all())[0]
@@ -25,33 +37,37 @@ async def getAllProperties(cls :dataclass, router, path: str = ''):
 async def help_me():
     conn = await open_dbus_connection(bus="SYSTEM")
     router = DBusRouter(conn)
-    proxy_object = Proxy(NetworkManager(), router)
-    device_paths = await proxy_object.GetDevices()
+    nm = Proxy(NetworkManager(), router)
+    device_paths = await nm.GetDevices()
     
     for path in device_paths[0]:
 
-        device_prox = Proxy(Properties(Device(path)), router)
+        dev = Proxy(Properties(Device(path)), router)
 
-        all_device_props = (await device_prox.get_all())[0]
+        print(await dev.get("Interface"))
 
-        dev = DeviceProperties.from_dict(all_device_props)
+        deviceProperties = (await dev.get_all())[0]
 
+        devProps = DeviceProperties.from_dict(deviceProperties)
 
-        if dev.Interface == 'wlp1s0':
+        print(devProps.ActiveConnection)
 
-            print(dev.AvailableConnections)
-
-            print(dev.Ip4Config)
-
-
-            config_prox = Proxy(Properties(IP4Config(dev.Ip4Config)), router)
-
-            all_config_data = (await config_prox.get_all())[0]
-
-            cfg = IP4ConfigProperties.from_dict(all_config_data)
-
-            print(cfg.AddressData)
-
+#
+#        if device.Interface == 'wlp1s0':
+#
+#            print(device.AvailableConnections)
+#
+#            print(device.Ip4Config)
+#
+#
+#            config_prox = Proxy(Properties(IP4Config(device.Ip4Config)), router)
+#
+#            all_config_data = (await config_prox.get_all())[0]
+#
+#            cfg = IP4ConfigProperties.from_dict(all_config_data)
+#
+#            print(cfg.AddressData)
+#
         
         #print(res2)
         
