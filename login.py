@@ -13,9 +13,6 @@ p = pam.pam()
 
 
 async def try_login(_username: str, _password: str) -> None:
-    response = await api.post(
-        "/api/v1/login", {"username": _username, "password": _password}
-    )
 
     if p.authenticate(_username, _password):
         app.storage.user.update(

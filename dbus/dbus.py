@@ -9,5 +9,5 @@ async def setup():
 
 async def cleanup():
     global Connection
-    Connection.close()
+    await Connection.close()
 

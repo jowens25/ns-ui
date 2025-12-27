@@ -43,3 +43,6 @@ class Wired(MessageGenerator):
     def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
                  bus_name='org.freedesktop.NetworkManager'):
         super().__init__(object_path=object_path, bus_name=bus_name)
+
+
+

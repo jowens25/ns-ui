@@ -4,13 +4,33 @@ from rest_api import APIClient
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
 from org_freedesktop_NetworkManager import NetworkManager
-from org_freedesktop_NetworkManager_Devices import Device
+from org_freedesktop_NetworkManager_Device import Device
 
 from org_freedesktop_NetworkManager import NetworkManager
 from jeepney.wrappers import Properties
 from jeepney.io.asyncio import Proxy
 
 from dbus import dbus
+
+
+
+
+
+async def GetAllDevices() -> str:
+    nm_prox = Proxy(Properties(NetworkManager()), dbus.Router)
+    device_paths = await nm_prox.get("AllDevices")
+    return device_paths[0][1]
+
+async def GetInterface(d :Device):
+    device_proxy = Proxy(Properties(Device(d)), dbus.Router)
+    interface = await device_proxy.get("Interface")
+    return interface[0][1]
+
+
+async def GetInterfaces():
+    for d in await GetAllDevices():
+        print(await GetInterface(d))
+
 
 def update_dhcp_mode(dhcp_value):  # Receives the selected value
     print(f"Selected DHCP mode: {dhcp_value}")
@@ -27,6 +47,9 @@ def format_interfaces(result):
 
 
 async def get_interfaces_and_addresses() -> list:
+
+
+    await GetInterfaces()
 
 
     proxy_object = Proxy(NetworkManager(), dbus.Router)
