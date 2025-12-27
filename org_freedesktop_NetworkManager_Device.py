@@ -8,9 +8,7 @@ Bus name   : org.freedesktop.NetworkManager
 
 from dataclasses import dataclass, fields
 from typing import Any, Optional, Self
-from jeepney.wrappers import MessageGenerator, new_method_call, Properties
-from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
-from dbus import dbus
+from jeepney.wrappers import MessageGenerator, new_method_call
 
 class Statistics(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Device.Statistics'
@@ -21,7 +19,7 @@ class Statistics(MessageGenerator):
 
 
 @dataclass
-class Device(MessageGenerator):
+class DeviceProperties:
     Udi                   : Optional [str] = None        #    s
     Path                  : Optional [str] = None        #    s
     Interface             : Optional [str] = None        #    s
@@ -54,7 +52,24 @@ class Device(MessageGenerator):
     InterfaceFlags        : Optional [int] = None        #    u
     HwAddress             : Optional [str] = None        #    s
     Ports                 : Optional [list[str]] = None  #    ao
+    
 
+    @classmethod
+    def from_dict(cls, data: dict[str, tuple[str, Any]]) -> Self:
+        """Convert from dict of {'Prop': ('s', value)} or similar into structured props."""
+        filtered = {}
+        for f in fields(cls):
+            if f.name in data:
+                prop_data = data[f.name]
+                if isinstance(prop_data, tuple) and len(prop_data) == 2:
+                    filtered[f.name] = prop_data[1]
+                else:
+                    print("from dict ERROR")
+                    filtered[f.name] = prop_data
+        return cls(**filtered)
+
+
+class Device(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Device'
 
     def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
@@ -75,26 +90,6 @@ class Device(MessageGenerator):
     def Delete(self):
         return new_method_call(self, 'Delete')
     
-    @classmethod
-    def from_dict(cls, data: dict[str, tuple[str, Any]]) -> Self:
-        """Convert from dict of {'Prop': ('s', value)} or similar into structured props."""
-        filtered = {}
-        for f in fields(cls):
-            if f.name in data:
-                prop_data = data[f.name]
-                if isinstance(prop_data, tuple) and len(prop_data) == 2:
-                    filtered[f.name] = prop_data[1]
-                else:
-                    print("from dict ERROR")
-                    filtered[f.name] = prop_data
-        return cls(**filtered)
-    
-    @classmethod
-    async def get_all(cls, path: str):
-        prox = Proxy(Properties(cls(path)), dbus.Router)
-        all_properties = (await prox.get_all())[0]
-        if all_properties:
-            return cls.from_dict(all_properties)
 
 class Wired(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Device.Wired'
@@ -102,6 +97,5 @@ class Wired(MessageGenerator):
     def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
                  bus_name='org.freedesktop.NetworkManager'):
         super().__init__(object_path=object_path, bus_name=bus_name)
-
 
 
