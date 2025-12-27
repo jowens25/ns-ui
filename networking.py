@@ -21,7 +21,7 @@ async def GetAllDevices() -> str:
     device_paths = await nm_prox.get("AllDevices")
     return device_paths[0][1]
 
-async def GetInterface(d :Device):
+async def GetInterface(d :Device) -> str:
     device_proxy = Proxy(Properties(Device(d)), dbus.Router)
     interface = await device_proxy.get("Interface")
     return interface[0][1]

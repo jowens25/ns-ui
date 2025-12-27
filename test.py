@@ -9,16 +9,9 @@ from org_freedesktop_NetworkManager_IP4Config import IP4Config
 from jeepney.wrappers import MessageGenerator, new_method_call, Message, Properties
 from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
 from org_freedesktop_NetworkManager_DHCP4Config import DHCP4Config
+from typing import Self # Recommended for type hinting in Python 3.11+
 
- 
-@dataclass
-class PropValue:
-    type: str
-    value: Any
 
-    def __iter__(self):
-        yield self.type
-        yield self.value
 
 @dataclass
 class DeviceProp:
@@ -57,18 +50,27 @@ class DeviceProp:
 
 
     @classmethod
-    def from_dict(cls, data: dict[str, tuple[str, Any]]) -> 'DeviceProp':
+    def from_dict(cls, data: dict[str, tuple[str, Any]]) -> Self:
         """Convert from dict of {'Prop': ('s', value)} or similar into structured props."""
         filtered = {}
-        for f in fields(DeviceProp):
+        for f in fields(cls):
             if f.name in data:
                 prop_data = data[f.name]
                 if isinstance(prop_data, tuple) and len(prop_data) == 2:
                     filtered[f.name] = prop_data[1]
                 else:
-                    input("from dict ERROR")
+                    print("from dict ERROR")
                     filtered[f.name] = prop_data
-        return DeviceProp(**filtered)
+        return cls(**filtered)
+    
+
+
+
+async def getAllProperties(cls :dataclass, router, path: str = ''):
+    prox = Proxy(Properties(cls(path)), router)
+    all_properties = (await prox.get_all())[0]
+    if all_properties:
+        return cls.from_dict(all_properties)
 
 
 
@@ -79,8 +81,12 @@ async def help_me():
     device_paths = await proxy_object.GetDevices()
     
     for path in device_paths[0]:
-        device_prox = Proxy(Properties(Device(path)), router)
 
+
+        #devProps = await getAllProperties(Device, router, path)
+
+        #print(devProps)
+        device_prox = Proxy(Properties(Device(path)), router)
 
         all_device_props = (await device_prox.get_all())[0]
 
@@ -90,6 +96,8 @@ async def help_me():
         print(dev.Interface)
 
         print(dev.AvailableConnections)
+
+        print(dev.Ip4Config)
 
 
 
