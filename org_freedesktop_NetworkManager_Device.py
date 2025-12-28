@@ -6,11 +6,13 @@ Object path: /org/freedesktop/NetworkManager/Devices/2
 Bus name   : org.freedesktop.NetworkManager
 """
 
-import asyncio
+
 from dataclasses import dataclass, fields
-from typing import Any, Optional, Self
+from typing import Any, Optional
 from jeepney.wrappers import MessageGenerator, new_method_call
-from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
+
+from jeepney.wrappers import DBusAddress
+
 
 class Statistics(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Device.Statistics'
@@ -18,7 +20,6 @@ class Statistics(MessageGenerator):
     def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
                  bus_name='org.freedesktop.NetworkManager'):
         super().__init__(object_path=object_path, bus_name=bus_name)
-
 
 @dataclass
 class DeviceProperties:
@@ -54,30 +55,30 @@ class DeviceProperties:
     InterfaceFlags        : Optional [int] = None        #    u
     HwAddress             : Optional [str] = None        #    s
     Ports                 : Optional [list[str]] = None  #    ao
-    
 
-    @classmethod
-    def from_dict(cls, data: dict[str, tuple[str, Any]]) -> Self:
-        """Convert from dict of {'Prop': ('s', value)} or similar into structured props."""
-        filtered = {}
-        for f in fields(cls):
+    def load(self,  data):
+        '''Get all property values and store in instance. Note the 0th index'''
+        for f in fields(self):
             if f.name in data:
                 prop_data = data[f.name]
                 if isinstance(prop_data, tuple) and len(prop_data) == 2:
-                    filtered[f.name] = prop_data[1]
+                    setattr(self, f.name, prop_data[1])
                 else:
-                    print("from dict ERROR")
-                    filtered[f.name] = prop_data
-        return cls(**filtered)
-
+                    setattr(self, f.name, prop_data)
 
 class Device(MessageGenerator):
-
+    
     interface = 'org.freedesktop.NetworkManager.Device'
 
     def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
                  bus_name='org.freedesktop.NetworkManager'):
+        
+        self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
+
+        self.props = DeviceProperties()
+
         super().__init__(object_path=object_path, bus_name=bus_name)
+
 
     def Reapply(self, connection, version_id, flags):
         return new_method_call(self, 'Reapply', 'a{sa{sv}}tu',
@@ -93,9 +94,25 @@ class Device(MessageGenerator):
     def Delete(self):
         return new_method_call(self, 'Delete')
     
-
+######################################################################
     
+    def get(self, name):
+        """Get the value of the property *name*"""
+        return new_method_call(self.props_if, 'Get', 'ss',
+                   (self.interface, name))
 
+    def get_all(self):
+        """Get all property values for this interface"""
+        return new_method_call(self.props_if, 'GetAll', 's',
+                               (self.interface,))
+
+
+    def set(self, name, signature, value):
+        """Set the property *name* to *value* (with appropriate signature)"""
+        return new_method_call(self.props_if, 'Set', 'ssv',
+                   (self.interface, name, (signature, value)))
+    
+    
 
     
 

@@ -9,17 +9,18 @@ Bus name   : org.freedesktop.NetworkManager
 from dataclasses import dataclass, fields
 from typing import Any, Optional, Self
 from jeepney.wrappers import MessageGenerator, new_method_call
+from jeepney.wrappers import Properties
 
 
 @dataclass
 class IP4ConfigProperties:
     Addresses       :Optional [list[int]] = None         #    aau
-    AddressData     :Optional [list[str]] = None         #    aa{sv}
+    AddressData     :Optional [list[dict]] = None         #    aa{sv}
     Gateway         :Optional [str] = None               #    s
     Routes          :Optional [list[str]] = None         #    aau
-    RouteData       :Optional [list[str]] = None         #    aa{sv}
+    RouteData       :Optional [list[dict]] = None         #    aa{sv}
     Nameservers     :Optional [list[str]] = None         #    au
-    NameserverData  :Optional [list[str]] = None         #    aa{sv}
+    NameserverData  :Optional [list[dict]] = None         #    aa{sv}
     Domains         :Optional [list[str]] = None         #    as
     Searches        :Optional [list[str]] = None         #    as
     DnsOptions      :Optional [list[str]] = None         #    as
@@ -41,17 +42,13 @@ class IP4ConfigProperties:
                     filtered[f.name] = prop_data
         return cls(**filtered)
 
+
 class IP4Config(MessageGenerator):
-
     interface = 'org.freedesktop.NetworkManager.IP4Config'
-
+    
     def __init__(self, object_path='/org/freedesktop/NetworkManager/IP4Config/1',
                  bus_name='org.freedesktop.NetworkManager'):
         super().__init__(object_path=object_path, bus_name=bus_name)
-
-
-
-
-
+        
 
 

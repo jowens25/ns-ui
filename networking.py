@@ -17,66 +17,59 @@ from dbus import dbus
 
 async def GetDevices() -> list[str]:
     nm_prox = Proxy(NetworkManager(), dbus.Router)
-
     return (await nm_prox.GetDevices())[0]
 
 
-async def GetInterfaces() ->list[str]:
+async def GetDeviceProperties(device_path :str) -> DeviceProperties:
+    devicePropProx = Proxy(Properties(Device(device_path)), dbus.Router)
+    data = (await devicePropProx.get_all())[0]
 
-    interfaces = []
+    deviceProps = DeviceProperties.from_dict(data)
 
-    for path in await GetDevices():
-        device_prox = Proxy(Properties(Device(path)), dbus.Router)
+    return deviceProps
 
-        i = (await device_prox.get("Interface"))[0][1]
+async def GetIp4Config(config_path :str) -> IP4Config:
+    configPropProx = Proxy(Properties(IP4Config(config_path)), dbus.Router)
+    data = (await devicePropProx.get_all())[0]
 
-        interfaces.append(i)
-
-    return interfaces
-
-async def GetInterfaceAddressData(interfaces :list[str]) -> list[str]:
-
-    nm = Proxy(NetworkManager(), dbus.Router)
-
-    for i in interfaces:
-        device = nm.GetDeviceByIpIface(i)
-
-
-
-
-
-
-
-def update_dhcp_mode(dhcp_value):  # Receives the selected value
-    print(f"Selected DHCP mode: {dhcp_value}")
-
-
-def format_interfaces(result):
-    table_rows = []
-    for iface in result["interfaces"]:
-        addresses_str = (
-            ", ".join(iface.get("addresses", [])) if iface.get("addresses") else "None"
-        )
-        table_rows.append({"name": iface["name"], "addresses": addresses_str})
-    return table_rows
+#async def GetInterfaceAndAddressData() -> list[str]:
+#
+#    row = []
+#
+#    nm = Proxy(NetworkManager(), dbus.Router)
+#
+#    for i in GetInterfaces():
+#        device_path = (await nm.GetDeviceByIpIface(i))[0]
+#        device_prox = Proxy(Properties(Device(device_path)), dbus.Router)
+#
+#        cfg_path = (await device_prox.get("Ip4Config"))[0][1]
+#
+#        if cfg_path != "/":
+#
+#            config_proxy = Proxy(Properties(IP4Config(cfg_path)), dbus.Router)
+#
+#            addressData = (await config_proxy.get("AddressData"))[0][1]
+#
+#            
+#
+#        row.append({"name": i, "address": f"{addressData.get(address)}/{}"})
 
 
-async def get_interfaces_and_addresses() -> list:
+async def load_network_info() -> list:
+
+    devices = []
+    for d in await GetDevices():
+        device = await GetDeviceProperties(d)
+        devices.append(device)
+
+
+
 
     rows = []
-
-
     interfaces = await GetInterfaces()
-
     for i in interfaces:
-
         rows.append({"name": i})
-
-
     return rows
-
-
-
 
 
 async def on_row_selected(event):
@@ -93,7 +86,10 @@ async def on_row_selected(event):
 async def network_page():
 
     with ui.column():
-        interfaces = await get_interfaces_and_addresses()
+
+
+
+        interfaces = await load_network_info()
 
         #res = await nm.getNetworkManger()
         #print(res)
@@ -101,8 +97,8 @@ async def network_page():
 
         interface_table = ui.table(
             title="Interfaces",
-            rows=interfaces,
-            #rows=[{'d':'v'}],
+            #rows=interfaces,
+            rows=[{'d':'v'}],
             column_defaults={
                 "align": "left",
                 "headerClasses": "uppercase text-primary",
