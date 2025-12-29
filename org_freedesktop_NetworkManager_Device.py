@@ -12,14 +12,6 @@ from typing import Any, Optional
 from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
 
 
-
-class Statistics(MessageGenerator):
-    interface = 'org.freedesktop.NetworkManager.Device.Statistics'
-
-    def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
-                 bus_name='org.freedesktop.NetworkManager'):
-        super().__init__(object_path=object_path, bus_name=bus_name)
-
 @dataclass
 class DeviceProperties:
     def __init__(self, data):
@@ -117,8 +109,56 @@ class Device(MessageGenerator):
 class Wired(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Device.Wired'
 
-    def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
-                 bus_name='org.freedesktop.NetworkManager'):
+    def __init__(self, object_path, bus_name='org.freedesktop.NetworkManager'):
+        
+        self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
+
         super().__init__(object_path=object_path, bus_name=bus_name)
+        
+######################################################################
+    
+    def get(self, name):
+        """Get the value of the property *name*"""
+        return new_method_call(self.props_if, 'Get', 'ss',
+                   (self.interface, name))
+
+    def get_all(self):
+        """Get all property values for this interface"""
+        return new_method_call(self.props_if, 'GetAll', 's',
+                               (self.interface,))
 
 
+    def set(self, name, signature, value):
+        """Set the property *name* to *value* (with appropriate signature)"""
+        return new_method_call(self.props_if, 'Set', 'ssv',
+                   (self.interface, name, (signature, value)))
+
+
+
+class Statistics(MessageGenerator):
+    interface = 'org.freedesktop.NetworkManager.Device.Statistics'
+
+    def __init__(self, object_path, bus_name='org.freedesktop.NetworkManager'):
+        
+        self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
+
+        super().__init__(object_path=object_path, bus_name=bus_name)
+        
+        
+######################################################################
+    
+    def get(self, name):
+        """Get the value of the property *name*"""
+        return new_method_call(self.props_if, 'Get', 'ss',
+                   (self.interface, name))
+
+    def get_all(self):
+        """Get all property values for this interface"""
+        return new_method_call(self.props_if, 'GetAll', 's',
+                               (self.interface,))
+
+
+    def set(self, name, signature, value):
+        """Set the property *name* to *value* (with appropriate signature)"""
+        return new_method_call(self.props_if, 'Set', 'ssv',
+                   (self.interface, name, (signature, value)))

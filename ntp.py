@@ -1,3 +1,5 @@
+import asyncio
+from mysocket.mysocket import ListenSocket
 from rest_api import APIClient
 from nicegui import ui, app
 
@@ -82,6 +84,10 @@ async def ntp_page():
     with ui.column():
 
         ui.label("NTP").classes("text-h5")
+        with ui.card():
+            terminal = ui.xterm({'cols': 84, 'rows': 16, 'convertEol': True})
+            asyncio.create_task(ListenSocket(terminal))
+
 
         with ui.card():
             ui.label(f"version: {ntp.version}")

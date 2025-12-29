@@ -7,7 +7,7 @@ from rest_api import APIClient
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
 from org_freedesktop_NetworkManager import NetworkManager, NetworkManagerProperties
-from org_freedesktop_NetworkManager_Device import Device, DeviceProperties
+from org_freedesktop_NetworkManager_Device import Device, DeviceProperties, Statistics, Wired
 from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigProperties
 from org_freedesktop_NetworkManager import NetworkManager
 from org_freedesktop_NetworkManager_Settings_Connection import Connection, ConnectionProperties
@@ -96,87 +96,28 @@ async def GetInterfacesAndAddresses() -> list:
 
     rows = []
     
-    nm = Proxy(NetworkManager(), dbus.Router)
-    nmProps = NetworkManagerProperties((await nm.get_all())[0])
+    networkManager = Proxy(NetworkManager(), dbus.Router)
+    networkManagerProperties = NetworkManagerProperties((await networkManager.get_all())[0])
     
-    #settings = Proxy(Settings(), dbus.Router)
-    #settingsProperties = SettingsProperties((await settings.get_all())[0])
-    #
-    #pprint(asdict(settingsProperties))
+    for devicePath in networkManagerProperties.Devices:
     
-    for devPath in nmProps.Devices:
-    
-        dev = Proxy(Device(devPath), dbus.Router)
-        devProp = DeviceProperties((await dev.get_all())[0])
+        device = Proxy(Device(devicePath), dbus.Router)
+        deviceProperties = DeviceProperties((await device.get_all())[0])
         
-        if devProp.Ip6Config and devProp.Ip4Config:
+        print(devicePath)
+        pprint(asdict(deviceProperties))
         
-            ip4config = Proxy(IP4Config(devProp.Ip4Config), dbus.Router)
-            ip4configProps = IP4ConfigProperties((await ip4config.get_all())[0])
-
-            ip6config = Proxy(IP6Config(devProp.Ip6Config), dbus.Router)
-            ip6configProps = IP6ConfigProperties((await ip6config.get_all())[0])
-
-            rows.append({'name': devProp.Interface,'addresses': combineAddresses(ip4configProps, ip6configProps)})
+        if deviceProperties.Ip6Config and deviceProperties.Ip4Config:
         
-        #if "enp" in deviceProperties.Udi:
+            ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
+            ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
+
+            ip6config = Proxy(IP6Config(deviceProperties.Ip6Config), dbus.Router)
+            ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
+
+            rows.append({'name': deviceProperties.Interface,'addresses': 
+                combineAddresses(ip4configProperties, ip6configProperties)})
         
-        #for settingsPath in deviceProperties.AvailableConnections:
-        #    connection = Proxy(Connection(settingsPath), dbus.Router)
-            #pprint(asdict( ConnectionProperties((await connection.get_all())[0]) ))
-            #deviceProperties = SettingsProperties((await settings.get_all())[0])
-
-            
-            #settingsProperties = SettingsProperties((await settings.get_all())[0])
-            
-                #pprint(asdict(settingsProperties))
-#
-        #ip4config = Proxy(IP4Config(), dbus.Router)
-        #ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
-#
-        #ip6config = Proxy(IP6Config(), dbus.Router)
-        #ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
-#
-        #connection = Proxy(Connection(), dbus.Router)
-        #connectionProperties = ConnectionProperties((await connection.get_all())[0])
-#
-        #activeConnection = Proxy(ActiveConnection(), dbus.Router)
-        #activeConnectionProperties = ActiveConnectionProperties((await activeConnection.get_all())[0])
-
-    
-        #pprint(asdict(deviceProperties))
-
-    #activeConnection = Proxy(ActiveConnection(networkManagerProperties.PrimaryConnection), dbus.Router)
-    #
-    #settings = ActiveConnectionProperties((await activeConnection.get_all())[0])
-    #
-    #pprint(settings)
-    
-    #connectionProperties = ConnectionProperties((await connection.get_all())[0])
-    
-    #pprint(asdict(connectionProperties))
-    #connectionPaths = (await nm.ActiveConnections())[0]
-    
-    #print(connectionPaths)
-
-    #for devicePath in await GetDevices(nm):
-    
-        #device = Proxy(Device(devicePath), dbus.Router)
-        #
-        #deviceProperties = DeviceProperties((await device.get_all())[0])
-        #
-        #ip4config = Proxy(IP4Config(deviceProperties.Ip4Config))
-        #
-        #ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
-#
-        #ip6config = Proxy(IP6Config(deviceProperties.Ip6Config))
-        #
-        #ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
-
-        #addresses = await GetAddressString(ip4configPath, ip6configPath)
-#
-        #rows.append(formatInterfaceRow(interface, addresses))
-
     return rows
 
 
@@ -233,10 +174,21 @@ async def interface_page(interface_name: str):
 
 
 async def interface_card(iface :str ):
-
-    nm_prox = Proxy(NetworkManager(), dbus.Router)
-    devicePath = (await nm_prox.GetDeviceByIpIface(iface))[0]
+    
+    networkManager = Proxy(NetworkManager(), dbus.Router)
+    networkManagerProperties = NetworkManagerProperties((await networkManager.get_all())[0])
+    
+    devicePath = (await networkManager.GetDeviceByIpIface(iface))[0]
     device = Proxy(Device(devicePath), dbus.Router)
+    print(devicePath)
+    wired = Proxy(Statistics(devicePath), dbus.Router)
+    print((await wired.get("TxBytes"))[0][1])
+    #await wired.set("RefreshRateMs", "u", 1000)
+
+    print((await wired.get("RefreshRateMs"))[0][1])
+    
+
+    
 
     ip4configPath = (await device.get("Ip4Config"))[0][1]
     ip6configPath = (await device.get("Ip6Config"))[0][1]
@@ -246,15 +198,15 @@ async def interface_card(iface :str ):
     carrier = processInterfaceFlags((await device.get("InterfaceFlags"))[0][1])
     
 
-    speed = 16000
+
+    #speed = (await wired.get("Speed"))[0][1]
+    speed = 10
 
     driver = (await device.get("Driver"))[0][1]
 
 
-
-
-    ip4addressString = await GetAddressString(ip4configPath, [])
-    ip6addressString = await GetAddressString([], ip6configPath)
+    #ip4addressString = await GetAddressString(ip4configPath, [])
+    #ip6addressString = await GetAddressString([], ip6configPath)
 
 
 
@@ -280,7 +232,7 @@ async def interface_card(iface :str ):
                ui.label("MTU").classes("font-bold")
     
             with ui.column().classes("flex-1 gap-4"):  # Flexible width for values
-                ui.label(ip4addressString + ", "+ ip6addressString)
+                #ui.label(ip4addressString + ", "+ ip6addressString)
 
                 ui.label(f"{speed/1000} Gbps")
 
@@ -288,12 +240,12 @@ async def interface_card(iface :str ):
                
                 ui.checkbox('Connect automatically').props("flat color=accent align=left").classes("w-full").props("dense")
 
-                with ui.row():
-                    ui.label(ip4addressString), ui.link("edit")
-
-                with ui.row():
-                    ui.label(ip4addressString), ui.link("edit")
-                
-                with ui.row():
-                    ui.label(ip6addressString), ui.link("edit")
+                #with ui.row():
+                #    ui.label(ip4addressString), ui.link("edit")
+#
+                #with ui.row():
+                #    ui.label(ip4addressString), ui.link("edit")
+                #
+                #with ui.row():
+                #    ui.label(ip6addressString), ui.link("edit")
 

@@ -82,7 +82,26 @@ class PpsSlaveProps:
     
 pps = PpsSlaveProps()
 
+async def ListenSocket(term):
+    try: 
+        reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
 
+    #print(f'Send: {message!r}')
+    #writer.write(message.encode())
+    #await writer.drain()
+        while True:
+
+            data = await reader.read(100)
+            term.write(data)
+            #print(f'Received: {data.decode()!r}')
+            
+    finally:
+
+        #print('Close the connection')
+        writer.close()
+        await writer.wait_closed()
+
+    
 
 def ReadWriteSocket(command: str) -> str:
     command = command + "\r\n"
