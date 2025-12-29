@@ -13,40 +13,34 @@ from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
 
 @dataclass
 class IP4ConfigProperties:
-    Addresses       :Optional [list[int]] = None         #    aau
-    AddressData     :Optional [list[dict]] = None         #    aa{sv}
-    Gateway         :Optional [str] = None               #    s
-    Routes          :Optional [list[str]] = None         #    aau
-    RouteData       :Optional [list[dict]] = None         #    aa{sv}
-    Nameservers     :Optional [list[str]] = None         #    au
-    NameserverData  :Optional [list[dict]] = None         #    aa{sv}
-    Domains         :Optional [list[str]] = None         #    as
-    Searches        :Optional [list[str]] = None         #    as
-    DnsOptions      :Optional [list[str]] = None         #    as
-    DnsPriority     :Optional [int] = None               #    i
-    WinsServers     :Optional [list[str]] = None         #    au
-    WinsServerData  :Optional [list[str]] = None         #    as
-    
-    @classmethod
-    def from_dict(cls, data: dict[str, tuple[str, Any]]) -> Self:
-        """Convert from dict of {'Prop': ('s', value)} or similar into structured props."""
-        filtered = {}
-        for f in fields(cls):
+    def __init__(self, data):
+        for f in fields(self):
             if f.name in data:
                 prop_data = data[f.name]
                 if isinstance(prop_data, tuple) and len(prop_data) == 2:
-                    filtered[f.name] = prop_data[1]
+                    setattr(self, f.name, prop_data[1])
                 else:
-                    print("from dict ERROR")
-                    filtered[f.name] = prop_data
-        return cls(**filtered)
-
+                    setattr(self, f.name, prop_data)
+                    
+    Addresses       :Optional [list[int]] = None               #    aau
+    AddressData     :Optional [list[dict[str, Any]]] = None    #    aa{sv}
+    Gateway         :Optional [str] = None                     #    s
+    Routes          :Optional [list[str]] = None               #    aau
+    RouteData       :Optional [list[dict[str, Any]]] = None    #    aa{sv}
+    Nameservers     :Optional [list[str]] = None               #    au
+    NameserverData  :Optional [list[dict[str, Any]]] = None    #    aa{sv}
+    Domains         :Optional [list[str]] = None               #    as
+    Searches        :Optional [list[str]] = None               #    as
+    DnsOptions      :Optional [list[str]] = None               #    as
+    DnsPriority     :Optional [int] = None                     #    i
+    WinsServers     :Optional [list[str]] = None               #    au
+    WinsServerData  :Optional [list[str]] = None               #    as
+    
 
 class IP4Config(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.IP4Config'
     
-    def __init__(self, object_path='/org/freedesktop/NetworkManager/IP4Config/1',
-                 bus_name='org.freedesktop.NetworkManager'):
+    def __init__(self, object_path, bus_name='org.freedesktop.NetworkManager'):
         
         self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
 

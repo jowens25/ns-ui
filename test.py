@@ -51,16 +51,20 @@ def from_dict(obj, instance, data: dict[str, tuple[str, Any]]) -> Self:
 
 async def help_me():
     conn = await open_dbus_connection(bus="SYSTEM")
-    router = DBusRouter(conn)
-    nm = Proxy(NetworkManager(), router)
-    device_paths = await nm.GetDevices()
     
-    for path in device_paths[0]:
-
-
-
-        deviceProxy = Proxy(Device(path), router) # holds methods
-        properties = await deviceProxy.get_all() # gets all props
+    router = DBusRouter(conn)
+    
+    
+    
+    #nm = Proxy(NetworkManager(), router)
+    #device_paths = await nm.GetDevices()
+    #
+    #for path in device_paths[0]:
+#
+#
+#
+    #    deviceProxy = Proxy(Device(path), router) # holds methods
+    #    properties = await deviceProxy.get_all() # gets all props
 
 
 

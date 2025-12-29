@@ -6,7 +6,46 @@ Object path: /org/freedesktop/NetworkManager
 Bus name   : org.freedesktop.NetworkManager
 """
 
-from jeepney.wrappers import MessageGenerator, new_method_call
+from typing import Any, Optional
+from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
+from dataclasses import dataclass, fields
+
+@dataclass
+class NetworkManagerProperties:
+    def __init__(self, data):
+        for f in fields(self):
+            if f.name in data:
+                prop_data = data[f.name]
+                if isinstance(prop_data, tuple) and len(prop_data) == 2:
+                    setattr(self, f.name, prop_data[1])
+                else:
+                    setattr(self, f.name, prop_data)
+    Devices                     : Optional [list[str]] = None #readable   ao
+    AllDevices                  : Optional [list[str]] = None #readable   ao
+    Checkpoints                 : Optional [list[str]] = None #readable   ao
+    NetworkingEnabled           : Optional [bool] = None #readable   b
+    WirelessEnabled             : Optional [bool] = None #readwrite  b
+    WirelessHardwareEnabled     : Optional [bool] = None #readable   b
+    WwanEnabled                 : Optional [bool] = None #readwrite  b
+    WwanHardwareEnabled         : Optional [bool] = None #readable   b
+    WimaxEnabled                : Optional [bool] = None #readwrite  b
+    WimaxHardwareEnabled        : Optional [bool] = None #readable   b
+    RadioFlags                  : Optional [int] = None #readable   u
+    ActiveConnections           : Optional [list[str]] = None #readable   ao
+    PrimaryConnection           : Optional [str] = None #readable   o
+    PrimaryConnectionType       : Optional [str] = None #readable   s
+    Metered                     : Optional [int] = None #readable   u
+    ActivatingConnection        : Optional [str] = None #readable   o
+    Startup                     : Optional [bool] = None #readable   b
+    Version                     : Optional [str] = None #readable   s
+    VersionInfo                 : Optional [list[int]] = None #readable   au
+    Capabilities                : Optional [list[int]] = None #readable   au
+    State                       : Optional [int] = None #readable   u
+    Connectivity                : Optional [int] = None #readable   u
+    ConnectivityCheckAvailable  : Optional [bool] = None #readable   b
+    ConnectivityCheckEnabled    : Optional [bool] = None #readwrite  b
+    ConnectivityCheckUri        : Optional [str] = None #readable   s
+    GlobalDnsConfiguration      : Optional [dict[str, Any]] = None #readwrite  a{sv}
 
 
 class NetworkManager(MessageGenerator):
@@ -14,6 +53,9 @@ class NetworkManager(MessageGenerator):
 
     def __init__(self, object_path='/org/freedesktop/NetworkManager',
                  bus_name='org.freedesktop.NetworkManager'):
+    
+        self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')    
+    
         super().__init__(object_path=object_path, bus_name=bus_name)
 
     def Reload(self, flags):
@@ -85,3 +127,21 @@ class NetworkManager(MessageGenerator):
     def CheckpointAdjustRollbackTimeout(self, checkpoint, add_timeout):
         return new_method_call(self, 'CheckpointAdjustRollbackTimeout', 'ou',
                                (checkpoint, add_timeout))
+        
+######################################################################
+    
+    def get(self, name):
+        """Get the value of the property *name*"""
+        return new_method_call(self.props_if, 'Get', 'ss',
+                   (self.interface, name))
+
+    def get_all(self):
+        """Get all property values for this interface"""
+        return new_method_call(self.props_if, 'GetAll', 's',
+                               (self.interface,))
+
+
+    def set(self, name, signature, value):
+        """Set the property *name* to *value* (with appropriate signature)"""
+        return new_method_call(self.props_if, 'Set', 'ssv',
+                   (self.interface, name, (signature, value)))

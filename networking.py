@@ -1,13 +1,19 @@
+from dataclasses import asdict
+from pprint import pprint
 from nicegui import ui, app
-from org_freedesktop_NetworkManager_IP6Config import IP6Config
+from org_freedesktop_NetworkManager_IP6Config import IP6Config, IP6ConfigProperties
 from theme import init_colors
 from rest_api import APIClient
 from dbus_next.aio import MessageBus
 from dbus_next import BusType
-from org_freedesktop_NetworkManager import NetworkManager
+from org_freedesktop_NetworkManager import NetworkManager, NetworkManagerProperties
 from org_freedesktop_NetworkManager_Device import Device, DeviceProperties
 from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigProperties
 from org_freedesktop_NetworkManager import NetworkManager
+from org_freedesktop_NetworkManager_Settings_Connection import Connection, ConnectionProperties
+from org_freedesktop_NetworkManager_Settings import Settings, SettingsProperties
+
+from org_freedesktop_NetworkManager_ActiveConnection import ActiveConnection, ActiveConnectionProperties
 from jeepney.wrappers import Properties
 from jeepney.io.asyncio import Proxy
 
@@ -16,77 +22,40 @@ from dbus import dbus
 
 
 
-async def GetDevices() -> list[str]:
-    nm_prox = Proxy(NetworkManager(), dbus.Router)
-    return (await nm_prox.GetDevices())[0]
+async def GetDevices(nm: Proxy) -> list[str]:
+    return (await nm.GetDevices())[0]
 
 
-async def GetInterface(device_path: str) -> str:
-    device = Proxy(Device(device_path), dbus.Router)
+async def GetInterface(device :Proxy) -> str:
     return (await device.get("Interface"))[0][1]
-
-#async def GetIp4Config(device)
-
-
-async def GetDeviceProperties(device_path :str) -> DeviceProperties:
-    devicePropProx = Proxy(Properties(Device(device_path)), dbus.Router)
-    data = (await devicePropProx.get_all())[0]
-
-    deviceProps = DeviceProperties.from_dict(data)
-
-    return deviceProps
-
-async def GetIp4Config(config_path :str) -> IP4Config:
-    configPropProx = Proxy(Properties(IP4Config(config_path)), dbus.Router)
-    #data = (await devicePropProx.get_all())[0]
-
-#async def GetInterfaceAndAddressData() -> list[str]:
-#
-#    row = []
-#
-#    nm = Proxy(NetworkManager(), dbus.Router)
-#
-#    for i in GetInterfaces():
-#        device_path = (await nm.GetDeviceByIpIface(i))[0]
-#        device_prox = Proxy(Properties(Device(device_path)), dbus.Router)
-#
-#        cfg_path = (await device_prox.get("Ip4Config"))[0][1]
-#
-#        if cfg_path != "/":
-#
-#            config_proxy = Proxy(Properties(IP4Config(cfg_path)), dbus.Router)
-#
-#            addressData = (await config_proxy.get("AddressData"))[0][1]
-#
-#            
-#
-#        row.append({"name": i, "address": f"{addressData.get(address)}/{}"})
 
 
 def formatAddress(addressData: dict)-> list[str]:
     addresses = []
-    
     for address in addressData:
         addr = address.get("address")[1]
         prefix = address.get("prefix")[1]
         addresses.append(f"{addr}/{prefix}")
     return addresses
 
-def formatInterfaceRow(interface, addresses: list[str]):
-    return {"name": interface, "addresses": formatAddressString(addresses)}
-
-
 def formatAddressString(addresses: list[str]) -> str:
     return ', '.join(addresses) if addresses else ' '
 
-NM_DEVICE_INTERFACE_FLAG_NONE= 0 # an alias for numeric zero, no flags set. 
-NM_DEVICE_INTERFACE_FLAG_UP= 0x1 # the interface is enabled from the administrative point of view. Corresponds to kernel IFF_UP. 
-NM_DEVICE_INTERFACE_FLAG_LOWER_UP= 0x2 # the physical link is up. Corresponds to kernel IFF_LOWER_UP. 
-NM_DEVICE_INTERFACE_FLAG_PROMISC= 0x4 # receive all packets. Corresponds to kernel IFF_PROMISC. Since: 1.32. 
-NM_DEVICE_INTERFACE_FLAG_CARRIER= 0x10000 # the interface has carrier. In most cases this is equal to the value of @NM_DEVICE_INTERFACE_FLAG_LOWER_UP. However some devices have a non-standard carrier detection mechanism. 
-NM_DEVICE_INTERFACE_FLAG_LLDP_CLIENT_ENABLED= 0x20000 # the flag to indicate device LLDP status. Since: 1.32.
+def formatInterfaceRow(interface :str, addresses: str):
+    return {"name": interface, "addresses": addresses}
+
+
+
+
+
 
 def processInterfaceFlags(flags: int) -> str:
+    NM_DEVICE_INTERFACE_FLAG_NONE= 0 # an alias for numeric zero, no flags set. 
+    NM_DEVICE_INTERFACE_FLAG_UP= 0x1 # the interface is enabled from the administrative point of view. Corresponds to kernel IFF_UP. 
+    NM_DEVICE_INTERFACE_FLAG_LOWER_UP= 0x2 # the physical link is up. Corresponds to kernel IFF_LOWER_UP. 
+    NM_DEVICE_INTERFACE_FLAG_PROMISC= 0x4 # receive all packets. Corresponds to kernel IFF_PROMISC. Since: 1.32. 
+    NM_DEVICE_INTERFACE_FLAG_CARRIER= 0x10000 # the interface has carrier. In most cases this is equal to the value of @NM_DEVICE_INTERFACE_FLAG_LOWER_UP. However some devices have a non-standard carrier detection mechanism. 
+    NM_DEVICE_INTERFACE_FLAG_LLDP_CLIENT_ENABLED= 0x20000 # the flag to indicate device LLDP status. Since: 1.32.
     """Convert interface flags to detailed status string"""
     
     if flags == 0:
@@ -115,35 +84,98 @@ def processInterfaceFlags(flags: int) -> str:
     return " | ".join(status)
 
 
-async def GetAddressString(ip4configPath, ip6configPath)-> str:
+def combineAddresses(ip4configProps: IP4ConfigProperties, ip6configProps: IP6ConfigProperties) -> str:
+    
     addresses = []
-    if len(ip4configPath) > 1:
-        ip4config = Proxy(IP4Config(ip4configPath), dbus.Router)
-        ip4addresses = formatAddress((await ip4config.get("AddressData"))[0][1])
-        addresses.extend(ip4addresses)
-    if len(ip6configPath) > 1:
-        ip6config = Proxy(IP6Config(ip6configPath), dbus.Router)
-        ip6addresses = formatAddress((await ip6config.get("AddressData"))[0][1])
-        addresses.extend(ip6addresses)
-
+    addresses.extend(formatAddress(ip4configProps.AddressData))
+    addresses.extend(formatAddress(ip6configProps.AddressData))
     return formatAddressString(addresses)
 
 
 async def GetInterfacesAndAddresses() -> list:
 
     rows = []
-
-    for devicePath in await GetDevices():
     
-        device = Proxy(Device(devicePath), dbus.Router)
-        interface = (await device.get("Interface"))[0][1]
-        ip4configPath = (await device.get("Ip4Config"))[0][1]
-        ip6configPath = (await device.get("Ip6Config"))[0][1]
+    nm = Proxy(NetworkManager(), dbus.Router)
+    nmProps = NetworkManagerProperties((await nm.get_all())[0])
+    
+    #settings = Proxy(Settings(), dbus.Router)
+    #settingsProperties = SettingsProperties((await settings.get_all())[0])
+    #
+    #pprint(asdict(settingsProperties))
+    
+    for devPath in nmProps.Devices:
+    
+        dev = Proxy(Device(devPath), dbus.Router)
+        devProp = DeviceProperties((await dev.get_all())[0])
+        
+        if devProp.Ip6Config and devProp.Ip4Config:
+        
+            ip4config = Proxy(IP4Config(devProp.Ip4Config), dbus.Router)
+            ip4configProps = IP4ConfigProperties((await ip4config.get_all())[0])
 
+            ip6config = Proxy(IP6Config(devProp.Ip6Config), dbus.Router)
+            ip6configProps = IP6ConfigProperties((await ip6config.get_all())[0])
 
-        addresses = await GetAddressString(ip4configPath, ip6configPath)
+            rows.append({'name': devProp.Interface,'addresses': combineAddresses(ip4configProps, ip6configProps)})
+        
+        #if "enp" in deviceProperties.Udi:
+        
+        #for settingsPath in deviceProperties.AvailableConnections:
+        #    connection = Proxy(Connection(settingsPath), dbus.Router)
+            #pprint(asdict( ConnectionProperties((await connection.get_all())[0]) ))
+            #deviceProperties = SettingsProperties((await settings.get_all())[0])
 
-        rows.append(formatInterfaceRow(interface, addresses))
+            
+            #settingsProperties = SettingsProperties((await settings.get_all())[0])
+            
+                #pprint(asdict(settingsProperties))
+#
+        #ip4config = Proxy(IP4Config(), dbus.Router)
+        #ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
+#
+        #ip6config = Proxy(IP6Config(), dbus.Router)
+        #ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
+#
+        #connection = Proxy(Connection(), dbus.Router)
+        #connectionProperties = ConnectionProperties((await connection.get_all())[0])
+#
+        #activeConnection = Proxy(ActiveConnection(), dbus.Router)
+        #activeConnectionProperties = ActiveConnectionProperties((await activeConnection.get_all())[0])
+
+    
+        #pprint(asdict(deviceProperties))
+
+    #activeConnection = Proxy(ActiveConnection(networkManagerProperties.PrimaryConnection), dbus.Router)
+    #
+    #settings = ActiveConnectionProperties((await activeConnection.get_all())[0])
+    #
+    #pprint(settings)
+    
+    #connectionProperties = ConnectionProperties((await connection.get_all())[0])
+    
+    #pprint(asdict(connectionProperties))
+    #connectionPaths = (await nm.ActiveConnections())[0]
+    
+    #print(connectionPaths)
+
+    #for devicePath in await GetDevices(nm):
+    
+        #device = Proxy(Device(devicePath), dbus.Router)
+        #
+        #deviceProperties = DeviceProperties((await device.get_all())[0])
+        #
+        #ip4config = Proxy(IP4Config(deviceProperties.Ip4Config))
+        #
+        #ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
+#
+        #ip6config = Proxy(IP6Config(deviceProperties.Ip6Config))
+        #
+        #ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
+
+        #addresses = await GetAddressString(ip4configPath, ip6configPath)
+#
+        #rows.append(formatInterfaceRow(interface, addresses))
 
     return rows
 

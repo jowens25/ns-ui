@@ -6,14 +6,36 @@ Object path: /org/freedesktop/NetworkManager/Settings
 Bus name   : org.freedesktop.NetworkManager
 """
 
-from jeepney.wrappers import MessageGenerator, new_method_call
+from dataclasses import dataclass, fields
+from typing import Optional
+from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
+
+@dataclass
+class SettingsProperties:
+    
+    def __init__(self, data):
+        for f in fields(self):
+            if f.name in data:
+                prop_data = data[f.name]
+                if isinstance(prop_data, tuple) and len(prop_data) == 2:
+                    setattr(self, f.name, prop_data[1])
+                else:
+                    setattr(self, f.name, prop_data)
+                    
+    Connections  : Optional [list[str]] = None #    ao
+    Hostname     : Optional [str] = None #    s
+    CanModify    : Optional [bool] = None #    b
+    VersionId    : Optional [str] = None #    t
+    
 
 
 class Settings(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.Settings'
 
-    def __init__(self, object_path='/org/freedesktop/NetworkManager/Settings',
-                 bus_name='org.freedesktop.NetworkManager'):
+    def __init__(self, object_path='/org/freedesktop/NetworkManager/Settings', bus_name='org.freedesktop.NetworkManager'):
+            
+        self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
+
         super().__init__(object_path=object_path, bus_name=bus_name)
 
     def ListConnections(self):
@@ -45,3 +67,20 @@ class Settings(MessageGenerator):
     def SaveHostname(self, hostname):
         return new_method_call(self, 'SaveHostname', 's',
                                (hostname,))
+######################################################################
+    
+    def get(self, name):
+        """Get the value of the property *name*"""
+        return new_method_call(self.props_if, 'Get', 'ss',
+                   (self.interface, name))
+
+    def get_all(self):
+        """Get all property values for this interface"""
+        return new_method_call(self.props_if, 'GetAll', 's',
+                               (self.interface,))
+
+
+    def set(self, name, signature, value):
+        """Set the property *name* to *value* (with appropriate signature)"""
+        return new_method_call(self.props_if, 'Set', 'ssv',
+                   (self.interface, name, (signature, value)))

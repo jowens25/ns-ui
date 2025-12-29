@@ -22,6 +22,15 @@ class Statistics(MessageGenerator):
 
 @dataclass
 class DeviceProperties:
+    def __init__(self, data):
+        for f in fields(self):
+            if f.name in data:
+                prop_data = data[f.name]
+                if isinstance(prop_data, tuple) and len(prop_data) == 2:
+                    setattr(self, f.name, prop_data[1])
+                else:
+                    setattr(self, f.name, prop_data)
+    
     Udi                   : Optional [str] = None        #    s
     Path                  : Optional [str] = None        #    s
     Interface             : Optional [str] = None        #    s
@@ -55,22 +64,14 @@ class DeviceProperties:
     HwAddress             : Optional [str] = None        #    s
     Ports                 : Optional [list[str]] = None  #    ao
 
-    def load(self,  data):
-        '''Get all property values and store in instance. Note the 0th index'''
-        for f in fields(self):
-            if f.name in data:
-                prop_data = data[f.name]
-                if isinstance(prop_data, tuple) and len(prop_data) == 2:
-                    setattr(self, f.name, prop_data[1])
-                else:
-                    setattr(self, f.name, prop_data)
+
+
 
 class Device(MessageGenerator):
     
     interface = 'org.freedesktop.NetworkManager.Device'
 
-    def __init__(self, object_path='/org/freedesktop/NetworkManager/Devices/2',
-                 bus_name='org.freedesktop.NetworkManager'):
+    def __init__(self, object_path, bus_name='org.freedesktop.NetworkManager'):
         
         self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
 

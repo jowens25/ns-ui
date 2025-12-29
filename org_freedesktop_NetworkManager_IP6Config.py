@@ -6,14 +6,40 @@ Object path: /org/freedesktop/NetworkManager/IP6Config/2
 Bus name   : org.freedesktop.NetworkManager
 """
 
+from dataclasses import dataclass, fields
+from typing import Any, Optional
 from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
+
+
+
+@dataclass
+class IP6ConfigProperties:
+    def __init__(self, data):
+        for f in fields(self):
+            if f.name in data:
+                prop_data = data[f.name]
+                if isinstance(prop_data, tuple) and len(prop_data) == 2:
+                    setattr(self, f.name, prop_data[1])
+                else:
+                    setattr(self, f.name, prop_data)
+                        
+    Addresses    : Optional [list[str]] = None              #   a(ayuay)
+    AddressData  : Optional [list[dict[str, Any]]] = None   #   aa{sv}
+    Gateway      : Optional [str] = None                    #   s
+    Routes       : Optional [list[str]] = None              #   a(ayuayu)
+    RouteData    : Optional [list[dict[str, Any]]] = None   #   aa{sv}
+    Nameservers  : Optional [list] = None                   #   aay
+    Domains      : Optional [list[str]] = None              #   as
+    Searches     : Optional [list[str]] = None              #   as
+    DnsOptions   : Optional [list[str]] = None              #   as
+    DnsPriority  : Optional [int] = None                    #   i           
+    
 
 
 class IP6Config(MessageGenerator):
     interface = 'org.freedesktop.NetworkManager.IP6Config'
 
-    def __init__(self, object_path='/org/freedesktop/NetworkManager/IP6Config/2',
-                 bus_name='org.freedesktop.NetworkManager'):
+    def __init__(self, object_path, bus_name='org.freedesktop.NetworkManager'):
         
         self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
 
