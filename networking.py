@@ -1,4 +1,5 @@
 from nicegui import ui, app
+from org_freedesktop_NetworkManager_IP6Config import IP6Config
 from theme import init_colors
 from rest_api import APIClient
 from dbus_next.aio import MessageBus
@@ -20,6 +21,13 @@ async def GetDevices() -> list[str]:
     return (await nm_prox.GetDevices())[0]
 
 
+async def GetInterface(device_path: str) -> str:
+    device = Proxy(Device(device_path), dbus.Router)
+    return (await device.get("Interface"))[0][1]
+
+#async def GetIp4Config(device)
+
+
 async def GetDeviceProperties(device_path :str) -> DeviceProperties:
     devicePropProx = Proxy(Properties(Device(device_path)), dbus.Router)
     data = (await devicePropProx.get_all())[0]
@@ -30,7 +38,7 @@ async def GetDeviceProperties(device_path :str) -> DeviceProperties:
 
 async def GetIp4Config(config_path :str) -> IP4Config:
     configPropProx = Proxy(Properties(IP4Config(config_path)), dbus.Router)
-    data = (await devicePropProx.get_all())[0]
+    #data = (await devicePropProx.get_all())[0]
 
 #async def GetInterfaceAndAddressData() -> list[str]:
 #
@@ -55,20 +63,88 @@ async def GetIp4Config(config_path :str) -> IP4Config:
 #        row.append({"name": i, "address": f"{addressData.get(address)}/{}"})
 
 
-async def load_network_info() -> list:
+def formatAddress(addressData: dict)-> list[str]:
+    addresses = []
+    
+    for address in addressData:
+        addr = address.get("address")[1]
+        prefix = address.get("prefix")[1]
+        addresses.append(f"{addr}/{prefix}")
+    return addresses
 
-    devices = []
-    for d in await GetDevices():
-        device = await GetDeviceProperties(d)
-        devices.append(device)
+def formatInterfaceRow(interface, addresses: list[str]):
+    return {"name": interface, "addresses": formatAddressString(addresses)}
 
 
+def formatAddressString(addresses: list[str]) -> str:
+    return ', '.join(addresses) if addresses else ' '
 
+NM_DEVICE_INTERFACE_FLAG_NONE= 0 # an alias for numeric zero, no flags set. 
+NM_DEVICE_INTERFACE_FLAG_UP= 0x1 # the interface is enabled from the administrative point of view. Corresponds to kernel IFF_UP. 
+NM_DEVICE_INTERFACE_FLAG_LOWER_UP= 0x2 # the physical link is up. Corresponds to kernel IFF_LOWER_UP. 
+NM_DEVICE_INTERFACE_FLAG_PROMISC= 0x4 # receive all packets. Corresponds to kernel IFF_PROMISC. Since: 1.32. 
+NM_DEVICE_INTERFACE_FLAG_CARRIER= 0x10000 # the interface has carrier. In most cases this is equal to the value of @NM_DEVICE_INTERFACE_FLAG_LOWER_UP. However some devices have a non-standard carrier detection mechanism. 
+NM_DEVICE_INTERFACE_FLAG_LLDP_CLIENT_ENABLED= 0x20000 # the flag to indicate device LLDP status. Since: 1.32.
+
+def processInterfaceFlags(flags: int) -> str:
+    """Convert interface flags to detailed status string"""
+    
+    if flags == 0:
+        return "Interface disabled (no flags set)"
+    
+    status = []
+    
+    if flags & NM_DEVICE_INTERFACE_FLAG_UP:
+        status.append("administratively up")
+    
+    if flags & NM_DEVICE_INTERFACE_FLAG_LOWER_UP:
+        status.append("physical link up")
+    
+    if flags & NM_DEVICE_INTERFACE_FLAG_CARRIER:
+        status.append("carrier detected")
+    
+    if flags & NM_DEVICE_INTERFACE_FLAG_PROMISC:
+        status.append("promiscuous mode")
+    
+    if flags & NM_DEVICE_INTERFACE_FLAG_LLDP_CLIENT_ENABLED:
+        status.append("LLDP enabled")
+    
+    if not status:
+        return f"Unknown flags: 0x{flags:x}"
+    
+    return " | ".join(status)
+
+
+async def GetAddressString(ip4configPath, ip6configPath)-> str:
+    addresses = []
+    if len(ip4configPath) > 1:
+        ip4config = Proxy(IP4Config(ip4configPath), dbus.Router)
+        ip4addresses = formatAddress((await ip4config.get("AddressData"))[0][1])
+        addresses.extend(ip4addresses)
+    if len(ip6configPath) > 1:
+        ip6config = Proxy(IP6Config(ip6configPath), dbus.Router)
+        ip6addresses = formatAddress((await ip6config.get("AddressData"))[0][1])
+        addresses.extend(ip6addresses)
+
+    return formatAddressString(addresses)
+
+
+async def GetInterfacesAndAddresses() -> list:
 
     rows = []
-    interfaces = await GetInterfaces()
-    for i in interfaces:
-        rows.append({"name": i})
+
+    for devicePath in await GetDevices():
+    
+        device = Proxy(Device(devicePath), dbus.Router)
+        interface = (await device.get("Interface"))[0][1]
+        ip4configPath = (await device.get("Ip4Config"))[0][1]
+        ip6configPath = (await device.get("Ip6Config"))[0][1]
+
+
+        addresses = await GetAddressString(ip4configPath, ip6configPath)
+
+        rows.append(formatInterfaceRow(interface, addresses))
+
     return rows
 
 
@@ -87,18 +163,14 @@ async def network_page():
 
     with ui.column():
 
+        interfaces = await GetInterfacesAndAddresses()
 
-
-        interfaces = await load_network_info()
-
-        #res = await nm.getNetworkManger()
-        #print(res)
         ui.label("Networking").classes("text-h5")
 
         interface_table = ui.table(
             title="Interfaces",
-            #rows=interfaces,
-            rows=[{'d':'v'}],
+            rows=interfaces,
+            #rows=[{'d':'v'}],
             column_defaults={
                 "align": "left",
                 "headerClasses": "uppercase text-primary",
@@ -124,107 +196,42 @@ async def interface_page(interface_name: str):
         ui.label('>')
         ui.label(interface_name)
 
-
-
         await interface_card(interface_name)
 
 
 
 async def interface_card(iface :str ):
 
-    '''
+    nm_prox = Proxy(NetworkManager(), dbus.Router)
+    devicePath = (await nm_prox.GetDeviceByIpIface(iface))[0]
+    device = Proxy(Device(devicePath), dbus.Router)
 
-    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager")
-    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager", nm.introspection)
-    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager')
-    device = await nm.interface.call_get_device_by_ip_iface(iface)
+    ip4configPath = (await device.get("Ip4Config"))[0][1]
+    ip6configPath = (await device.get("Ip6Config"))[0][1]
 
+    hwaddr = (await device.get("HwAddress"))[0][1]
 
-
-
-
-    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', device)
-    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', device, nm.introspection)
-    #nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.Device')
-    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
-
-
-    hwaddr = await nm.properties_interface.call_get(        
-            "org.freedesktop.NetworkManager.Device.Wired",   
-            "HwAddress")  
-
-
-    hwaddr = await nm.properties_interface.call_get(        
-            "org.freedesktop.NetworkManager.Device.Wired",   
-            "HwAddress")  
-    
-    carrier = await nm.properties_interface.call_get(        
-            "org.freedesktop.NetworkManager.Device.Wired",   
-            "Carrier")  
-    print((carrier.value))
-    speed = await nm.properties_interface.call_get(        
-            "org.freedesktop.NetworkManager.Device.Wired",   
-            "Speed")  
-   
-    print(speed)
-    driver = await nm.properties_interface.call_get(        
-            "org.freedesktop.NetworkManager.Device",   
-            "Driver")  
+    carrier = processInterfaceFlags((await device.get("InterfaceFlags"))[0][1])
     
 
-    id = await nm.properties_interface.call_get(        
-            "org.freedesktop.NetworkManager.Device",   
-            "PhysicalPortId")  
+    speed = 16000
 
-    print(driver.value)
-
-    print(id.value)
+    driver = (await device.get("Driver"))[0][1]
 
 
-    
 
 
-    address_data = []
-    ipv4_conf = await nm.properties_interface.call_get(        
-        "org.freedesktop.NetworkManager.Device",   
-        "Ip4Config")    
-    
-    ipv6_conf = await nm.properties_interface.call_get(        
-        "org.freedesktop.NetworkManager.Device",   
-        "Ip6Config")   
-    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', ipv4_conf.value)
-    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', ipv4_conf.value, nm.introspection)
-    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.IP4Config')
-    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
-    ip4_address_data = await nm.properties_interface.call_get(        
-        "org.freedesktop.NetworkManager.IP4Config",   
-        "AddressData")    
-    
-    address_data.extend(ip4_address_data.value)
-    nm.introspection = await nm.bus.introspect('org.freedesktop.NetworkManager', ipv6_conf.value)
-    nm.object = nm.bus.get_proxy_object('org.freedesktop.NetworkManager', ipv6_conf.value, nm.introspection)
-    nm.interface = nm.object.get_interface('org.freedesktop.NetworkManager.IP6Config')
-    nm.properties_interface = nm.object.get_interface('org.freedesktop.DBus.Properties')
-    ip6_address_data = await nm.properties_interface.call_get(        
-        "org.freedesktop.NetworkManager.IP6Config",   
-        "AddressData")    
-    
-    address_data.extend(ip6_address_data.value)
-    
-    address_string = ", ".join(
-        f"{item['address'].value}/{item['prefix'].value}" 
-        for item in address_data
-    )
+    ip4addressString = await GetAddressString(ip4configPath, [])
+    ip6addressString = await GetAddressString([], ip6configPath)
 
-    
 
 
     with ui.card().classes("w-full"):
         # Header row
         with ui.row().classes("w-full items-center justify-between"):
             ui.label(iface).classes("text-h6")
-            ui.label(f"{driver.value}").classes("text-h6")
-            ui.label(f"{hwaddr.value}").classes("text-h6")
+            ui.label(f"{driver}").classes("text-h6")
+            ui.label(f"{hwaddr}").classes("text-h6")
             ui.switch("Connected").props("disable")
 
         ui.separator()
@@ -241,18 +248,20 @@ async def interface_card(iface :str ):
                ui.label("MTU").classes("font-bold")
     
             with ui.column().classes("flex-1 gap-4"):  # Flexible width for values
-                ui.label(address_string)
+                ui.label(ip4addressString + ", "+ ip6addressString)
 
-                ui.label(f"{speed.value/1000} Gbps")
+                ui.label(f"{speed/1000} Gbps")
+
+                ui.label(f"{carrier}")
                
                 ui.checkbox('Connect automatically').props("flat color=accent align=left").classes("w-full").props("dense")
 
                 with ui.row():
-                    ui.label(address_string), ui.link("edit")
+                    ui.label(ip4addressString), ui.link("edit")
 
                 with ui.row():
-                    ui.label(address_string), ui.link("edit")
+                    ui.label(ip4addressString), ui.link("edit")
                 
                 with ui.row():
-                    ui.label(address_string), ui.link("edit")
-         '''
+                    ui.label(ip6addressString), ui.link("edit")
+

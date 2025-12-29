@@ -8,8 +8,7 @@ Bus name   : org.freedesktop.NetworkManager
 
 from dataclasses import dataclass, fields
 from typing import Any, Optional, Self
-from jeepney.wrappers import MessageGenerator, new_method_call
-from jeepney.wrappers import Properties
+from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
 
 
 @dataclass
@@ -48,7 +47,26 @@ class IP4Config(MessageGenerator):
     
     def __init__(self, object_path='/org/freedesktop/NetworkManager/IP4Config/1',
                  bus_name='org.freedesktop.NetworkManager'):
+        
+        self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
+
         super().__init__(object_path=object_path, bus_name=bus_name)
         
 
+######################################################################
+    
+    def get(self, name):
+        """Get the value of the property *name*"""
+        return new_method_call(self.props_if, 'Get', 'ss',
+                   (self.interface, name))
 
+    def get_all(self):
+        """Get all property values for this interface"""
+        return new_method_call(self.props_if, 'GetAll', 's',
+                               (self.interface,))
+
+
+    def set(self, name, signature, value):
+        """Set the property *name* to *value* (with appropriate signature)"""
+        return new_method_call(self.props_if, 'Set', 'ssv',
+                   (self.interface, name, (signature, value)))

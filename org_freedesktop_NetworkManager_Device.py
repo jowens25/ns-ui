@@ -9,9 +9,8 @@ Bus name   : org.freedesktop.NetworkManager
 
 from dataclasses import dataclass, fields
 from typing import Any, Optional
-from jeepney.wrappers import MessageGenerator, new_method_call
+from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
 
-from jeepney.wrappers import DBusAddress
 
 
 class Statistics(MessageGenerator):
@@ -74,8 +73,6 @@ class Device(MessageGenerator):
                  bus_name='org.freedesktop.NetworkManager'):
         
         self.props_if = DBusAddress(object_path, bus_name=bus_name, interface='org.freedesktop.DBus.Properties')
-
-        self.props = DeviceProperties()
 
         super().__init__(object_path=object_path, bus_name=bus_name)
 
