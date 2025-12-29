@@ -101,5 +101,5 @@ async def accounts_page():
 
     ui.label("User Configuration").classes("text-h5")
 
-    table("Groups", GetCombinedDict(), "Name", add_group_dialog(), "Name,Id,NumLocalUsers,LocalUsers")  # Only show these
+    #table("Groups", GetCombinedDict(), "Name", add_group_dialog(), "Name,Id,NumLocalUsers,LocalUsers")  # Only show these
     table("Groups", GetAccountsDict(), "Name", add_group_dialog(), "Name,PrimaryId,SecondaryId,Info,Home,Shell")  # Only show these

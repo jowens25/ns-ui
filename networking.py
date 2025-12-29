@@ -160,6 +160,12 @@ async def network_page():
                 </a>
             </q-td>
         ''')
+        
+        interface_table.add_slot('body-cell-addresses', '''
+            <q-td :props="props" class="font-bold text-sm">
+                {{ props.value }}
+            </q-td>
+        ''')
 
 
 async def interface_page(interface_name: str):
@@ -177,32 +183,30 @@ async def interface_card(iface :str ):
     
     networkManager = Proxy(NetworkManager(), dbus.Router)
     networkManagerProperties = NetworkManagerProperties((await networkManager.get_all())[0])
-    
     devicePath = (await networkManager.GetDeviceByIpIface(iface))[0]
-    device = Proxy(Device(devicePath), dbus.Router)
-    print(devicePath)
-    wired = Proxy(Statistics(devicePath), dbus.Router)
-    print((await wired.get("TxBytes"))[0][1])
-    #await wired.set("RefreshRateMs", "u", 1000)
-
-    print((await wired.get("RefreshRateMs"))[0][1])
     
+    device = Proxy(Device(devicePath), dbus.Router)    
+    deviceProperties = DeviceProperties((await device.get_all())[0])
+    
+    ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
+    ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
+    
+    ip6config = Proxy(IP6Config(deviceProperties.Ip6Config), dbus.Router)
+    ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
 
     
-
-    ip4configPath = (await device.get("Ip4Config"))[0][1]
-    ip6configPath = (await device.get("Ip6Config"))[0][1]
-
-    hwaddr = (await device.get("HwAddress"))[0][1]
+    addresses = combineAddresses(ip4configProperties, ip6configProperties)
+    
+    
+    hwaddr = deviceProperties.HwAddress
 
     carrier = processInterfaceFlags((await device.get("InterfaceFlags"))[0][1])
     
+    wired = Proxy(Wired(devicePath), dbus.Router)
 
-
-    #speed = (await wired.get("Speed"))[0][1]
-    speed = 10
-
-    driver = (await device.get("Driver"))[0][1]
+    speed = (await wired.get("Speed"))[0][1]
+    
+    connectAutomatically = deviceProperties.Autoconnect
 
 
     #ip4addressString = await GetAddressString(ip4configPath, [])
@@ -214,7 +218,6 @@ async def interface_card(iface :str ):
         # Header row
         with ui.row().classes("w-full items-center justify-between"):
             ui.label(iface).classes("text-h6")
-            ui.label(f"{driver}").classes("text-h6")
             ui.label(f"{hwaddr}").classes("text-h6")
             ui.switch("Connected").props("disable")
 
@@ -232,7 +235,7 @@ async def interface_card(iface :str ):
                ui.label("MTU").classes("font-bold")
     
             with ui.column().classes("flex-1 gap-4"):  # Flexible width for values
-                #ui.label(ip4addressString + ", "+ ip6addressString)
+                ui.label(addresses)
 
                 ui.label(f"{speed/1000} Gbps")
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict
 import asyncio
 from asyncio import StreamWriter, StreamReader
 from typing import Optional, Required
+from nicegui import Event, app
 
 
 MODULES  = {
@@ -82,24 +83,39 @@ class PpsSlaveProps:
     
 pps = PpsSlaveProps()
 
-async def ListenSocket(term):
+
+SocketListenerEvent = Event()
+SocketListenerTask = None
+
+async def SocketListener():
+    print("SOCKET OPENED")
+    reader = None
+    writer = None
+    
     try: 
         reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
-
-    #print(f'Send: {message!r}')
-    #writer.write(message.encode())
-    #await writer.drain()
+        
         while True:
-
-            data = await reader.read(100)
-            term.write(data)
-            #print(f'Received: {data.decode()!r}')
-            
+            data = await reader.read(128)
+            if data:
+                # Emit event with the data - any subscribed UI can receive it
+                SocketListenerEvent.emit(data.decode('utf-8', errors='ignore'))
+            else:
+                # Socket closed by remote end
+                break
+                
+    except asyncio.CancelledError:
+        print("SOCKET LISTENER CANCELLED")
+        raise
+        
+    except Exception as e:
+        print(f"SOCKET ERROR: {e}")
+        
     finally:
-
-        #print('Close the connection')
-        writer.close()
-        await writer.wait_closed()
+        print("SOCKET LISTENER CLOSED")
+        if writer:
+            writer.close()
+            await writer.wait_closed()
 
     
 

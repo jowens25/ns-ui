@@ -1,7 +1,7 @@
 import asyncio
-from mysocket.mysocket import ListenSocket
+from mysocket.mysocket import SocketListener, SocketListenerEvent
 from rest_api import APIClient
-from nicegui import ui, app
+from nicegui import ui, app, background_tasks
 
 api = APIClient(base_url="http://localhost:5000")
 from dataclasses import dataclass, field
@@ -77,34 +77,26 @@ async def load_ntp_properties():
 
 async def ntp_page():
 
-
-    #await load_ntp_properties()
-
-
-    with ui.column():
-
+    with ui.column() as pageContainer:
         ui.label("NTP").classes("text-h5")
         with ui.card():
             terminal = ui.xterm({'cols': 84, 'rows': 16, 'convertEol': True})
-            asyncio.create_task(ListenSocket(terminal))
-
-
+            SocketListenerEvent.subscribe(lambda data: terminal.write(data))
+            
+             
+            
         with ui.card():
             ui.label(f"version: {ntp.version}")
             ui.select(label="Status", options=["Enabled", "Disabled"], value="Enabled").classes('w-full')
-        
         ui.select(label="Ip Mode", options=["IPv4", "IPv6"], value="IPv4").classes('w-full')
         ui.input(f"ip address: {ntp.ipaddress}")
         ui.input(f"mac address: {ntp.macaddress}")
-        
         with ui.card():
             ui.label(f"vlanstatus: {ntp.vlanstatus}")
             ui.label(f"vlanaddress: {ntp.vlanaddress}")
-            
         ui.label(f"unicastmode: {ntp.unicastmode}")
         ui.label(f"multicastmode: {ntp.multicastmode}")
         ui.label(f"broadcastmode: {ntp.broadcastmode}")
-        
         ui.label(f"precisionvalue: {ntp.precisionvalue}")
         ui.label(f"pollintervalvalue: {ntp.pollintervalvalue}")
         ui.label(f"stratumvalue: {ntp.stratumvalue}")
@@ -116,16 +108,13 @@ async def ntp_page():
         ui.label(f"leap59status: {ntp.leap59status}")
         ui.label(f"utcoffsetstatus: {ntp.utcoffsetstatus}")
         ui.label(f"utcoffsetvalue: {ntp.utcoffsetvalue}")
-        
         with ui.card():
             ui.label(f"requestsvalue: {ntp.requestsvalue}")
             ui.label(f"responsesvalue: {ntp.responsesvalue}")
             ui.label(f"requestsdroppedvalue: {ntp.requestsdroppedvalue}")
             ui.label(f"broadcastsvalue: {ntp.broadcastsvalue}")
             ui.label(f"clearcountersstatus: {ntp.clearcountersstatus}")
-
-
             ui.link("Edit")
-
             
+
 
