@@ -7,117 +7,50 @@ from typing import Optional, Required
 from nicegui import Event, app
 
 
-MODULES  = {
- 1:"ConfSlave", 
- 2:"ClkClock", 
- 3:"ClkSignalGenerator", 
- 4:"ClkSignalTimestamper", 
- 5:"IrigSlave", 
- 6:"IrigMaster", 
- 7:"PpsSlave", 
- 8:"PpsMaster", 
- 9:"PtpOrdinaryClock", 
-10:"PtpTransparentClock", 
-11:"PtpHybridClock", 
-12:"RedHsrPrp", 
-13:"RtcSlave", 
-14:"RtcMaster", 
-15:"TodSlave", 
-16:"TodMaster", 
-17:"TapSlave", 
-18:"DcfSlave", 
-19:"DcfMaster", 
-20:"RedTsn", 
-21:"TsnIic", 
-22:"NtpServer", 
-23:"NtpClient", 
-25:"ClkFrequencyGenerator", 
-26:"SynceNode", 
-27:"PpsClkToPps", 
-28:"PtpServer", 
-29:"PtpClient", 
-}
+socket_received = Event()
+socket_writer = None
+socket_reader = None
 
-
-@dataclass
-class NtpServerProps:
-    Index:                Optional[int] = 22
-    version:              Optional[int] = 0
-    status:               Optional[int] = 1
-    ipmode:               Optional[int] = 2
-    ipaddress:            Optional[int] = 3
-    macaddress:           Optional[int] = 4
-    vlanstatus:           Optional[int] = 5
-    vlanaddress:          Optional[int] = 6
-    unicastmode:          Optional[int] = 7
-    multicastmode:        Optional[int] = 8
-    broadcastmode:        Optional[int] = 9
-    precisionvalue:       Optional[int] = 10
-    pollintervalvalue:    Optional[int] = 11
-    stratumvalue:         Optional[int] = 12
-    referenceid:          Optional[int] = 13
-    smearingstatus:       Optional[int] = 14
-    leap61inprogress:     Optional[int] = 15
-    leap59inprogress:     Optional[int] = 16
-    leap61status:         Optional[int] = 17
-    leap59status:         Optional[int] = 18
-    utcoffsetstatus:      Optional[int] = 19
-    utcoffsetvalue:       Optional[int] = 20
-    requestsvalue:        Optional[int] = 21
-    responsesvalue:       Optional[int] = 22
-    requestsdroppedvalue: Optional[int] = 23
-    broadcastsvalue:      Optional[int] = 24
-    clearcountersstatus:  Optional[int] = 25
-
-ntp = NtpServerProps()
-
-@dataclass
-class PpsSlaveProps:
-    Index:           Optional[int] = 7
-    Version:         Optional[int] = 0
-    EnableStatus:    Optional[int] = 1
-    Polarity:        Optional[int] = 2
-    InputOkStatus:   Optional[int] = 3
-    PulsewidthValue: Optional[int] = 4
-    CableDelayValue: Optional[int] = 5
-    
-pps = PpsSlaveProps()
-
-
-SocketListenerEvent = Event()
-SocketListenerTask = None
-
-async def SocketListener():
-    print("SOCKET OPENED")
-    reader = None
-    writer = None
-    
+async def socket_setup():
+    global socket_reader, socket_writer
     try: 
-        reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
-        
-        while True:
-            data = await reader.read(128)
-            if data:
-                # Emit event with the data - any subscribed UI can receive it
-                SocketListenerEvent.emit(data.decode('utf-8', errors='ignore'))
-            else:
-                # Socket closed by remote end
-                break
+        socket_reader, socket_writer = await asyncio.open_unix_connection("/tmp/serial.sock")
+        print("SOCKET OPENED")
+        await read_socket()
                 
     except asyncio.CancelledError:
         print("SOCKET LISTENER CANCELLED")
         raise
         
-    except Exception as e:
-        print(f"SOCKET ERROR: {e}")
-        
     finally:
-        print("SOCKET LISTENER CLOSED")
-        if writer:
-            writer.close()
-            await writer.wait_closed()
+        socket_cleanup()
+        
+async def socket_cleanup():
+    global socket_writer
+    print("SOCKET LISTENER CLOSED")
+    if socket_writer:
+        socket_writer.close()
+        await socket_writer.wait_closed()
+        
+        
+async def read_socket():
+    global socket_reader
+    while True:
+        data = await socket_reader.read(128)
+        if data:
+            # Emit event with the data - any subscribed UI can receive it
+            socket_received.emit(data.decode('utf-8', errors='ignore'))
+        else:
+            # Socket closed by remote end
+            break
 
-    
+async def write_socket(command: str):
+    global socket_writer
+    command = command+"\r\n"
+    socket_writer.write(command.encode())
+    await socket_writer.drain()
+
+
 
 def ReadWriteSocket(command: str) -> str:
     command = command + "\r\n"

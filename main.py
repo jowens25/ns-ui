@@ -2,7 +2,7 @@
 import asyncio
 from nicegui import ui, app, background_tasks
 from lib.date import get_date
-from mysocket.mysocket import SocketListener, SocketListenerTask
+from mysocket.mysocket import socket_setup, socket_cleanup
 
 from networking import network_page, interface_page
 from accounts import accounts_page
@@ -134,11 +134,13 @@ async def root():
 @app.on_startup
 async def startup():
     await dbus.setup()
+    await socket_setup()
 
 
 @app.on_shutdown
 async def shutdown():
     await dbus.cleanup()
+    await socket_cleanup()
 
 
 if __name__ in {"__main__", "__mp_main__"}:

@@ -1,5 +1,5 @@
 import asyncio
-from mysocket.mysocket import SocketListener, SocketListenerEvent
+from mysocket.mysocket import socket_received, write_socket
 from rest_api import APIClient
 from nicegui import ui, app, background_tasks
 
@@ -79,11 +79,17 @@ async def ntp_page():
 
     with ui.column() as pageContainer:
         ui.label("NTP").classes("text-h5")
-        with ui.card():
-            terminal = ui.xterm({'cols': 84, 'rows': 16, 'convertEol': True})
-            SocketListenerEvent.subscribe(lambda data: terminal.write(data))
+        with ui.card().classes('size-120 resize overflow-auto'):
+            terminal = ui.xterm({'convertEol': True}).classes('size-full')
+            ui.element('q-resize-observer').on('resize', terminal.fit)
+            socket_received.subscribe(lambda data: terminal.write(data))
             
-             
+        with ui.card():
+            async def on_cmd():
+                await write_socket(cmd.value)
+            cmd = ui.input("command: ").on("keydown.enter", on_cmd)
+
+
             
         with ui.card():
             ui.label(f"version: {ntp.version}")

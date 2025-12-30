@@ -45,7 +45,10 @@ def formatInterfaceRow(interface :str, addresses: str):
     return {"name": interface, "addresses": addresses}
 
 
-
+def addressDataToString(addressData):
+    addresses = []
+    addresses.extend(formatAddress(addressData))
+    return formatAddressString(addresses)
 
 
 
@@ -179,7 +182,10 @@ async def interface_page(interface_name: str):
 
         await interface_card(interface_name)
 
-    
+
+
+
+        
 
 async def interface_card(iface :str ):
     
@@ -189,25 +195,16 @@ async def interface_card(iface :str ):
     
     device = Proxy(Device(devicePath), dbus.Router)    
     deviceProperties = DeviceProperties((await device.get_all())[0])
-
-
-    #appliedConnection = await device.GetAppliedConnection(0)
-    #pprint(appliedConnection)
-
-
-    #connection = Proxy(Connection(appliedConnection), dbus.Router)
-    #settings = (await connection.GetSettings())[0]
-#
-    #pprint(settings)
-
+    
+    speed = 0
+    if deviceProperties.DeviceType == 1: # ethernet
+        wired = Proxy(Wired(devicePath), dbus.Router)
+        speed = (await wired.get("Speed"))[0][1]
+    
 
     ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
     ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
-
-    pprint(ip4configProperties)
-
-
-
+    
     
     ip6config = Proxy(IP6Config(deviceProperties.Ip6Config), dbus.Router)
     ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
@@ -220,13 +217,7 @@ async def interface_card(iface :str ):
 
     carrier = processInterfaceFlags((await device.get("InterfaceFlags"))[0][1])
     
-    #wired = Proxy(Wired(devicePath), dbus.Router)
 
-    #speed = (await wired.get("Speed"))[0][1]
-    speed = 10
-    #connectAutomatically = deviceProperties.Autoconnect
-
-    #print(deviceProperties.State)
 
 
     with ui.card().classes("w-full"):
@@ -242,58 +233,197 @@ async def interface_card(iface :str ):
                     with ui.row():
                         ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
                         ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
-
                 result = await dialog
-
                 if result == "enable":
-                    #StartSnmpd()
                     await networkManager.ActivateConnection(deviceProperties.ActiveConnection, devicePath, "/")
-
                 if result == "disable":
                     await networkManager.DeactivateConnection(deviceProperties.ActiveConnection)
 
-
             ui.switch("Connected").on('click', lambda e: connection_sw_cb(e)).props("flat color=accent").bind_value_from(deviceProperties, "State", backward= lambda v: v==100)
-            print(deviceProperties.State)
+            #print(deviceProperties.State)
 
         ui.separator()
         
+        async def autoConnectCallback():
+            await device.set("Autoconnect", 'b', deviceProperties.Autoconnect)
 
-
-        with ui.row().classes("w-full gap-4"):
-            with ui.column().classes("w-32 items-start"):  # Fixed width for labels
-               ui.label("Status").classes("font-bold")
-               ui.label("Carrier").classes("font-bold")
-               ui.label("General").classes("font-bold")
-               ui.label("IPv4").classes("font-bold")
-               ui.label("IPv6").classes("font-bold")
-               ui.label("MTU").classes("font-bold")
-    
-            with ui.column().classes("flex-1 gap-4"):  # Flexible width for values
+        with ui.column().classes("flex-1 gap-4"):  # Fixed width for labels
+            with ui.row().classes("flex-1 gap-16"):    
+                ui.label("Status").classes("font-bold w-8")
                 ui.label(addresses)
-
-                ui.label(f"{speed/1000} Gbps")
-
+                
+            with ui.row().classes("flex-1 gap-16"):
+                ui.label("Carrier").classes("font-bold w-8")
                 ui.label(f"{carrier}")
-
-
-                async def autoConnectCallback():
-                    await device.set("Autoconnect", 'b', deviceProperties.Autoconnect)
-
+                
+            with ui.row().classes("flex-1 gap-16"):
+                ui.label("General").classes("font-bold w-8")
                 ui.checkbox('Connect automatically', on_change=autoConnectCallback).props(
-                    "flat color=accent align=left").classes(
-                        "w-full").props(
+                    "flat color=accent").props(
                             "dense").bind_value(deviceProperties, 'Autoconnect')
+            
+            with ui.row().classes("flex-1 gap-16"):
+                ui.label("IPv4").classes("font-bold w-8")
+                ui.label(addressDataToString(ip4configProperties.AddressData))
+                
+
+            with ui.row().classes("flex-1 gap-16"):
+                ui.label("IPv6").classes("font-bold w-8")
+                ui.label(addressDataToString(ip6configProperties.AddressData))
+                
+            with ui.row().classes("flex-1 gap-16"):
+                ui.button("Edit", on_click=edit_connection).props("flat color=accent")
+                
                 
 
 
 
-                #with ui.row():
-                #    ui.label(ip4addressString), ui.link("edit")
-#
-                #with ui.row():
-                #    ui.label(ip4addressString), ui.link("edit")
-                #
-                #with ui.row():
-                #    ui.label(ip6addressString), ui.link("edit")
 
+
+
+def edit_connection():
+    
+    
+    #def on_mode_change(e):
+        
+        #ip_address_button.enabled = e.value == ""
+        
+        #route_button.enabled = 
+        
+    
+    
+    def remove_ip_address_box(item):
+        address_section.remove(item)
+        
+    def remove_dns_server_box(item):
+        dns_section.remove(item)
+        
+    def remove_dns_search_box(item):
+        dns_search_section.remove(item)
+    
+    def remove_route_box(item):
+        route_section.remove(item)
+    
+    def add_ip_address_box():
+        with address_section:
+            with ui.row() as ip_box:
+                ui.input(label="Address").props("dense").classes("flex-1")
+                ui.input(label="Prefix or netmask").props("dense").classes("flex-1")
+                ui.input(label="Gateway").props("dense").classes("flex-1")
+                ui.button(icon="delete", on_click=lambda: remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
+                
+    def add_dns_server():
+        with dns_section:
+            with ui.row() as dns_box:
+                ui.input(label="Server").props("dense").classes("flex-1")
+                ui.button(icon="delete", on_click=lambda: remove_dns_server_box( dns_box)).props("flat color=accent").props("dense")
+                
+    def add_dns_search():
+        with dns_search_section:
+            with ui.row() as dns_search_box:
+                ui.input(label="Search domain").props("dense").classes("flex-1")
+                ui.button(icon="delete", on_click=lambda: remove_dns_search_box( dns_search_box)).props("flat color=accent").props("dense")  
+                       
+    def add_route():
+        with route_section:
+            with ui.row() as route_box:
+                ui.input(label="Address").props("dense").classes("flex-1")
+                ui.input(label="Prefix or netmask").props("dense").classes("flex-1")
+                ui.input(label="Gateway").props("dense").classes("flex-1")
+                ui.input(label="Metric").props("dense").classes("flex-1")
+
+                ui.button(icon="delete", on_click=lambda: remove_route_box(route_box)).props("flat color=accent").props("dense")
+                
+
+                    
+    with ui.dialog() as dialog:
+        with ui.card().classes("w-full self-start max-h-[90vh] overflow-y-auto"):
+            ui.label("IPv4 settings").classes("text-h5")
+            with ui.column().classes("w-full"):
+                with ui.row().classes("w-full justify-between"):
+                    ui.label("Addresses")
+                    with ui.row():
+                        address_mode = ui.select(options=["Automatic", "Link Local", "Manual", "Shared", "Disabled"], 
+                                  value="Automatic").props("dense").classes("w-24")
+                        address_mode.on("updated:model-value", on_mode_change)
+                        ip_address_button = ui.button(
+                            icon="add",
+                            on_click=add_ip_address_box,
+                        ).props("flat color=accent").props("dense")
+                address_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                ui.separator()
+                
+                with ui.row().classes("w-full justify-between"):
+                    ui.label("DNS")
+                    with ui.row():
+                        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
+                        dns_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                        dns_button = ui.button(
+                            icon="add",
+                            on_click=add_dns_server,
+                        ).props("flat color=accent").props("dense")
+                dns_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                ui.separator()
+                
+                with ui.row().classes("w-full justify-between"):
+                    ui.label("DNS search domains")
+                    with ui.row():
+                        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
+                        search_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                        search_button = ui.button(
+                            icon="add",
+                            on_click=add_dns_search,
+                        ).props("flat color=accent").props("dense")
+                dns_search_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                ui.separator()
+                
+                
+                with ui.row().classes("w-full justify-between"):
+                    ui.label("Routes")
+                    with ui.row():
+                        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
+                        route_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                        route_button = ui.button(
+                            icon="add",
+                            on_click=add_route,
+                        ).props("flat color=accent").props("dense")
+                route_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                ui.separator()
+                ## DNS
+                #with ui.row().classes("w-full items-center justify-between"):
+                #    ui.label("DNS")
+                #    ui.switch().props("flat color=accent").props("align=right")
+                #    ui.button(icon="add", on_click=add_ip_address_box).props("flat color=accent").props("align=right")
+                #    
+                #ui.separator()
+                ## DNS search
+                #with ui.row().classes("w-full justify-between"):
+                #    ui.label("DNS search domains")
+                #    ui.switch().props("flat color=accent")
+                #    ui.button(icon="add", on_click=add_ip_address_box).props("flat color=accent")
+                #    
+                #ui.separator()
+                ## Routes 
+                #with ui.row().classes("w-full items-center justify-between"):
+                #    ui.label("Routes")
+                #    ui.switch().props("flat color=accent")
+                #    ui.button(icon="add", on_click=add_ip_address_box).props("flat color=accent")
+                
+              
+                with ui.row().classes("items-center justify-between gap-4 w-full"):
+
+                    def on_save_cb():
+
+                
+                        if True:
+                            #AddV3User(user)
+                            dialog.close()
+                        else:
+                            ui.notify("Please correct the errors", type='negative')
+
+                    def on_cancel_cb():
+                        dialog.close()
+
+                    save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
+                    cancel_button = ui.button("cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
+    return dialog
