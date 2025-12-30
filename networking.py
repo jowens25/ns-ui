@@ -284,13 +284,46 @@ async def interface_card(iface :str ):
 def edit_connection():
     
     
-    #def on_mode_change(e):
-        
-        #ip_address_button.enabled = e.value == ""
-        
-        #route_button.enabled = 
-        
-    
+    def on_mode_change(e):
+        print("did it work?")
+        match e.value:
+            case "Disabled":                
+                ip_address_button.disable()
+                dns_switch.disable()
+                dns_button.disable()
+                search_switch.disable()
+                search_button.disable()
+                route_switch.disable()
+                route_button.disable()
+                dns_switch.value = False
+                search_switch.value = False
+                route_switch.value = False
+                
+            case "Automatic":
+                ip_address_button.enable()
+                dns_switch.enable()
+                dns_button.enable()
+                search_switch.enable()
+                search_button.enable()
+                route_switch.enable()
+                route_button.enable()
+                
+                dns_switch.value = True
+                search_switch.value = True
+                route_switch.value = True
+                
+            case "Shared":
+                ip_address_button.disable()
+                dns_switch.disable()
+                dns_button.disable()
+                search_switch.disable()
+                search_button.disable()
+                route_switch.disable()
+                route_button.enable()
+            
+            case _:
+                print("default")
+            
     
     def remove_ip_address_box(item):
         address_section.remove(item)
@@ -343,9 +376,10 @@ def edit_connection():
                 with ui.row().classes("w-full justify-between"):
                     ui.label("Addresses")
                     with ui.row():
-                        address_mode = ui.select(options=["Automatic", "Link Local", "Manual", "Shared", "Disabled"], 
-                                  value="Automatic").props("dense").classes("w-24")
-                        address_mode.on("updated:model-value", on_mode_change)
+                        address_mode = ui.select(
+                            options=["Automatic", "Link Local", "Manual", "Shared", "Disabled"], 
+                            on_change=on_mode_change ,value="Automatic").props("dense").classes("w-24")
+                        
                         ip_address_button = ui.button(
                             icon="add",
                             on_click=add_ip_address_box,
