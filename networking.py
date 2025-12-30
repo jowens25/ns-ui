@@ -103,11 +103,13 @@ async def GetInterfacesAndAddresses() -> list:
     
         device = Proxy(Device(devicePath), dbus.Router)
         deviceProperties = DeviceProperties((await device.get_all())[0])
+
         
-        print(devicePath)
-        pprint(asdict(deviceProperties))
         
-        if deviceProperties.Ip6Config and deviceProperties.Ip4Config:
+        #print(devicePath)
+        #pprint(asdict(deviceProperties))
+        
+        if len(deviceProperties.Ip6Config) > 1 and len(deviceProperties.Ip4Config) >1:
         
             ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
             ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
@@ -187,6 +189,12 @@ async def interface_card(iface :str ):
     
     device = Proxy(Device(devicePath), dbus.Router)    
     deviceProperties = DeviceProperties((await device.get_all())[0])
+
+
+    appliedConnectionProperties = await device.GetAppliedConnection(0)
+
+    pprint((appliedConnectionProperties))
+
     
     ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
     ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
@@ -202,16 +210,11 @@ async def interface_card(iface :str ):
 
     carrier = processInterfaceFlags((await device.get("InterfaceFlags"))[0][1])
     
-    wired = Proxy(Wired(devicePath), dbus.Router)
+    #wired = Proxy(Wired(devicePath), dbus.Router)
 
-    speed = (await wired.get("Speed"))[0][1]
-    
+    #speed = (await wired.get("Speed"))[0][1]
+    speed = 10
     connectAutomatically = deviceProperties.Autoconnect
-
-
-    #ip4addressString = await GetAddressString(ip4configPath, [])
-    #ip6addressString = await GetAddressString([], ip6configPath)
-
 
 
     with ui.card().classes("w-full"):
@@ -240,8 +243,18 @@ async def interface_card(iface :str ):
                 ui.label(f"{speed/1000} Gbps")
 
                 ui.label(f"{carrier}")
-               
-                ui.checkbox('Connect automatically').props("flat color=accent align=left").classes("w-full").props("dense")
+
+
+                async def autoConnectCallback():
+                    await device.set("Autoconnect", 'b', deviceProperties.Autoconnect)
+
+                ui.checkbox('Connect automatically', on_change=autoConnectCallback).props(
+                    "flat color=accent align=left").classes(
+                        "w-full").props(
+                            "dense").bind_value(deviceProperties, 'Autoconnect')
+                
+
+
 
                 #with ui.row():
                 #    ui.label(ip4addressString), ui.link("edit")
