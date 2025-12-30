@@ -179,7 +179,7 @@ async def interface_page(interface_name: str):
 
         await interface_card(interface_name)
 
-
+    
 
 async def interface_card(iface :str ):
     
@@ -191,13 +191,23 @@ async def interface_card(iface :str ):
     deviceProperties = DeviceProperties((await device.get_all())[0])
 
 
-    appliedConnectionProperties = await device.GetAppliedConnection(0)
+    #appliedConnection = await device.GetAppliedConnection(0)
+    #pprint(appliedConnection)
 
-    pprint((appliedConnectionProperties))
 
-    
+    #connection = Proxy(Connection(appliedConnection), dbus.Router)
+    #settings = (await connection.GetSettings())[0]
+#
+    #pprint(settings)
+
+
     ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
     ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
+
+    pprint(ip4configProperties)
+
+
+
     
     ip6config = Proxy(IP6Config(deviceProperties.Ip6Config), dbus.Router)
     ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
@@ -214,7 +224,9 @@ async def interface_card(iface :str ):
 
     #speed = (await wired.get("Speed"))[0][1]
     speed = 10
-    connectAutomatically = deviceProperties.Autoconnect
+    #connectAutomatically = deviceProperties.Autoconnect
+
+    #print(deviceProperties.State)
 
 
     with ui.card().classes("w-full"):
@@ -222,7 +234,27 @@ async def interface_card(iface :str ):
         with ui.row().classes("w-full items-center justify-between"):
             ui.label(iface).classes("text-h6")
             ui.label(f"{hwaddr}").classes("text-h6")
-            ui.switch("Connected").props("disable")
+
+            async def connection_sw_cb(e):
+                action = "enable" if  e.sender.value else "disable"
+                with ui.dialog() as dialog, ui.card():
+                    ui.label(f'Are you sure you want to {action} this connection?')
+                    with ui.row():
+                        ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
+                        ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
+
+                result = await dialog
+
+                if result == "enable":
+                    #StartSnmpd()
+                    await networkManager.ActivateConnection(deviceProperties.ActiveConnection, devicePath, "/")
+
+                if result == "disable":
+                    await networkManager.DeactivateConnection(deviceProperties.ActiveConnection)
+
+
+            ui.switch("Connected").on('click', lambda e: connection_sw_cb(e)).props("flat color=accent").bind_value_from(deviceProperties, "State", backward= lambda v: v==100)
+            print(deviceProperties.State)
 
         ui.separator()
         
