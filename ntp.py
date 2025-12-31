@@ -1,7 +1,7 @@
 import asyncio
 from mysocket.mysocket import socket_received, write_socket
 from rest_api import APIClient
-from nicegui import ui, app, background_tasks
+from nicegui import ui, app, background_tasks, events
 
 api = APIClient(base_url="http://localhost:5000")
 from dataclasses import dataclass, field
@@ -75,6 +75,11 @@ async def load_ntp_properties():
 #        setattr(ntp, field_name, result[field_name])  # Update field
 #        print(f"Updated {field_name}: {result[field_name]}")
 
+async def writeNtlConfig(content: str):
+    content.splitlines()
+    for line in content.splitlines():
+        await write_socket(line)
+
 async def ntp_page():
 
     with ui.column() as pageContainer:
@@ -89,6 +94,15 @@ async def ntp_page():
                 await write_socket(cmd.value)
             cmd = ui.input("command: ").on("keydown.enter", on_cmd)
 
+        
+        
+
+        with ui.card():
+            async def handle_upload(e: events.UploadEventArguments):
+                ui.notify(f'Uploaded {e.file.name}')
+                await writeNtlConfig(await e.file.text())
+
+            ui.upload(on_upload=handle_upload).classes('max-w-full').props("flat color=accent")
 
             
         with ui.card():

@@ -4,8 +4,7 @@ from nicegui import ui, app
 from org_freedesktop_NetworkManager_IP6Config import IP6Config, IP6ConfigProperties
 from theme import init_colors
 from rest_api import APIClient
-from dbus_next.aio import MessageBus
-from dbus_next import BusType
+
 from org_freedesktop_NetworkManager import NetworkManager, NetworkManagerProperties
 from org_freedesktop_NetworkManager_Device import Device, DeviceProperties, Statistics, Wired
 from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigProperties
@@ -18,6 +17,7 @@ from jeepney.wrappers import Properties
 from jeepney.io.asyncio import Proxy
 
 from dbus import dbus
+
 
 
 
