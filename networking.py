@@ -286,43 +286,43 @@ def edit_connection():
     
     def on_mode_change(e):
         print("did it work?")
-        match e.value:
-            case "Disabled":                
-                ip_address_button.disable()
-                dns_switch.disable()
-                dns_button.disable()
-                search_switch.disable()
-                search_button.disable()
-                route_switch.disable()
-                route_button.disable()
-                dns_switch.value = False
-                search_switch.value = False
-                route_switch.value = False
-                
-            case "Automatic":
-                ip_address_button.enable()
-                dns_switch.enable()
-                dns_button.enable()
-                search_switch.enable()
-                search_button.enable()
-                route_switch.enable()
-                route_button.enable()
-                
-                dns_switch.value = True
-                search_switch.value = True
-                route_switch.value = True
-                
-            case "Shared":
-                ip_address_button.disable()
-                dns_switch.disable()
-                dns_button.disable()
-                search_switch.disable()
-                search_button.disable()
-                route_switch.disable()
-                route_button.enable()
-            
-            case _:
-                print("default")
+        #match e.value:
+        #    case "Disabled":                
+        #        ip_address_button.disable()
+        #        dns_switch.disable()
+        #        dns_button.disable()
+        #        search_switch.disable()
+        #        search_button.disable()
+        #        route_switch.disable()
+        #        route_button.disable()
+        #        dns_switch.value = False
+        #        search_switch.value = False
+        #        route_switch.value = False
+        #        
+        #    case "Automatic":
+        #        ip_address_button.enable()
+        #        dns_switch.enable()
+        #        dns_button.enable()
+        #        search_switch.enable()
+        #        search_button.enable()
+        #        route_switch.enable()
+        #        route_button.enable()
+        #        
+        #        dns_switch.value = True
+        #        search_switch.value = True
+        #        route_switch.value = True
+        #        
+        #    case "Shared":
+        #        ip_address_button.disable()
+        #        dns_switch.disable()
+        #        dns_button.disable()
+        #        search_switch.disable()
+        #        search_button.disable()
+        #        route_switch.disable()
+        #        route_button.enable()
+        #    
+        #    case _:
+        #        print("default")
             
     
     def remove_ip_address_box(item):
