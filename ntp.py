@@ -78,7 +78,8 @@ async def load_ntp_properties():
 async def writeNtlConfig(content: str):
     content.splitlines()
     for line in content.splitlines():
-        await write_socket(line)
+        if line.startswith("$WC"):
+            await write_socket(line)
 
 async def ntp_page():
 
