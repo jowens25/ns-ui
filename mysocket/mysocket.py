@@ -3,7 +3,6 @@ import time
 from dataclasses import dataclass, asdict
 import asyncio
 from asyncio import StreamWriter, StreamReader
-from typing import Optional, Required
 from nicegui import Event, app
 
 
