@@ -9,7 +9,7 @@ from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigPropert
 from jeepney.wrappers import MessageGenerator, new_method_call, Message, Properties
 from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
 from org_freedesktop_NetworkManager_DHCP4Config import DHCP4Config
-from typing import Self # Recommended for type hinting in Python 3.11+
+ # Recommended for type hinting in Python 3.11+
 
 
 
@@ -35,7 +35,7 @@ async def getAllProperties(cls :dataclass, router, path: str = ''):
 
 
 
-def from_dict(obj, instance, data: dict[str, tuple[str, Any]]) -> Self:
+def from_dict(obj, instance, data: dict[str, tuple[str, Any]]):
     """Convert from dict of {'Prop': ('s', value)} or similar into structured props."""
     for f in fields(obj):
         if f.name in data:

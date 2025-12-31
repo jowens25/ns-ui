@@ -7,7 +7,7 @@ Bus name   : org.freedesktop.NetworkManager
 """
 
 from dataclasses import dataclass, fields
-from typing import Any, Optional, Self
+from typing import Any, Optional
 from jeepney.wrappers import MessageGenerator, new_method_call, DBusAddress
 
 
