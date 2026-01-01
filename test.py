@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass, fields
+import os
 import time
 from typing import Any, Optional, Type, TypeVar
 from dbus import dbus
@@ -10,6 +11,9 @@ from jeepney.wrappers import MessageGenerator, new_method_call, Message, Propert
 from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
 from org_freedesktop_NetworkManager_DHCP4Config import DHCP4Config
  # Recommended for type hinting in Python 3.11+
+
+from dbus_next import BusType
+from dbus_next.aio import MessageBus
 
 
 
@@ -49,10 +53,81 @@ def from_dict(obj, instance, data: dict[str, tuple[str, Any]]):
                 setattr(instance, f.name, prop_data)
     #return cls(**filtered)
 
+
+
+def load_introspection():
+    introspections = {}
+
+    for file_name in os.listdir("introspection"):
+        if file_name.endswith(".xml"):
+            print(file_name)
+            with open("introspection/"+file_name, "r") as f:
+                introspections[file_name] = f.read()
+
+    return introspections
+
+def get_network_manager(bus, intro):
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', intro)
+    nm = obj.get_interface('org.freedesktop.NetworkManager')
+    return nm
+
+def get_network_device(bus, intro, path):
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, intro)
+    nm = obj.get_interface('org.freedesktop.NetworkManager.Device')
+    return nm 
+
 async def help_me():
-    conn = await open_dbus_connection(bus="SYSTEM")
+    #conn = await open_dbus_connection(bus="SYSTEM")
     
-    router = DBusRouter(conn)
+    #router = DBusRouter(conn)
+
+    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+    # the introspection xml would normally be included in your project, but
+    # this is convenient for development
+#    introspection = await bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager/Devices/2')
+#
+#    #print(introspection.tostring())
+#    
+#    with open("test.xml", 'a') as f:
+#        f.write(introspection.tostring())
+#
+#    with open("./introspection/org.freedesktop.NetworkManager.Device.xml", "r") as f:
+#        device_intro = f.read()
+#
+#    with open("./introspection/org.freedesktop.NetworkManager.xml", 'r') as f:
+#        nm_intro = f.read()
+
+    intros = load_introspection()
+
+    #obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', nm_intro)
+    #nm = obj.get_interface('org.freedesktop.NetworkManager')
+    #properties = obj.get_interface('org.freedesktop.DBus.Properties')
+
+    nm = get_network_manager(bus, intros["org.freedesktop.NetworkManager.xml"])
+
+    device_paths = await nm.call_get_devices()
+    print(device_paths)
+
+#
+    for device in device_paths:
+        dev = get_network_device(bus, intros['org.freedesktop.NetworkManager.Device.xml'], device)
+
+
+        print( await dev.get_udi())
+
+
+    # call methods on the interface (this causes the media player to play)
+#    await player.call_play()
+#
+#    volume = await player.get_volume()
+#    print(f'current volume: {volume}, setting to 0.5')
+#
+    #print(introspection)
+#
+    #introspection.to_xml()
+#
+    #with open("NetworkManager.xml", 'x') as f:
+    #    f.write(introspection.tostring())
     
     
     
@@ -107,6 +182,6 @@ async def help_me():
         
         #print(res2)
         
-    await conn.close()
+    #await conn.close()
 
 asyncio.run(help_me())

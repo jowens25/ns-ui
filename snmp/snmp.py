@@ -1,3 +1,4 @@
+import asyncio
 import ipaddress
 import json
 import os
@@ -13,6 +14,134 @@ from typing import Optional
 
 snmp_config_file = "/etc/snmp/snmpd.conf"
 default_persistent_dir_path = "/var/lib/snmp"
+
+
+
+
+"""
+PolicyKit Integration Module for SNMP Manager
+This module provides authorization checks for privileged SNMP operations
+"""
+
+import subprocess
+
+import sys
+from typing import Optional
+
+class PolkitException(Exception):
+    """Exception raised when polkit authorization fails"""
+    pass
+
+class PolkitAuth:
+    """Handle PolicyKit authorization for SNMP operations"""
+    
+    # Define action IDs for different SNMP operations
+    ACTIONS = {
+        'modify_config': 'com.example.snmp.modify-config',
+        'manage_service': 'com.example.snmp.manage-service',
+        'manage_v2_users': 'com.example.snmp.manage-v2-users',
+        'manage_v3_users': 'com.example.snmp.manage-v3-users',
+        'reset_config': 'com.example.snmp.reset-config',
+    }
+    
+    @staticmethod
+    def check_authorization(action_id: str, allow_user_interaction: bool = True) -> bool:
+        """
+        Check if the current user is authorized to perform an action
+        
+        Args:
+            action_id: The polkit action ID to check
+            allow_user_interaction: Whether to show authentication dialog
+            
+        Returns:
+            True if authorized, False otherwise
+            
+        Raises:
+            PolkitException: If polkit check fails
+        """
+        try:
+            # Use pkcheck to verify authorization
+            cmd = [
+                'pkcheck',
+                '--action-id', action_id,
+                '--process', str(os.getpid()),
+            ]
+            
+            if allow_user_interaction:
+                cmd.append('--enable-internal-agent')
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            # Return code 0 means authorized
+            return result.returncode == 0
+            
+        except subprocess.TimeoutExpired:
+            raise PolkitException(f"Authorization check timed out for action: {action_id}")
+        except FileNotFoundError:
+            raise PolkitException("pkcheck command not found. Is PolicyKit installed?")
+        except Exception as e:
+            raise PolkitException(f"Authorization check failed: {str(e)}")
+    
+    @staticmethod
+    def require_authorization(action_id: str, allow_user_interaction: bool = True):
+        """
+        Decorator to require polkit authorization for a function
+        
+        Args:
+            action_id: The polkit action ID to check
+            allow_user_interaction: Whether to show authentication dialog
+        """
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                if not PolkitAuth.check_authorization(action_id, allow_user_interaction):
+                    raise PolkitException(
+                        f"Authorization denied for action: {action_id}"
+                    )
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+# Decorator functions for common operations
+def require_service_management(func):
+    """Require authorization to manage SNMP service"""
+    return PolkitAuth.require_authorization(
+        PolkitAuth.ACTIONS['manage_service']
+    )(func)
+
+def require_config_modification(func):
+    """Require authorization to modify SNMP configuration"""
+    return PolkitAuth.require_authorization(
+        PolkitAuth.ACTIONS['modify_config']
+    )(func)
+
+def require_v2_user_management(func):
+    """Require authorization to manage V2 users"""
+    return PolkitAuth.require_authorization(
+        PolkitAuth.ACTIONS['manage_v2_users']
+    )(func)
+
+def require_v3_user_management(func):
+    """Require authorization to manage V3 users"""
+    return PolkitAuth.require_authorization(
+        PolkitAuth.ACTIONS['manage_v3_users']
+    )(func)
+
+def require_config_reset(func):
+    """Require authorization to reset SNMP configuration"""
+    return PolkitAuth.require_authorization(
+        PolkitAuth.ACTIONS['reset_config']
+    )(func)
+
+
+
+
+
 
 
 
@@ -442,15 +571,18 @@ def MakeEmptyPersistentDirConf():
 def OverWriteWithDefaultSnmpConf():
     runCmd(['cp', './configs/snmpd.conf', '/etc/snmp/snmpd.conf'])
 
+@require_service_management
 def StopSnmpd():
     print("stoping... snmpd")
 
     runCmd(["systemctl", "stop", "snmpd"])
 
+@require_service_management
 def StartSnmpd():
     print("starting... snmpd")
     runCmd(["systemctl", "start", "snmpd"])
 
+@require_service_management
 def RestartSnmpd():
     print("restarting... snmpd")
 
@@ -549,6 +681,22 @@ def GetV3UserByUsername(username: str) -> V3User:
 
 def validate_group(group: list):
     return [x.validate() for x in group]
+
+
+
+def handle_polkit_error(func):
+    """Decorator to handle PolkitException and show user-friendly messages"""
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
+        except PolkitException as e:
+            ui.notify(f'Authorization denied: {str(e)}', type='negative', position='top')
+            return None
+        except Exception as e:
+            ui.notify(f'Error: {str(e)}', type='negative', position='top')
+            return None
+    return wrapper
+
 
 def add_v2_dialog():
 
@@ -660,6 +808,8 @@ async def snmp_page():
 
         ui.label("SNMP").classes("text-h5")
         
+        
+        @handle_polkit_error
         async def snmp_switch_cb(e):
             action = "enable" if  e.sender.value else "disable"
             with ui.dialog() as dialog, ui.card():
