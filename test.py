@@ -1,6 +1,7 @@
 import asyncio
 from dataclasses import dataclass, fields
 import os
+from pprint import pprint
 import time
 from typing import Any, Optional, Type, TypeVar
 from dbus import dbus
@@ -13,10 +14,67 @@ from org_freedesktop_NetworkManager_DHCP4Config import DHCP4Config
  # Recommended for type hinting in Python 3.11+
 
 from dbus_next import BusType
+from dbus_next.signature import Variant, SignatureTree, SignatureType
 from dbus_next.aio import MessageBus
 
 
+def GetNetworkManager(bus: MessageBus):
+    file_name = 'org.freedesktop.NetworkManager.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager')
 
+def GetDevice(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Device.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Device')
+
+
+def GetActiveConnection(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Connection.Active.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Connection.Active')
+
+
+def GetIp4Config(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.IP4Config.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.IP4Config')
+
+def GetIp6Config(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.IP6Config.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.IP6Config')
+
+
+def GetSettingsManager(bus: MessageBus):
+    file_name = 'org.freedesktop.NetworkManager.Settings.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', "/org/freedesktop/NetworkManager/Settings", introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Settings')
+
+def GetConnection(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Settings.Connection.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
+
+#def UnpackSettings(settings: dict):
+
+
+introspections = None
+bus = None
 
 async def GetProperties(proxy):
     data = (await proxy.get_all())[0]
@@ -66,22 +124,133 @@ def load_introspection():
 
     return introspections
 
-def get_network_manager(bus, intro):
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', intro)
+def get_network_manager():
+    global introspections, bus
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', introspections['org.freedesktop.NetworkManager.xml'])
     nm = obj.get_interface('org.freedesktop.NetworkManager')
     return nm
 
-def get_network_device(bus, intro, path):
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, intro)
-    nm = obj.get_interface('org.freedesktop.NetworkManager.Device')
-    return nm 
+def get_network_device(path):
+    global introspections, bus
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspections['org.freedesktop.NetworkManager.Device.xml'])
+    return obj.get_interface('org.freedesktop.NetworkManager.Device')
+
+def get_active_connection(path):
+    global introspections, bus
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspections['org.freedesktop.NetworkManager.Connection.Active.xml'])
+    return obj.get_interface('org.freedesktop.NetworkManager.Connection.Active')
+
+
+def get_settings_manager():
+    global introspections, bus
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager/Settings', introspections['org.freedesktop.NetworkManager.Settings.xml'])
+    nm = obj.get_interface('org.freedesktop.NetworkManager.Settings')
+    return nm
+
+#def nm_settings_to_dict(settings: dict):
+#    new_dict = {}
+#    for key, value in settings.items():
+#        new_dict[key] = value
+#        for k, v in value.items():
+#            if isinstance(v.value, list):
+#                if k == "address-data":
+#                    addresses = []
+#                    for addr in v.value:
+#                        addresses.append(f"{addr.get("address").value}/{addr.get("prefix").value}")
+#                    new_dict[key][k] = addresses
+#                else:
+#                    new_dict[key][k] = v.value
+#
+#    return new_dict
+#
+#def dict_to_nm_settings(settings: dict):
+#    new_dict = {}
+#    for key, value in settings.items():
+#        new_dict[key] = value
+#        for k, v in value.items():
+#            if isinstance(v.value, list):
+#                if k == "address-data":
+#                    addresses = []
+#                    for addr in v.value:
+#                        addresses.append(f"{addr.get("address").value}/{addr.get("prefix").value}")
+#                    new_dict[key][k] = addresses
+#                else:
+#                    new_dict[key][k] = v.value
+#
+#    return new_dict
 
 async def help_me():
+    global introspections, bus
+
+
+    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+
+
+
+    nm = GetNetworkManager(bus)
+
+    sm = GetSettingsManager(bus)
+
+    connections = await sm.call_list_connections()
+
+    pprint(connections)
+
+    devices = await nm.call_get_devices()
+
+
+    for device_path in devices:
+
+        device = GetDevice(bus, device_path)
+
+        interface = await device.get_interface()
+
+        if interface == 'wlp1s0':
+
+            active_connection_path = await device.get_active_connection()
+            #print(active_connection_path)
+            if len(active_connection_path) > 1:
+                activeConnection = GetActiveConnection(bus, active_connection_path)
+
+                connection_path = await activeConnection.get_connection()
+
+                #print(connection_path)
+
+                connection = GetConnection(bus, connection_path)
+
+                current_settings = await connection.call_get_settings()
+
+                pprint(current_settings)
+
+                current_settings['ipv4']['method'] = Variant('s', 'auto')
+                #current_settings['ipv4']['address-data'] = Variant('aa{sv}', [
+                #    {
+                #        'address': Variant('s', '192.168.0.105'),
+                #        'prefix': Variant('u', 24)
+                #    }
+                #])
+                #current_settings['ipv4']['gateway'] = Variant('s', '192.168.0.1')
+
+                
+                # Remove if exists, do nothing if it doesn't
+                current_settings['ipv4'].pop('addresses', None)
+                current_settings['ipv4'].pop('routes', None)  # Also remove deprecated routes
+
+                await connection.call_update2(current_settings, 0x1, {})
+
+                await device.call_reapply(current_settings, 0, 0)
+
+                pprint(current_settings)
+
+
+    
+    
+    
+    
+    
     #conn = await open_dbus_connection(bus="SYSTEM")
     
     #router = DBusRouter(conn)
-
-    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+    
     # the introspection xml would normally be included in your project, but
     # this is convenient for development
 #    introspection = await bus.introspect('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager/Devices/2')
@@ -97,23 +266,33 @@ async def help_me():
 #    with open("./introspection/org.freedesktop.NetworkManager.xml", 'r') as f:
 #        nm_intro = f.read()
 
-    intros = load_introspection()
-
-    #obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', nm_intro)
-    #nm = obj.get_interface('org.freedesktop.NetworkManager')
-    #properties = obj.get_interface('org.freedesktop.DBus.Properties')
-
-    nm = get_network_manager(bus, intros["org.freedesktop.NetworkManager.xml"])
-
-    device_paths = await nm.call_get_devices()
-    print(device_paths)
-
+   # introspections = load_introspection()
 #
-    for device in device_paths:
-        dev = get_network_device(bus, intros['org.freedesktop.NetworkManager.Device.xml'], device)
-
-
-        print( await dev.get_udi())
+   # #obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', nm_intro)
+   # #nm = obj.get_interface('org.freedesktop.NetworkManager')
+   # #properties = obj.get_interface('org.freedesktop.DBus.Properties')
+#
+   # nm = get_network_manager()
+#
+   # sm = get_settings_manager()
+#
+   # #connections = await sm.call_list_connections()
+   # #print(connections)
+#
+   # print(await nm.get_all())
+#
+   # device_paths = await nm.call_get_devices()
+   # print(device_paths)
+#
+##
+   # for device in device_paths:
+   #     dev = get_network_device(device)
+#
+#
+   #     print( await dev.get_udi())
+#
+#
+  #
 
 
     # call methods on the interface (this causes the media player to play)

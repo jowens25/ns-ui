@@ -1,13 +1,13 @@
-from jeepney.io.asyncio import  DBusRouter, open_dbus_connection
+from dbus_next import BusType
+from dbus_next.aio import MessageBus
 
-global Connection, Router
+global Bus
 
 async def setup():
-    global Connection, Router
-    Connection = await open_dbus_connection(bus="SYSTEM")
-    Router = DBusRouter(Connection)
+    global Bus
+    Bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
 async def cleanup():
-    global Connection
-    await Connection.close()
+    global Bus
+    Bus.disconnect()
 

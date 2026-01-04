@@ -16,11 +16,62 @@ from org_freedesktop_NetworkManager_ActiveConnection import ActiveConnection, Ac
 from jeepney.wrappers import Properties
 from jeepney.io.asyncio import Proxy
 
+from dbus_next import BusType
+from dbus_next.aio import MessageBus
 from dbus import dbus
 
 
+def GetNetworkManager(bus: MessageBus):
+    file_name = 'org.freedesktop.NetworkManager.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager')
+
+def GetDevice(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Device.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Device')
 
 
+def GetActiveConnection(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Connection.Active.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Connection.Active')
+
+
+def GetIp4Config(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.IP4Config.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.IP4Config')
+
+def GetIp6Config(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.IP6Config.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.IP6Config')
+
+
+def GetSettingsManager(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Settings.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Settings')
+
+def GetConnection(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Settings.Connection.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
 
 async def GetDevices(nm: Proxy) -> list[str]:
     return (await nm.GetDevices())[0]
