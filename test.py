@@ -204,43 +204,53 @@ async def help_me():
 
         interface = await device.get_interface()
 
+
         if interface == 'wlp1s0':
 
-            active_connection_path = await device.get_active_connection()
-            #print(active_connection_path)
-            if len(active_connection_path) > 1:
-                activeConnection = GetActiveConnection(bus, active_connection_path)
+            ip4_config_path = await device.get_ip4_config()
 
-                connection_path = await activeConnection.get_connection()
+            ip4_config = GetIp4Config(bus, ip4_config_path)
 
-                #print(connection_path)
+            address_data = await ip4_config.get_address_data()
+            gateway = await ip4_config.get_gateway()
+            print(gateway)
+            pprint(address_data)
 
-                connection = GetConnection(bus, connection_path)
-
-                current_settings = await connection.call_get_settings()
-
-                pprint(current_settings)
-
-                current_settings['ipv4']['method'] = Variant('s', 'auto')
-                #current_settings['ipv4']['address-data'] = Variant('aa{sv}', [
-                #    {
-                #        'address': Variant('s', '192.168.0.105'),
-                #        'prefix': Variant('u', 24)
-                #    }
-                #])
-                #current_settings['ipv4']['gateway'] = Variant('s', '192.168.0.1')
-
-                
-                # Remove if exists, do nothing if it doesn't
-                current_settings['ipv4'].pop('addresses', None)
-                current_settings['ipv4'].pop('routes', None)  # Also remove deprecated routes
-
-                await connection.call_update2(current_settings, 0x1, {})
-
-                await device.call_reapply(current_settings, 0, 0)
-
-                pprint(current_settings)
-
+            #active_connection_path = await device.get_active_connection()
+            ##print(active_connection_path)
+            #if len(active_connection_path) > 1:
+            #    activeConnection = GetActiveConnection(bus, active_connection_path)
+#
+            #    connection_path = await activeConnection.get_connection()
+#
+            #    #print(connection_path)
+#
+            #    connection = GetConnection(bus, connection_path)
+#
+            #    current_settings = await connection.call_get_settings()
+#
+            #    pprint(current_settings)
+#
+            #    current_settings['ipv4']['method'] = Variant('s', 'auto')
+            #    #current_settings['ipv4']['address-data'] = Variant('aa{sv}', [
+            #    #    {
+            #    #        'address': Variant('s', '192.168.0.105'),
+            #    #        'prefix': Variant('u', 24)
+            #    #    }
+            #    #])
+            #    #current_settings['ipv4']['gateway'] = Variant('s', '192.168.0.1')
+#
+            #    
+            #    # Remove if exists, do nothing if it doesn't
+            #    current_settings['ipv4'].pop('addresses', None)
+            #    current_settings['ipv4'].pop('routes', None)  # Also remove deprecated routes
+#
+            #    await connection.call_update2(current_settings, 0x1, {})
+#
+            #    await device.call_reapply(current_settings, 0, 0)
+#
+            #    pprint(current_settings)
+#
 
     
     
