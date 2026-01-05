@@ -16,7 +16,14 @@ async def socket_setup():
         socket_reader, socket_writer = await asyncio.open_unix_connection("/tmp/serial.sock")
         print("SOCKET OPENED")
         await read_socket()
-                
+    
+    except FileNotFoundError:
+        print("SOCKET NOT AVAILABLE")
+        socket_received.emit("Socket Not Available")
+
+        #raise 
+
+
     except asyncio.CancelledError:
         print("SOCKET LISTENER CANCELLED")
         raise
@@ -26,10 +33,13 @@ async def socket_setup():
         
 async def socket_cleanup():
     global socket_writer
+    await asyncio.sleep(0.01)
+
     print("SOCKET LISTENER CLOSED")
     if socket_writer:
         socket_writer.close()
         await socket_writer.wait_closed()
+
         
         
 async def read_socket():

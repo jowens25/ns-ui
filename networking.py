@@ -73,21 +73,18 @@ def GetConnection(bus: MessageBus, path : str):
     obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
     return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
 
-async def GetDevices(nm: Proxy) -> list[str]:
-    return (await nm.GetDevices())[0]
 
 
-async def GetInterface(device :Proxy) -> str:
-    return (await device.get("Interface"))[0][1]
+def addressDataToAddress(addressdata: list[dict]) -> list:
+    formatted = []
+    for addr in addressdata:
+        address = addr.get('address')
+        prefix = addr.get('prefix')
+        if address and prefix:
+            formatted.append(f"{address.value}/{prefix.value}")
+    return formatted
 
 
-def formatAddress(addressData: dict)-> list[str]:
-    addresses = []
-    for address in addressData:
-        addr = address.get("address")[1]
-        prefix = address.get("prefix")[1]
-        addresses.append(f"{addr}/{prefix}")
-    return addresses
 
 def formatAddressString(addresses: list[str]) -> str:
     return ', '.join(addresses) if addresses else ' '
@@ -98,9 +95,11 @@ def formatInterfaceRow(interface :str, addresses: str):
 
 def addressDataToString(addressData):
     addresses = []
-    addresses.extend(formatAddress(addressData))
+    addresses.extend(addressDataToAddress(addressData))
     return formatAddressString(addresses)
 
+def dnsDataToString(dnsData):
+    return formatAddressString(dnsData)
 
 
 def processInterfaceFlags(flags: int) -> str:
@@ -138,41 +137,39 @@ def processInterfaceFlags(flags: int) -> str:
     return " | ".join(status)
 
 
-def combineAddresses(ip4configProps: IP4ConfigProperties, ip6configProps: IP6ConfigProperties) -> str:
+def combineAddresses(ipv4AddressData, ipv6AddressData) -> str:
     
     addresses = []
-    addresses.extend(formatAddress(ip4configProps.AddressData))
-    addresses.extend(formatAddress(ip6configProps.AddressData))
+    addresses.extend(addressDataToAddress(ipv4AddressData))
+    addresses.extend(addressDataToAddress(ipv6AddressData))
     return formatAddressString(addresses)
 
 
 async def GetInterfacesAndAddresses() -> list:
 
     rows = []
-    
-    networkManager = Proxy(NetworkManager(), dbus.Router)
-    networkManagerProperties = NetworkManagerProperties((await networkManager.get_all())[0])
-    
-    for devicePath in networkManagerProperties.Devices:
-    
-        device = Proxy(Device(devicePath), dbus.Router)
-        deviceProperties = DeviceProperties((await device.get_all())[0])
 
-        
-        
-        #print(devicePath)
-        #pprint(asdict(deviceProperties))
-        
-        if len(deviceProperties.Ip6Config) > 1 and len(deviceProperties.Ip4Config) >1:
-        
-            ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
-            ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
+    nm = GetNetworkManager(dbus.Bus)
+    
+    device_paths = await nm.call_get_devices()
+    
+    for devicePath in device_paths:
 
-            ip6config = Proxy(IP6Config(deviceProperties.Ip6Config), dbus.Router)
-            ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
+        device = GetDevice(dbus.Bus, devicePath)
+        interface = await device.get_interface()
 
-            rows.append({'name': deviceProperties.Interface,'addresses': 
-                combineAddresses(ip4configProperties, ip6configProperties)})
+        ip4_config_path = await device.get_ip4_config()
+        ip6_config_path = await device.get_ip6_config()
+        if len(ip4_config_path) > 1:
+
+            ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
+            ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
+
+            ip4AddressData = await ip4Config.get_address_data()
+            ip6AddressData = await ip6Config.get_address_data()
+    
+            rows.append({'name': interface,'addresses': 
+                combineAddresses(ip4AddressData, ip6AddressData)})
         
     return rows
 
@@ -236,37 +233,39 @@ async def interface_page(interface_name: str):
 
 
 
-        
 
-async def interface_card(iface :str ):
-    
-    networkManager = Proxy(NetworkManager(), dbus.Router)
-    networkManagerProperties = NetworkManagerProperties((await networkManager.get_all())[0])
-    devicePath = (await networkManager.GetDeviceByIpIface(iface))[0]
-    
-    device = Proxy(Device(devicePath), dbus.Router)    
-    deviceProperties = DeviceProperties((await device.get_all())[0])
-    
-    speed = 0
-    if deviceProperties.DeviceType == 1: # ethernet
-        wired = Proxy(Wired(devicePath), dbus.Router)
-        speed = (await wired.get("Speed"))[0][1]
-    
+async def interface_card(iface :str):
 
-    ip4config = Proxy(IP4Config(deviceProperties.Ip4Config), dbus.Router)
-    ip4configProperties = IP4ConfigProperties((await ip4config.get_all())[0])
-    
-    
-    ip6config = Proxy(IP6Config(deviceProperties.Ip6Config), dbus.Router)
-    ip6configProperties = IP6ConfigProperties((await ip6config.get_all())[0])
+    nm = GetNetworkManager(dbus.Bus)
 
-    
-    addresses = combineAddresses(ip4configProperties, ip6configProperties)
-    
-    
-    hwaddr = deviceProperties.HwAddress
+    device_path = await nm.call_get_device_by_ip_iface(iface)
 
-    carrier = processInterfaceFlags((await device.get("InterfaceFlags"))[0][1])
+    device = GetDevice(dbus.Bus, device_path)
+
+    hwaddr = await device.get_hw_address()
+    flags = await device.get_interface_flags()
+    carrier = processInterfaceFlags(flags)
+    
+    active_connection_path = await device.get_active_connection()
+
+    if len(active_connection_path) > 1:
+        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
+        connection_path = await activeConnection.get_connection()
+        connection = GetConnection(dbus.Bus, connection_path)
+        current_settings = await connection.call_get_settings()
+
+    autoConnect = await device.get_autoconnect()
+    ip4_config_path = await device.get_ip4_config()
+    ip6_config_path = await device.get_ip6_config()
+
+    if len(ip4_config_path) > 1:
+
+        ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
+        ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
+        ip4AddressData = await ip4Config.get_address_data()
+        ip6AddressData = await ip6Config.get_address_data()
+
+        addresses = combineAddresses(ip4AddressData, ip6AddressData)
     
 
 
@@ -286,17 +285,19 @@ async def interface_card(iface :str ):
                         ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
                 result = await dialog
                 if result == "enable":
-                    await networkManager.ActivateConnection(deviceProperties.ActiveConnection, devicePath, "/")
+                    #await nm.ActivateConnection(deviceProperties.ActiveConnection, devicePath, "/")
+                    print()
                 if result == "disable":
-                    await networkManager.DeactivateConnection(deviceProperties.ActiveConnection)
+                    #await networkManager.DeactivateConnection(deviceProperties.ActiveConnection)
+                    print()
 
-            ui.switch("Connected").on('click', lambda e: connection_sw_cb(e)).props("flat color=accent").bind_value_from(deviceProperties, "State", backward= lambda v: v==100)
+            #ui.switch("Connected").on('click', lambda e: connection_sw_cb(e)).props("flat color=accent").bind_value_from(deviceProperties, "State", backward= lambda v: v==100)
             #print(deviceProperties.State)
 
         ui.separator()
         
         async def autoConnectCallback():
-            await device.set("Autoconnect", 'b', deviceProperties.Autoconnect)
+            await device.set("Autoconnect", 'b', autoConnect)
 
         with ui.column().classes("flex-1 gap-4"):  # Fixed width for labels
             with ui.row().classes("flex-1 gap-16"):    
@@ -311,30 +312,90 @@ async def interface_card(iface :str ):
                 ui.label("General").classes("font-bold w-8")
                 ui.checkbox('Connect automatically', on_change=autoConnectCallback).props(
                     "flat color=accent").props(
-                            "dense").bind_value(deviceProperties, 'Autoconnect')
+                            "dense")
             
             with ui.row().classes("flex-1 gap-16"):
                 ui.label("IPv4").classes("font-bold w-8")
-                ui.label(addressDataToString(ip4configProperties.AddressData))
+                ui.label(addressDataToString(ip4AddressData))
+            
                 
 
             with ui.row().classes("flex-1 gap-16"):
                 ui.label("IPv6").classes("font-bold w-8")
-                ui.label(addressDataToString(ip6configProperties.AddressData))
+                ui.label(addressDataToString(ip6AddressData))
                 
             with ui.row().classes("flex-1 gap-16"):
-                ui.button("Edit", on_click=edit_connection).props("flat color=accent")
+                ui.button("Edit", on_click=lambda: edit_connection(current_settings)).props("flat color=accent")
                 
                 
 
 
 
 
+class IpAddressSection:
+
+    def __init__(self, settings):
+        self.settings = settings
+
+    def build(self):
+        self.section = ui.column().classes("items-center justify-between gap-4 w-full")
+        self.load_ip4_addresses()
+
+    def load_ip4_addresses(self):
+           ipv4 = self.settings.get('ipv4')
+           addrData = ipv4.get('address-data').value
+           gw = ipv4.get('gateway').value
+           for addr in addrData:
+               a = addr.get('address').value
+               p = addr.get('prefix').value
+               g = gw
+               self.add_ip_address_box(a,p,g)
+
+    def add_ip_address_box(self, a:str=None, p:str=None, g:str=None):
+        with self.section:
+            with ui.row() as ip_box:
+                ui.input(label="Address", value=a).props("dense").classes("flex-1")
+                ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
+                ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
+                ui.button(icon="delete", on_click=lambda: self.remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
+            #ui_addresses.append(ip_box)
+
+    def remove_ip_address_box(self, item):
+        self.section.remove(item)
+
+        
 
 
-def edit_connection():
+def edit_connection(settings :dict):
+
+    ui_addresses = []
+
+    #def parse_current_settings():
+
+    def load_ip4_addresses(settings :dict):
+           ipv4 = settings.get('ipv4')
+           addrData = ipv4.get('address-data').value
+           gw = ipv4.get('gateway').value
+           for addr in addrData:
+               a = addr.get('address').value
+               p = addr.get('prefix').value
+               g = gw
+               add_ip_address_box(a,p,g)
     
+    def load_ip4_dns(settings :dict):
+        ipv4 = settings.get('ipv4')
+        dnsData = ipv4.get('dns-data').value
+        for dns in dnsData:
+            add_dns_server(dns)
+
+    def load_ip4_dns_search(settings :dict):
+        ipv4 = settings.get('ipv4')
+        dnsSearch = ipv4.get('dns-search').value
+        for dns in dnsSearch:
+            add_dns_search(dns)
+
     
+    pprint(settings)
     def on_mode_change(e):
         print("did it work?")
         #match e.value:
@@ -387,25 +448,29 @@ def edit_connection():
     
     def remove_route_box(item):
         route_section.remove(item)
+
+
+
     
-    def add_ip_address_box():
+    def add_ip_address_box(a:str=None, p:str=None, g:str=None):
         with address_section:
             with ui.row() as ip_box:
-                ui.input(label="Address").props("dense").classes("flex-1")
-                ui.input(label="Prefix or netmask").props("dense").classes("flex-1")
-                ui.input(label="Gateway").props("dense").classes("flex-1")
+                ui.input(label="Address", value=a).props("dense").classes("flex-1")
+                ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
+                ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
                 ui.button(icon="delete", on_click=lambda: remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
-                
-    def add_dns_server():
+            ui_addresses.append(ip_box)
+
+    def add_dns_server(s:str=None):
         with dns_section:
             with ui.row() as dns_box:
-                ui.input(label="Server").props("dense").classes("flex-1")
+                ui.input(label="Server", value=s).props("dense").classes("flex-1")
                 ui.button(icon="delete", on_click=lambda: remove_dns_server_box( dns_box)).props("flat color=accent").props("dense")
                 
-    def add_dns_search():
+    def add_dns_search(s:str=None):
         with dns_search_section:
             with ui.row() as dns_search_box:
-                ui.input(label="Search domain").props("dense").classes("flex-1")
+                ui.input(label="Search domain", value=s).props("dense").classes("flex-1")
                 ui.button(icon="delete", on_click=lambda: remove_dns_search_box( dns_search_box)).props("flat color=accent").props("dense")  
                        
     def add_route():
@@ -418,7 +483,10 @@ def edit_connection():
 
                 ui.button(icon="delete", on_click=lambda: remove_route_box(route_box)).props("flat color=accent").props("dense")
                 
+    
 
+
+    addr_section = IpAddressSection(settings)
                     
     with ui.dialog() as dialog:
         with ui.card().classes("w-full self-start max-h-[90vh] overflow-y-auto"):
@@ -430,12 +498,20 @@ def edit_connection():
                         address_mode = ui.select(
                             options=["Automatic", "Link Local", "Manual", "Shared", "Disabled"], 
                             on_change=on_mode_change ,value="Automatic").props("dense").classes("w-24")
-                        
+                                        
+
                         ip_address_button = ui.button(
                             icon="add",
-                            on_click=add_ip_address_box,
+                            on_click=addr_section.add_ip_address_box,
                         ).props("flat color=accent").props("dense")
-                address_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                
+
+                addr_section.build()
+
+                #address_section = ui.column().classes("items-center justify-between gap-4 w-full")
+
+                #load_ip4_addresses(settings)
+
                 ui.separator()
                 
                 with ui.row().classes("w-full justify-between"):
@@ -448,6 +524,7 @@ def edit_connection():
                             on_click=add_dns_server,
                         ).props("flat color=accent").props("dense")
                 dns_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                load_ip4_dns(settings)
                 ui.separator()
                 
                 with ui.row().classes("w-full justify-between"):
@@ -460,6 +537,7 @@ def edit_connection():
                             on_click=add_dns_search,
                         ).props("flat color=accent").props("dense")
                 dns_search_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                load_ip4_dns_search(settings)
                 ui.separator()
                 
                 
@@ -474,31 +552,12 @@ def edit_connection():
                         ).props("flat color=accent").props("dense")
                 route_section = ui.column().classes("items-center justify-between gap-4 w-full")
                 ui.separator()
-                ## DNS
-                #with ui.row().classes("w-full items-center justify-between"):
-                #    ui.label("DNS")
-                #    ui.switch().props("flat color=accent").props("align=right")
-                #    ui.button(icon="add", on_click=add_ip_address_box).props("flat color=accent").props("align=right")
-                #    
-                #ui.separator()
-                ## DNS search
-                #with ui.row().classes("w-full justify-between"):
-                #    ui.label("DNS search domains")
-                #    ui.switch().props("flat color=accent")
-                #    ui.button(icon="add", on_click=add_ip_address_box).props("flat color=accent")
-                #    
-                #ui.separator()
-                ## Routes 
-                #with ui.row().classes("w-full items-center justify-between"):
-                #    ui.label("Routes")
-                #    ui.switch().props("flat color=accent")
-                #    ui.button(icon="add", on_click=add_ip_address_box).props("flat color=accent")
-                
-              
+
                 with ui.row().classes("items-center justify-between gap-4 w-full"):
 
                     def on_save_cb():
 
+                        print(ui_addresses)
                 
                         if True:
                             #AddV3User(user)
