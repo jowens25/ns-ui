@@ -534,7 +534,7 @@ async def edit_connection(device: ProxyInterface):
 
                     with ui.row():
                         address_mode = ui.select(
-                            options=["disabled", "auto", "manual", "link-local"], 
+                            options=["disabled", "auto", "manual"], 
                             on_change=on_method_change).props("dense").classes("w-24")
                             #on_change=print("nothing")).props("dense").classes("w-24")
 
@@ -603,12 +603,20 @@ async def edit_connection(device: ProxyInterface):
                     async def on_save_cb():
 
                         if True:
+
+                            if address_mode.value == 'auto':
+                                settings['ipv4'].pop('address-data', None)
+                                settings['ipv4'].pop('routes', None)
+                                settings['ipv4'].pop('addresses', None)
+                                settings['ipv4'].pop('gateway', None)
+
                             
-                            settings['ipv4']['address-data'] = ip4_addresses_to_dbus(ip4Addresses)
-                            settings['ipv4']['method'] = ipv4_method_to_dbus(address_mode.value)
-                            settings['ipv4'].pop('addresses', None)
-                            settings['ipv4'].pop('routes', None)
-                            settings['ipv4']['gateway'] = ip4_gateway_to_dbus("10.1.10.1")
+                            if address_mode.value == 'manual':
+                                settings['ipv4']['method'] = ipv4_method_to_dbus(address_mode.value)
+                                settings['ipv4']['gateway'] = ip4_gateway_to_dbus("10.1.10.1")
+                                settings['ipv4']['address-data'] = ip4_addresses_to_dbus(ip4Addresses)
+                                settings['ipv4'].pop('addresses', None)
+                                settings['ipv4'].pop('routes', None)
 
                             await connection.call_update2(settings, 0x1, {})
 
