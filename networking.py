@@ -1,23 +1,14 @@
 from dataclasses import asdict
 from pprint import pprint
-from nicegui import ui, app
-from org_freedesktop_NetworkManager_IP6Config import IP6Config, IP6ConfigProperties
+from typing import List, Optional
+from nicegui import ui, app, binding
 from theme import init_colors
 from rest_api import APIClient
 
-from org_freedesktop_NetworkManager import NetworkManager, NetworkManagerProperties
-from org_freedesktop_NetworkManager_Device import Device, DeviceProperties, Statistics, Wired
-from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigProperties
-from org_freedesktop_NetworkManager import NetworkManager
-from org_freedesktop_NetworkManager_Settings_Connection import Connection, ConnectionProperties
-from org_freedesktop_NetworkManager_Settings import Settings, SettingsProperties
-from dbus_next.signature import Variant, SignatureTree, SignatureType
 
-from org_freedesktop_NetworkManager_ActiveConnection import ActiveConnection, ActiveConnectionProperties
-from jeepney.wrappers import Properties
-from jeepney.io.asyncio import Proxy
+from dbus_next.signature import Variant
 
-from dbus_next import BusType
+from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
 from dbus import dbus
 
@@ -84,7 +75,6 @@ def addressDataToAddress(addressdata: list[dict]) -> list:
         if address and prefix:
             formatted.append(f"{address.value}/{prefix.value}")
     return formatted
-
 
 
 def formatAddressString(addresses: list[str]) -> str:
@@ -250,7 +240,7 @@ async def interface_card(iface :str):
         activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
         connection_path = await activeConnection.get_connection()
         connection = GetConnection(dbus.Bus, connection_path)
-        current_settings = await connection.call_get_settings()
+        #current_settings = await connection.call_get_settings()
 
     if len(ip4_config_path) > 1:
         ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
@@ -316,221 +306,222 @@ async def interface_card(iface :str):
                 ui.label(addressDataToString(ip6AddressData))
                 
             with ui.row().classes("flex-1 gap-16"):
-                ui.button("Edit", on_click=lambda: edit_connection(current_settings)).props("flat color=accent")
+                ui.button("Edit", on_click= lambda : edit_connection(device)).props("flat color=accent")
                 
                 
 
-
+@binding.bindable_dataclass
 class Ip4Address:
-    def __init__(self, a, p, g):
-        with ui.row() as ip_box:
-            self.address = ui.input(label="Address", value=a).props("dense").classes("flex-1")
-            self.prefix = ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
-            self.gateway = ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
+    Address: Optional[str] = None
+    Prefix: Optional[int] = None
 
-    def to_dbus(self):
-        addressDataEntry = Variant('aa{sv}', [
-            {
-                'address': Variant('s', self.address.value),
-                'prefix': Variant('u', self.prefix.value)
-            }
-        ])
-        return addressDataEntry
+@binding.bindable_dataclass
+class DnsServer:
+    Server: Optional[str] = None
 
-#class Ip4AddressSection:
-#
-#    def __init__(self, settings):
-#        self.settings = settings
-#        self.ipv4 = self.settings.get('ipv4')
-#        self.section = None
-#        self.addresses = []
-#
-#        self.get_address()
-#
-#    def build(self):
-#        self.section = ui.column().classes("items-center justify-between gap-4 w-full")
-#        return self.section
-#    
-#    def build_addresses(self):
-#        with self.section:
-#            for addr in self.addresses:
-#                with ui.row():
-#                    addr
-#
-#    def get_address(self):
-#        addrData = self.ipv4.get('address-data')
-#        if addrData:
-#            g = self.ipv4.get('gateway').value if self.ipv4.get('gateway') else ''
-#            for addr in addrData.value:
-#                a = addr.get('address').value
-#                p = addr.get('prefix').value
-#                self.addresses.append(Ip4Address(a,p,g))
-#            return 
-#
-#    def load_addresses_from_card():
-#        return
-#    
-#    def display_addresses():
-#        return
-#    
-#
-#    #def load_ip4_addresses(self):
-#    #       addrData = self.ipv4.get('address-data').value
-##
-#    #       for addr in addrData:
-#    #           print(addr)
-#    #           a = addr.get('address').value
-#    #           p = addr.get('prefix').value
-#    #           g = self.ipv4.get('gateway').value
-#    #           self.add_ip_address_box(a,p,g)
-##
-#    #def show_ip4_addresses(self):
-##
-##
-#    def add_ip_address_box(self, a:str=None, p:str=None, g:str=None):
-#        with self.section:
-#            with ui.row() as ip_box:
-#                #self.addresses
-#                #ui.input(label="Address", value=a).props("dense").classes("flex-1")
-#                #ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
-#                #ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
-#                ui.button(icon="delete", on_click=lambda: self.remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
-#            #ui_addresses.append(ip_box)
-##
-    #def remove_ip_address_box(self, item):
-    #    self.section.remove(item)
-#
-    #def write_addresses_to_connection(self):
-    #    for addr in self.addresses:
-    #        print() #self.settings['ipv4']['address-data'] = 
+@binding.bindable_dataclass
+class DnsSearch:
+    Search: Optional[str] = None
 
+@binding.bindable_dataclass
+class Gateway:
+    Address: Optional[str] = None
+    
+def ip4_addresses_to_dbus(ip :list[Variant]):
+    return Variant('aa{sv}', [{'address': Variant('s', i.Address), 'prefix': Variant('u', int(i.Prefix))} for i in ip])
 
+def dns_servers_to_dbus(servers :list[str]):
+    return Variant('as', servers)
 
-def edit_connection(settings :dict):
+def dns_searches_to_dbus(search: list[str]):
+    return Variant('as', search)
 
+def ip4_gateway_to_dbus(gw: str):
+    return Variant('s', gw)
 
-    def get_ip4_mode(settings :dict):
-        
+def ipv4_method_to_dbus(method :str):
+    return Variant('s', method)
 
+async def edit_connection(device: ProxyInterface):
 
-    ui_addresses = []
+    active_connection_path = await device.get_active_connection()
+
+    if len(active_connection_path) > 1:
+        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
+        connection_path = await activeConnection.get_connection()
+        connection = GetConnection(dbus.Bus, connection_path)
+        settings = await connection.call_get_settings()
+    
+    print("INITIAL SETTINGS")
+    pprint(settings)
+
+    ip4Addresses: List[Ip4Address] = []
+
+    #dnsServers: List[str] = []
+    #dnsSearch: List[str] = []
 
 
     def load_ip4_addresses(settings :dict):
-           ipv4 = settings.get('ipv4')
-           addrData = ipv4.get('address-data').value
-
-           gw = ipv4.get('gateway').value if ipv4.get('gateway') else ''
-
-
-           for addr in addrData:
-               a = addr.get('address').value
-               p = addr.get('prefix').value
-               g = gw
-               add_ip_address_box(a,p,g)
-    
-    def load_ip4_dns(settings :dict):
         ipv4 = settings.get('ipv4')
-        dnsData = ipv4.get('dns-data')
-        if dnsData:
-            for dns in dnsData.value:
-                add_dns_server(dns)
+        addrData = ipv4.get('address-data').value
+        gw = ipv4.get('gateway').value if ipv4.get('gateway') else ''
+        for addr in addrData:
+            a = addr.get('address').value
+            p = addr.get('prefix').value
+            g = gw
+            addr = Ip4Address(a, p)
+            ip4Addresses.append(addr)
+        ip_address_list.refresh()
 
-    def load_ip4_dns_search(settings :dict):
-        ipv4 = settings.get('ipv4')
-        dnsSearch = ipv4.get('dns-search')
-        if dnsSearch:
-            for dns in dnsSearch.value:
-                add_dns_search(dns)
+    def add_ip_address(a:str=None, p:str=None, g:str=None):
+        addr = Ip4Address(a, p)
+        ip4Addresses.append(addr)
+        ip_address_list.refresh()
 
-    
-    pprint(settings)
-    def on_mode_change(e):
-        print("did it work?")
-        #match e.value:
-        #    case "Disabled":                
-        #        ip_address_button.disable()
-        #        dns_switch.disable()
-        #        dns_button.disable()
-        #        search_switch.disable()
-        #        search_button.disable()
-        #        route_switch.disable()
-        #        route_button.disable()
-        #        dns_switch.value = False
-        #        search_switch.value = False
-        #        route_switch.value = False
-        #        
-        #    case "Automatic":
-        #        ip_address_button.enable()
-        #        dns_switch.enable()
-        #        dns_button.enable()
-        #        search_switch.enable()
-        #        search_button.enable()
-        #        route_switch.enable()
-        #        route_button.enable()
-        #        
-        #        dns_switch.value = True
-        #        search_switch.value = True
-        #        route_switch.value = True
-        #        
-        #    case "Shared":
-        #        ip_address_button.disable()
-        #        dns_switch.disable()
-        #        dns_button.disable()
-        #        search_switch.disable()
-        #        search_button.disable()
-        #        route_switch.disable()
-        #        route_button.enable()
-        #    
-        #    case _:
-        #        print("default")
-            
-    
-    def remove_ip_address_box(item):
-        address_section.remove(item)
-        
-    def remove_dns_server_box(item):
-        dns_section.remove(item)
-        
-    def remove_dns_search_box(item):
-        dns_search_section.remove(item)
-    
-    def remove_route_box(item):
-        route_section.remove(item)
+    def remove_ip_address(addr):
+        ip4Addresses.remove(addr)
+        ip_address_list.refresh()
 
-
-
-    
-    def add_ip_address_box(a:str=None, p:str=None, g:str=None):
-        with address_section:
-            with ui.row() as ip_box:
-                ui.input(label="Address", value=a).props("dense").classes("flex-1")
-                ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
-                ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
-                ui.button(icon="delete", on_click=lambda: remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
-            ui_addresses.append(ip_box)
-
-    def add_dns_server(s:str=None):
-        with dns_section:
-            with ui.row() as dns_box:
-                ui.input(label="Server", value=s).props("dense").classes("flex-1")
-                ui.button(icon="delete", on_click=lambda: remove_dns_server_box( dns_box)).props("flat color=accent").props("dense")
-                
-    def add_dns_search(s:str=None):
-        with dns_search_section:
-            with ui.row() as dns_search_box:
-                ui.input(label="Search domain", value=s).props("dense").classes("flex-1")
-                ui.button(icon="delete", on_click=lambda: remove_dns_search_box( dns_search_box)).props("flat color=accent").props("dense")  
-                       
-    def add_route():
-        with route_section:
-            with ui.row() as route_box:
-                ui.input(label="Address").props("dense").classes("flex-1")
-                ui.input(label="Prefix or netmask").props("dense").classes("flex-1")
+    @ui.refreshable
+    def ip_address_list():
+        for addr in ip4Addresses:
+            with ui.row():
+                ui.input(label="Address").props("dense").classes("flex-1").bind_value(addr, "Address")
+                ui.input(label="Prefix or netmask").props("dense").classes("flex-1").bind_value(addr, "Prefix")
                 ui.input(label="Gateway").props("dense").classes("flex-1")
-                ui.input(label="Metric").props("dense").classes("flex-1")
+                ui.button(icon="delete", on_click=lambda a=addr: remove_ip_address(a)).props("flat color=accent").props("dense")
+    
 
-                ui.button(icon="delete", on_click=lambda: remove_route_box(route_box)).props("flat color=accent").props("dense")
+
+    #def load_ip4_dns(settings :dict):
+    #    ipv4 = settings.get('ipv4')
+    #    dnsData = ipv4.get('dns-data')
+    #    if dnsData:
+    #        for dns in dnsData.value:
+    #            dnsServers.append(dns)
+    #    dns_server_list.refresh()
+#
+    #@ui.refreshable
+    #def dns_server_list():
+    #    with dns_section:
+    #        for dns in dnsServers:
+    #            with ui.row():
+    #                ui.input(label="Server").props("dense").classes("flex-1").bind_value(dns, "Server")
+    #                ui.button(icon="delete", on_click=lambda: remove_dns_server_box(dns)).props("flat color=accent").props("dense")
+#
+#
+    #def load_ip4_dns_search(settings :dict):
+    #    ipv4 = settings.get('ipv4')
+    #    dnsSearch = ipv4.get('dns-search')
+    #    if dnsSearch:
+    #        for dns in dnsSearch.value:
+    #            add_dns_search(dns)
+
+    #
+    def on_method_change(e):
+    #    match e.value:
+    #        case "disabled":                
+    #            ip_address_button.disable()
+    #            dns_switch.disable()
+    #            dns_button.disable()
+    #            search_switch.disable()
+    #            search_button.disable()
+    #            route_switch.disable()
+    #            route_button.disable()
+    #            dns_switch.value = False
+    #            search_switch.value = False
+    #            route_switch.value = False
+    #            
+    #        case "auto":
+    #            ip_address_button.enable()
+    #            dns_switch.enable()
+    #            dns_button.enable()
+    #            search_switch.enable()
+    #            search_button.enable()
+    #            route_switch.enable()
+    #            route_button.enable()
+    #            
+    #            dns_switch.value = True
+    #            search_switch.value = True
+    #            route_switch.value = True
+    #            
+    #        case "manual":
+    #            ip_address_button.enable()
+    #            dns_switch.disable()
+    #            dns_button.enable()
+    #            search_switch.disable()
+    #            search_button.enable()
+    #            route_switch.disable()
+    #            route_button.enable()
+    #            
+    #            dns_switch.value = False
+    #            search_switch.value = False
+    #            route_switch.value = False
+#
+    #        case "link-local":
+    #            ip_address_button.disable()
+    #            dns_switch.disable()
+    #            dns_button.disable()
+    #            search_switch.disable()
+    #            search_button.disable()
+    #            route_switch.disable()
+    #            route_button.enable()
+    #            
+    #            dns_switch.value = False
+    #            search_switch.value = False
+    #            route_switch.value = False
+#
+    #        
+    #        case _:
+    #            print("default")
+#
+        set_ip4_method(e.value)
+#
+    def get_ip4_method():
+        ipv4 = settings.get('ipv4')
+        method = ipv4.get('method')
+        if method:
+            return method.value
+        else:
+            return ''
+    
+    def set_ip4_method(method):
+        options=["disabled", "auto", "manual", "link-local"]
+        if method in options:
+            settings['ipv4']['method'] = Variant('s', method)
+    
+    #def remove_dns_server_box(item):
+    #    dns_section.remove(item)
+    #    
+    #def remove_dns_search_box(item):
+    #    dns_search_section.remove(item)
+    #
+    #def remove_route_box(item):
+    #    route_section.remove(item)
+
+
+    #def add_dns_server(s:str=None):
+    #    server = DnsServer(s)
+    #    with dns_section:
+    #        with ui.row() as dns_box:
+    #            ui.input(label="Server").props("dense").classes("flex-1").bind_value(server, "Server")
+    #            ui.button(icon="delete", on_click=lambda: remove_dns_server_box( dns_box)).props("flat color=accent").props("dense")
+    #            
+    #def add_dns_search(s:str=None):
+    #    with dns_search_section:
+    #        with ui.row() as dns_search_box:
+    #            ui.input(label="Search domain", value=s).props("dense").classes("flex-1")
+    #            ui.button(icon="delete", on_click=lambda: remove_dns_search_box( dns_search_box)).props("flat color=accent").props("dense")  
+    #                   
+    #def add_route():
+    #    with route_section:
+    #        with ui.row() as route_box:
+    #            ui.input(label="Address").props("dense").classes("flex-1")
+    #            ui.input(label="Prefix or netmask").props("dense").classes("flex-1")
+    #            ui.input(label="Gateway").props("dense").classes("flex-1")
+    #            ui.input(label="Metric").props("dense").classes("flex-1")
+#
+    #            ui.button(icon="delete", on_click=lambda: remove_route_box(route_box)).props("flat color=accent").props("dense")
                 
     
 
@@ -543,68 +534,90 @@ def edit_connection(settings :dict):
 
                     with ui.row():
                         address_mode = ui.select(
-                            options=["Automatic", "Link Local", "Manual", "Shared", "Disabled"], 
-                            on_change=on_mode_change ,value="Automatic").props("dense").classes("w-24")
-                                        
+                            options=["disabled", "auto", "manual", "link-local"], 
+                            on_change=on_method_change).props("dense").classes("w-24")
+                            #on_change=print("nothing")).props("dense").classes("w-24")
+
 
                         ip_address_button = ui.button(
                             icon="add",
-                            on_click=add_ip_address_box,
+                            on_click=add_ip_address,
                         ).props("flat color=accent").props("dense")
-                    
-
+                        
                 address_section = ui.column().classes("items-center justify-between gap-4 w-full")
+
+                ip_address_list()
+               
+                ui.separator()
+                
+                #with ui.row().classes("w-full justify-between"):
+                #    ui.label("DNS")
+                #    with ui.row():
+                #        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
+                #        dns_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                #        dns_button = ui.button(
+                #            icon="add",
+                #            on_click=add_dns_server,
+                #        ).props("flat color=accent").props("dense")
+                #dns_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                #ui.separator()
+                #
+                #with ui.row().classes("w-full justify-between"):
+                #    ui.label("DNS search domains")
+                #    with ui.row():
+                #        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
+                #        search_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                #        search_button = ui.button(
+                #            icon="add",
+                #            on_click=add_dns_search,
+                #        ).props("flat color=accent").props("dense")
+                #dns_search_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                #ui.separator()
+                
+                
+                #with ui.row().classes("w-full justify-between"):
+                #    ui.label("Routes")
+                #    with ui.row():
+                #        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
+                #        route_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                #        route_button = ui.button(
+                #            icon="add",
+                #            on_click=add_route,
+                #        ).props("flat color=accent").props("dense")
+                #route_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                #ui.separator()
 
                 load_ip4_addresses(settings)
 
-                ui.separator()
-                
-                with ui.row().classes("w-full justify-between"):
-                    ui.label("DNS")
-                    with ui.row():
-                        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
-                        dns_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
-                        dns_button = ui.button(
-                            icon="add",
-                            on_click=add_dns_server,
-                        ).props("flat color=accent").props("dense")
-                dns_section = ui.column().classes("items-center justify-between gap-4 w-full")
-                load_ip4_dns(settings)
-                ui.separator()
-                
-                with ui.row().classes("w-full justify-between"):
-                    ui.label("DNS search domains")
-                    with ui.row():
-                        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
-                        search_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
-                        search_button = ui.button(
-                            icon="add",
-                            on_click=add_dns_search,
-                        ).props("flat color=accent").props("dense")
-                dns_search_section = ui.column().classes("items-center justify-between gap-4 w-full")
-                load_ip4_dns_search(settings)
-                ui.separator()
-                
-                
-                with ui.row().classes("w-full justify-between"):
-                    ui.label("Routes")
-                    with ui.row():
-                        #ui.select(options=["Automatic", "Manual"], value="Automatic").props("dense").classes("w-24")
-                        route_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
-                        route_button = ui.button(
-                            icon="add",
-                            on_click=add_route,
-                        ).props("flat color=accent").props("dense")
-                route_section = ui.column().classes("items-center justify-between gap-4 w-full")
-                ui.separator()
+                #load_ip4_dns(settings)
+#
+                #load_ip4_dns_search(settings)
+
+                #print(settings['ipv4']['dns-data'])
+
+                address_mode.value = get_ip4_method()                           
+
 
                 with ui.row().classes("items-center justify-between gap-4 w-full"):
 
-                    def on_save_cb():
+                    async def on_save_cb():
 
-                        print(ui_addresses)
-                
                         if True:
+                            
+                            settings['ipv4']['address-data'] = ip4_addresses_to_dbus(ip4Addresses)
+                            settings['ipv4']['method'] = ipv4_method_to_dbus(address_mode.value)
+                            settings['ipv4'].pop('addresses', None)
+                            settings['ipv4'].pop('routes', None)
+                            settings['ipv4']['gateway'] = ip4_gateway_to_dbus("10.1.10.1")
+
+                            await connection.call_update2(settings, 0x1, {})
+
+                            await device.call_reapply(settings, 0, 0)
+
+                            print("FINAL SETTINGS")
+                            pprint(settings)
+
+            
                             #AddV3User(user)
                             dialog.close()
                         else:
@@ -615,4 +628,4 @@ def edit_connection(settings :dict):
 
                     save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
                     cancel_button = ui.button("cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
-    return dialog
+    await dialog

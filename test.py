@@ -5,13 +5,7 @@ from pprint import pprint
 import time
 from typing import Any, Optional, Type, TypeVar
 from dbus import dbus
-from org_freedesktop_NetworkManager import NetworkManager
-from org_freedesktop_NetworkManager_Device import Device
-from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigProperties
-from jeepney.wrappers import MessageGenerator, new_method_call, Message, Properties
-from jeepney.io.asyncio import open_dbus_router, Proxy, DBusRouter, DBusConnection, open_dbus_connection
-from org_freedesktop_NetworkManager_DHCP4Config import DHCP4Config
- # Recommended for type hinting in Python 3.11+
+
 
 from dbus_next import BusType
 from dbus_next.signature import Variant, SignatureTree, SignatureType
@@ -205,7 +199,7 @@ async def help_me():
         interface = await device.get_interface()
 
 
-        if interface == 'wlp1s0':
+        if interface == 'enp3s0':
 
             ip4_config_path = await device.get_ip4_config()
 
@@ -216,41 +210,42 @@ async def help_me():
             print(gateway)
             pprint(address_data)
 
-            #active_connection_path = await device.get_active_connection()
-            ##print(active_connection_path)
-            #if len(active_connection_path) > 1:
-            #    activeConnection = GetActiveConnection(bus, active_connection_path)
-#
-            #    connection_path = await activeConnection.get_connection()
-#
-            #    #print(connection_path)
-#
-            #    connection = GetConnection(bus, connection_path)
-#
-            #    current_settings = await connection.call_get_settings()
-#
-            #    pprint(current_settings)
-#
-            #    current_settings['ipv4']['method'] = Variant('s', 'auto')
-            #    #current_settings['ipv4']['address-data'] = Variant('aa{sv}', [
-            #    #    {
-            #    #        'address': Variant('s', '192.168.0.105'),
-            #    #        'prefix': Variant('u', 24)
-            #    #    }
-            #    #])
-            #    #current_settings['ipv4']['gateway'] = Variant('s', '192.168.0.1')
-#
-            #    
-            #    # Remove if exists, do nothing if it doesn't
-            #    current_settings['ipv4'].pop('addresses', None)
-            #    current_settings['ipv4'].pop('routes', None)  # Also remove deprecated routes
-#
-            #    await connection.call_update2(current_settings, 0x1, {})
-#
-            #    await device.call_reapply(current_settings, 0, 0)
-#
-            #    pprint(current_settings)
-#
+            active_connection_path = await device.get_active_connection()
+            #print(active_connection_path)
+            if len(active_connection_path) > 1:
+                activeConnection = GetActiveConnection(bus, active_connection_path)
+
+                connection_path = await activeConnection.get_connection()
+
+                #print(connection_path)
+
+                connection = GetConnection(bus, connection_path)
+
+                current_settings = await connection.call_get_settings()
+
+                pprint(current_settings)
+                
+                if False:
+                    current_settings['ipv4']['method'] = Variant('s', 'auto')
+                    current_settings['ipv4']['address-data'] = Variant('aa{sv}', [
+                        {
+                            'address': Variant('s', '10.1.10.106'),
+                            'prefix': Variant('u', 24)
+                        }
+                    ])
+                    current_settings['ipv4']['gateway'] = Variant('s', '10.1.10.1')
+
+
+                    # Remove if exists, do nothing if it doesn't
+                    current_settings['ipv4'].pop('addresses', None)
+                    current_settings['ipv4'].pop('routes', None)  # Also remove deprecated routes
+
+                    await connection.call_update2(current_settings, 0x1, {})
+
+                    await device.call_reapply(current_settings, 0, 0)
+
+                    pprint(current_settings)
+
 
     
     

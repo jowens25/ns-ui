@@ -1,3 +1,4 @@
+import os
 import socket
 import time
 from dataclasses import dataclass, asdict
@@ -29,16 +30,16 @@ async def socket_setup():
         raise
         
     finally:
-        socket_cleanup()
+        await socket_cleanup()
         
 async def socket_cleanup():
     global socket_writer
-    await asyncio.sleep(0.01)
 
     print("SOCKET LISTENER CLOSED")
     if socket_writer:
         socket_writer.close()
         await socket_writer.wait_closed()
+
 
         
         
