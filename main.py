@@ -6,6 +6,7 @@ from mysocket.mysocket import socket_setup, socket_cleanup
 
 from networking import network_page, interface_page
 from accounts import accounts_page
+from terminal import terminal_page
 from theme import init_colors
 from login import login_page
 from root import root_page
@@ -24,6 +25,8 @@ from dbus import dbus
 @ui.page('/ntp')
 
 @ui.page('/accounts')
+
+@ui.page('/terminal')
 
 @ui.page('/')
 async def root():
@@ -53,9 +56,9 @@ async def root():
 
 
 
+    
 
-
-
+   
 
     with ui.left_drawer(bordered=True).classes("bg-dark") as left_drawer:
 
@@ -68,7 +71,8 @@ async def root():
 #
         ui.button(
             "Networking",
-            on_click=lambda: ui.navigate.to('/networking'),
+            on_click=lambda:ui.navigate.to('/networking'),
+                              
             icon="settings_ethernet",
         ).props("flat color=white align=left").classes("full-width")
 #
@@ -78,7 +82,8 @@ async def root():
             on_click=lambda: ui.navigate.to('/ntp'),
             icon="settings_ethernet",
         ).props("flat color=white align=left").classes("full-width")
-#
+
+        ui.button("Terminal", on_click=lambda: ui.navigate.to('/terminal'), icon="terminal").props("flat color=white align=left").classes("full-width")
 #
         #ui.button(
         #    "Protocols",
@@ -125,6 +130,7 @@ async def root():
                   '/snmp': snmp_page, 
                   '/snmp/{user}': snmp_user_page,
                   '/accounts': accounts_page, 
+                  '/terminal': terminal_page,
                   })
 
 

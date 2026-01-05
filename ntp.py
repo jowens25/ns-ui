@@ -81,6 +81,8 @@ async def writeNtlConfig(content: str):
         if line.startswith("$WC"):
             await write_socket(line)
 
+
+
 async def ntp_page():
 
     with ui.column() as pageContainer:

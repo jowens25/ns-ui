@@ -11,6 +11,7 @@ from org_freedesktop_NetworkManager_IP4Config import IP4Config, IP4ConfigPropert
 from org_freedesktop_NetworkManager import NetworkManager
 from org_freedesktop_NetworkManager_Settings_Connection import Connection, ConnectionProperties
 from org_freedesktop_NetworkManager_Settings import Settings, SettingsProperties
+from dbus_next.signature import Variant, SignatureTree, SignatureType
 
 from org_freedesktop_NetworkManager_ActiveConnection import ActiveConnection, ActiveConnectionProperties
 from jeepney.wrappers import Properties
@@ -181,7 +182,6 @@ async def on_row_selected(event):
             ui.label(f"Interface Details: {row['name']}").classes("text-h6 mb-4")
             await interface_card(row["name"])
             ui.button("Close", on_click=interface_dialog.close).classes("bg-secondary")
-
         interface_dialog.open()
         
 
@@ -222,15 +222,11 @@ async def network_page():
 
 
 async def interface_page(interface_name: str):
-
     with ui.row():
         ui.link('Networking', '/networking')
         ui.label('>')
         ui.label(interface_name)
-
         await interface_card(interface_name)
-
-
 
 
 
@@ -239,14 +235,16 @@ async def interface_card(iface :str):
     nm = GetNetworkManager(dbus.Bus)
 
     device_path = await nm.call_get_device_by_ip_iface(iface)
-
     device = GetDevice(dbus.Bus, device_path)
 
     hwaddr = await device.get_hw_address()
     flags = await device.get_interface_flags()
-    carrier = processInterfaceFlags(flags)
-    
+    autoConnect = await device.get_autoconnect()
+    ip4_config_path = await device.get_ip4_config()
+    ip6_config_path = await device.get_ip6_config()
     active_connection_path = await device.get_active_connection()
+
+    carrier = processInterfaceFlags(flags)
 
     if len(active_connection_path) > 1:
         activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
@@ -254,20 +252,13 @@ async def interface_card(iface :str):
         connection = GetConnection(dbus.Bus, connection_path)
         current_settings = await connection.call_get_settings()
 
-    autoConnect = await device.get_autoconnect()
-    ip4_config_path = await device.get_ip4_config()
-    ip6_config_path = await device.get_ip6_config()
-
     if len(ip4_config_path) > 1:
-
         ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
         ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
         ip4AddressData = await ip4Config.get_address_data()
         ip6AddressData = await ip6Config.get_address_data()
 
         addresses = combineAddresses(ip4AddressData, ip6AddressData)
-    
-
 
 
     with ui.card().classes("w-full"):
@@ -330,52 +321,108 @@ async def interface_card(iface :str):
                 
 
 
+class Ip4Address:
+    def __init__(self, a, p, g):
+        with ui.row() as ip_box:
+            self.address = ui.input(label="Address", value=a).props("dense").classes("flex-1")
+            self.prefix = ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
+            self.gateway = ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
 
+    def to_dbus(self):
+        addressDataEntry = Variant('aa{sv}', [
+            {
+                'address': Variant('s', self.address.value),
+                'prefix': Variant('u', self.prefix.value)
+            }
+        ])
+        return addressDataEntry
 
-class IpAddressSection:
+#class Ip4AddressSection:
+#
+#    def __init__(self, settings):
+#        self.settings = settings
+#        self.ipv4 = self.settings.get('ipv4')
+#        self.section = None
+#        self.addresses = []
+#
+#        self.get_address()
+#
+#    def build(self):
+#        self.section = ui.column().classes("items-center justify-between gap-4 w-full")
+#        return self.section
+#    
+#    def build_addresses(self):
+#        with self.section:
+#            for addr in self.addresses:
+#                with ui.row():
+#                    addr
+#
+#    def get_address(self):
+#        addrData = self.ipv4.get('address-data')
+#        if addrData:
+#            g = self.ipv4.get('gateway').value if self.ipv4.get('gateway') else ''
+#            for addr in addrData.value:
+#                a = addr.get('address').value
+#                p = addr.get('prefix').value
+#                self.addresses.append(Ip4Address(a,p,g))
+#            return 
+#
+#    def load_addresses_from_card():
+#        return
+#    
+#    def display_addresses():
+#        return
+#    
+#
+#    #def load_ip4_addresses(self):
+#    #       addrData = self.ipv4.get('address-data').value
+##
+#    #       for addr in addrData:
+#    #           print(addr)
+#    #           a = addr.get('address').value
+#    #           p = addr.get('prefix').value
+#    #           g = self.ipv4.get('gateway').value
+#    #           self.add_ip_address_box(a,p,g)
+##
+#    #def show_ip4_addresses(self):
+##
+##
+#    def add_ip_address_box(self, a:str=None, p:str=None, g:str=None):
+#        with self.section:
+#            with ui.row() as ip_box:
+#                #self.addresses
+#                #ui.input(label="Address", value=a).props("dense").classes("flex-1")
+#                #ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
+#                #ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
+#                ui.button(icon="delete", on_click=lambda: self.remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
+#            #ui_addresses.append(ip_box)
+##
+    #def remove_ip_address_box(self, item):
+    #    self.section.remove(item)
+#
+    #def write_addresses_to_connection(self):
+    #    for addr in self.addresses:
+    #        print() #self.settings['ipv4']['address-data'] = 
 
-    def __init__(self, settings):
-        self.settings = settings
-
-    def build(self):
-        self.section = ui.column().classes("items-center justify-between gap-4 w-full")
-        self.load_ip4_addresses()
-
-    def load_ip4_addresses(self):
-           ipv4 = self.settings.get('ipv4')
-           addrData = ipv4.get('address-data').value
-           gw = ipv4.get('gateway').value
-           for addr in addrData:
-               a = addr.get('address').value
-               p = addr.get('prefix').value
-               g = gw
-               self.add_ip_address_box(a,p,g)
-
-    def add_ip_address_box(self, a:str=None, p:str=None, g:str=None):
-        with self.section:
-            with ui.row() as ip_box:
-                ui.input(label="Address", value=a).props("dense").classes("flex-1")
-                ui.input(label="Prefix", value=p).props("dense").classes("flex-1")
-                ui.input(label="Gateway", value=g).props("dense").classes("flex-1")
-                ui.button(icon="delete", on_click=lambda: self.remove_ip_address_box(ip_box)).props("flat color=accent").props("dense")
-            #ui_addresses.append(ip_box)
-
-    def remove_ip_address_box(self, item):
-        self.section.remove(item)
-
-        
 
 
 def edit_connection(settings :dict):
 
+
+    def get_ip4_mode(settings :dict):
+        
+
+
     ui_addresses = []
 
-    #def parse_current_settings():
 
     def load_ip4_addresses(settings :dict):
            ipv4 = settings.get('ipv4')
            addrData = ipv4.get('address-data').value
-           gw = ipv4.get('gateway').value
+
+           gw = ipv4.get('gateway').value if ipv4.get('gateway') else ''
+
+
            for addr in addrData:
                a = addr.get('address').value
                p = addr.get('prefix').value
@@ -384,15 +431,17 @@ def edit_connection(settings :dict):
     
     def load_ip4_dns(settings :dict):
         ipv4 = settings.get('ipv4')
-        dnsData = ipv4.get('dns-data').value
-        for dns in dnsData:
-            add_dns_server(dns)
+        dnsData = ipv4.get('dns-data')
+        if dnsData:
+            for dns in dnsData.value:
+                add_dns_server(dns)
 
     def load_ip4_dns_search(settings :dict):
         ipv4 = settings.get('ipv4')
-        dnsSearch = ipv4.get('dns-search').value
-        for dns in dnsSearch:
-            add_dns_search(dns)
+        dnsSearch = ipv4.get('dns-search')
+        if dnsSearch:
+            for dns in dnsSearch.value:
+                add_dns_search(dns)
 
     
     pprint(settings)
@@ -485,15 +534,13 @@ def edit_connection(settings :dict):
                 
     
 
-
-    addr_section = IpAddressSection(settings)
-                    
     with ui.dialog() as dialog:
         with ui.card().classes("w-full self-start max-h-[90vh] overflow-y-auto"):
             ui.label("IPv4 settings").classes("text-h5")
             with ui.column().classes("w-full"):
                 with ui.row().classes("w-full justify-between"):
                     ui.label("Addresses")
+
                     with ui.row():
                         address_mode = ui.select(
                             options=["Automatic", "Link Local", "Manual", "Shared", "Disabled"], 
@@ -502,15 +549,13 @@ def edit_connection(settings :dict):
 
                         ip_address_button = ui.button(
                             icon="add",
-                            on_click=addr_section.add_ip_address_box,
+                            on_click=add_ip_address_box,
                         ).props("flat color=accent").props("dense")
-                
+                    
 
-                addr_section.build()
+                address_section = ui.column().classes("items-center justify-between gap-4 w-full")
 
-                #address_section = ui.column().classes("items-center justify-between gap-4 w-full")
-
-                #load_ip4_addresses(settings)
+                load_ip4_addresses(settings)
 
                 ui.separator()
                 
