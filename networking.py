@@ -7,7 +7,7 @@ from rest_api import APIClient
 
 
 from dbus_next.signature import Variant
-
+from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
 from dbus import dbus
@@ -324,8 +324,8 @@ class DnsSearch:
     Search: Optional[str] = None
 
 @binding.bindable_dataclass
-class Gateway:
-    Address: Optional[str] = None
+class Ip4Gateway:
+    Address: Optional[str] = ''
     
 def ip4_addresses_to_dbus(ip :list[Variant]):
     return Variant('aa{sv}', [{'address': Variant('s', i.Address), 'prefix': Variant('u', int(i.Prefix))} for i in ip])
@@ -337,7 +337,7 @@ def dns_searches_to_dbus(search: list[str]):
     return Variant('as', search)
 
 def ip4_gateway_to_dbus(gw: str):
-    return Variant('s', gw)
+    return Variant('s', gw.Address)
 
 def ipv4_method_to_dbus(method :str):
     return Variant('s', method)
@@ -356,6 +356,7 @@ async def edit_connection(device: ProxyInterface):
     pprint(settings)
 
     ip4Addresses: List[Ip4Address] = []
+    ip4Gateway = Ip4Gateway()
 
     #dnsServers: List[str] = []
     #dnsSearch: List[str] = []
@@ -364,11 +365,9 @@ async def edit_connection(device: ProxyInterface):
     def load_ip4_addresses(settings :dict):
         ipv4 = settings.get('ipv4')
         addrData = ipv4.get('address-data').value
-        gw = ipv4.get('gateway').value if ipv4.get('gateway') else ''
         for addr in addrData:
             a = addr.get('address').value
             p = addr.get('prefix').value
-            g = gw
             addr = Ip4Address(a, p)
             ip4Addresses.append(addr)
         ip_address_list.refresh()
@@ -388,7 +387,7 @@ async def edit_connection(device: ProxyInterface):
             with ui.row():
                 ui.input(label="Address").props("dense").classes("flex-1").bind_value(addr, "Address")
                 ui.input(label="Prefix or netmask").props("dense").classes("flex-1").bind_value(addr, "Prefix")
-                ui.input(label="Gateway").props("dense").classes("flex-1")
+                ui.input(label="Gateway").props("dense").classes("flex-1").bind_value(ip4Gateway, "Address")
                 ui.button(icon="delete", on_click=lambda a=addr: remove_ip_address(a)).props("flat color=accent").props("dense")
     
 
@@ -605,6 +604,7 @@ async def edit_connection(device: ProxyInterface):
                         if True:
 
                             if address_mode.value == 'auto':
+                                settings['ipv4']['method'] = ipv4_method_to_dbus(address_mode.value)
                                 settings['ipv4'].pop('address-data', None)
                                 settings['ipv4'].pop('routes', None)
                                 settings['ipv4'].pop('addresses', None)
@@ -613,14 +613,28 @@ async def edit_connection(device: ProxyInterface):
                             
                             if address_mode.value == 'manual':
                                 settings['ipv4']['method'] = ipv4_method_to_dbus(address_mode.value)
-                                settings['ipv4']['gateway'] = ip4_gateway_to_dbus("10.1.10.1")
+                                settings['ipv4']['gateway'] = ip4_gateway_to_dbus(ip4Gateway)
                                 settings['ipv4']['address-data'] = ip4_addresses_to_dbus(ip4Addresses)
                                 settings['ipv4'].pop('addresses', None)
                                 settings['ipv4'].pop('routes', None)
 
-                            await connection.call_update2(settings, 0x1, {})
+                            if address_mode.value == 'disabled':
+                                settings['ipv4']['method'] = ipv4_method_to_dbus(address_mode.value)
+                                settings['ipv4'].pop('address-data', None)
+                                settings['ipv4'].pop('routes', None)
+                                settings['ipv4'].pop('addresses', None)
+                                settings['ipv4'].pop('gateway', None)
+                                settings['ipv4'].pop('dns-data', None)
+                                settings['ipv4'].pop('dns-search', None)
+                                settings['ipv4'].pop('route-data', None)
+                                settings['ipv4'].pop('dns', None)
 
-                            await device.call_reapply(settings, 0, 0)
+                            try:
+                                await connection.call_update2(settings, 0x1, {})
+                                await device.call_reapply(settings, 0, 0)
+                            except DBusError as e:
+                                ui.notify(e, type='negative')
+
 
                             print("FINAL SETTINGS")
                             pprint(settings)
