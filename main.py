@@ -159,3 +159,11 @@ if __name__ in {"__main__", "__mp_main__"}:
     )
 
 
+#TODO Add firewalld to networking page
+#TODO Clean up and test ipv4 stuff, expand to dns and ipv6
+#TODO Move snmp to a separate service for permissions
+#TODO Work on accounts and grouping users into accounts
+#TODO Implement Policy kit one day
+#TODO Move time server stuff to dbus service?
+#TODO Move PAM / Auth to a different service
+#TODO Fix terminal to be in the signed in user

@@ -632,6 +632,7 @@ async def edit_connection(device: ProxyInterface):
                             try:
                                 await connection.call_update2(settings, 0x1, {})
                                 await device.call_reapply(settings, 0, 0)
+
                             except DBusError as e:
                                 ui.notify(e, type='negative')
 
