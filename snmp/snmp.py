@@ -571,18 +571,18 @@ def MakeEmptyPersistentDirConf():
 def OverWriteWithDefaultSnmpConf():
     runCmd(['cp', './configs/snmpd.conf', '/etc/snmp/snmpd.conf'])
 
-@require_service_management
+#@require_service_management
 def StopSnmpd():
     print("stoping... snmpd")
 
     runCmd(["systemctl", "stop", "snmpd"])
 
-@require_service_management
+#@require_service_management
 def StartSnmpd():
     print("starting... snmpd")
     runCmd(["systemctl", "start", "snmpd"])
 
-@require_service_management
+#@require_service_management
 def RestartSnmpd():
     print("restarting... snmpd")
 

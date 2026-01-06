@@ -6,8 +6,9 @@ import asyncio
 from asyncio import StreamWriter, StreamReader
 from nicegui import Event, app
 
-
+from collections import deque
 socket_received = Event()
+
 socket_writer = None
 socket_reader = None
 
@@ -48,11 +49,33 @@ async def read_socket():
     while True:
         data = await socket_reader.read(128)
         if data:
+            record_data(data)
             # Emit event with the data - any subscribed UI can receive it
             socket_received.emit(data.decode('utf-8', errors='ignore'))
         else:
             # Socket closed by remote end
             break
+        
+        #get_data()
+
+
+
+def record_data(data):
+    latest = data.decode('utf-8', errors='ignore')
+    with open("data.txt", "a") as f:
+        f.writelines(latest)
+    
+    with open("data.txt", "r+") as f:
+        lines = f.readlines()
+        n = len(lines)
+        if n >= 10000:
+            lines = lines[n-10000:]
+            f.seek(0)       # go to start of file
+            f.truncate() 
+            f.writelines(lines)
+
+
+
 
 async def write_socket(command: str):
     global socket_writer

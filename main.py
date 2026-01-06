@@ -4,7 +4,7 @@ from nicegui import ui, app, background_tasks
 from lib.date import get_date
 from mysocket.mysocket import socket_setup, socket_cleanup
 
-from networking import network_page, interface_page
+from networking_page import network_page, interface_page
 from accounts import accounts_page
 from terminal import terminal_page
 from theme import init_colors
@@ -12,6 +12,7 @@ from login import login_page
 from root import root_page
 from snmp.snmp import snmp_page, snmp_user_page
 from ntp import ntp_page
+from fpga_page import fpga_page
 
 from dbus import dbus
 
@@ -27,6 +28,8 @@ from dbus import dbus
 @ui.page('/accounts')
 
 @ui.page('/terminal')
+
+@ui.page('/fpga')
 
 @ui.page('/')
 async def root():
@@ -85,11 +88,11 @@ async def root():
 
         ui.button("Terminal", on_click=lambda: ui.navigate.to('/terminal'), icon="terminal").props("flat color=white align=left").classes("full-width")
 #
-        #ui.button(
-        #    "Protocols",
-        #    on_click=lambda: ui.navigate.to('/protocols'),
-        #    icon="settings_ethernet",
-        #).props("flat color=white align=left").classes("full-width")
+        ui.button(
+            "FPGA",
+            on_click=lambda: ui.navigate.to('/fpga'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
 #
         #ui.button(
         #    "Access",
@@ -131,6 +134,7 @@ async def root():
                   '/snmp/{user}': snmp_user_page,
                   '/accounts': accounts_page, 
                   '/terminal': terminal_page,
+                  '/fpga': fpga_page,
                   })
 
 
@@ -159,8 +163,9 @@ if __name__ in {"__main__", "__mp_main__"}:
     )
 
 
-#TODO Add firewalld to networking page
+
 #TODO Clean up and test ipv4 stuff, expand to dns and ipv6
+#TODO Add firewalld to networking page
 #TODO Move snmp to a separate service for permissions
 #TODO Work on accounts and grouping users into accounts
 #TODO Implement Policy kit one day

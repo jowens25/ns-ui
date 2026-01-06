@@ -1,7 +1,9 @@
 import asyncio
-from mysocket.mysocket import socket_received, write_socket
+from mysocket.mysocket import socket_received, write_socket, socket_reader, socket_writer, socket_setup
 from rest_api import APIClient
 from nicegui import ui, app, background_tasks, events
+        
+import plotly.graph_objects as go
 
 api = APIClient(base_url="http://localhost:5000")
 from dataclasses import dataclass, field
@@ -81,31 +83,68 @@ async def writeNtlConfig(content: str):
         if line.startswith("$WC"):
             await write_socket(line)
 
+def parse_lines_for_num(lines :list[str]) -> list:
+    frequencies = []
+
+    line: str
+    for line in lines:
+        if line.startswith("$GPNVS,9,"):
+            fields = line.split(',')
+            freq = fields[2].strip('+')
+            frequencies.append(float(freq))
+    
+    return frequencies
+
+
+
 
 
 async def ntp_page():
-
     with ui.column() as pageContainer:
         ui.label("NTP").classes("text-h5")
-        with ui.card().classes('size-120 resize overflow-auto'):
-            terminal = ui.xterm({'convertEol': True}).classes('size-full')
-            ui.element('q-resize-observer').on('resize', terminal.fit)
-            socket_received.subscribe(lambda data: terminal.write(data))
+        with ui.row():
+            term = ui.xterm({'convertEol': True})
+            socket_received.subscribe(lambda data: term.write(data))
+
+            term.on_data(lambda e: term.write(e.data.replace('\r', '\n\r').replace('\x7f', '\x1b[0D\x1b[0K')))
+
+            with ui.card():
+                async def handle_upload(e: events.UploadEventArguments):
+                    ui.notify(f'Uploaded {e.file.name}')
+                    await writeNtlConfig(await e.file.text())
+    
+                ui.upload(label="FPGA Config Upload", on_upload=handle_upload).props("flat color=accent")
             
-        with ui.card():
-            async def on_cmd():
-                await write_socket(cmd.value)
-            cmd = ui.input("command: ").on("keydown.enter", on_cmd)
 
-        
-        
 
-        with ui.card():
-            async def handle_upload(e: events.UploadEventArguments):
-                ui.notify(f'Uploaded {e.file.name}')
-                await writeNtlConfig(await e.file.text())
 
-            ui.upload(on_upload=handle_upload).classes('max-w-full').props("flat color=accent")
+
+        def build_plot():
+            # initial read
+            with open('data.txt', 'r') as f:
+                lines = f.readlines()
+            y = parse_lines_for_num(lines)
+
+            fig = go.Figure(go.Scatter(x=list(range(len(y))),y=y))
+            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+
+            plot = ui.plotly(fig).classes('w-full h-40')
+            return plot, fig
+
+        plot, fig = build_plot()
+
+        def refresh_plot():
+            # re-read file and update trace data
+            with open('data.txt', 'r') as f:
+                lines = f.readlines()
+            y = parse_lines_for_num(lines)
+
+            # update the existing figure instead of creating a new one
+            fig.data[0].y = y
+            plot.update()
+
+        # call this whenever you get new data
+        socket_received.subscribe(lambda _data: refresh_plot())
 
             
         with ui.card():
