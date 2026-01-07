@@ -3,7 +3,7 @@ from typing import Optional
 from nicegui import ui, app
 from theme import init_colors
 
-from snmp.snmp import table
+from snmp_page import table
 
 @dataclass
 class SystemAccount:

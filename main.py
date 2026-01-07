@@ -10,7 +10,7 @@ from terminal import terminal_page
 from theme import init_colors
 from login import login_page
 from root import root_page
-from snmp.snmp import snmp_page, snmp_user_page
+from snmp_page import snmp_page, snmp_user_page
 from ntp import ntp_page
 from fpga_page import fpga_page
 
@@ -133,7 +133,7 @@ async def root():
                   '/networking/{interface_name}': interface_page,
                   '/ntp' : ntp_page,
                   '/snmp': snmp_page, 
-                  '/snmp/{user}': snmp_user_page,
+                  '/snmp/{version}/{user}': snmp_user_page,
                   '/accounts': accounts_page, 
                   '/terminal': terminal_page,
                   '/fpga': fpga_page,

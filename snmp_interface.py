@@ -26,6 +26,10 @@ class SnmpInterface(ServiceInterface):
         return await IsActiveSnmpd()
     
     @method()
+    async def Reset(self):
+        await ResetSnmpd()
+    
+    @method()
     async def IsActive(self) -> 'b':
         return await IsActiveSnmpd()
     
@@ -62,8 +66,8 @@ class SnmpInterface(ServiceInterface):
         return await AddV2User(V2User.from_dict(v2User))
 
     @method()
-    async def GetV2UserBySecurityName(self, secName :'s') -> 'a{ss}':
-        return asdict(await ReadV2UserBySecurityName(secName))
+    async def GetV2UserByCommunity(self, community :'s') -> 'a{ss}':
+        return asdict(await ReadV2UserByCommunity(community))
 
     @method()
     async def GetV2Users(self) -> 'aa{ss}':
@@ -81,9 +85,3 @@ class SnmpInterface(ServiceInterface):
 # 
 # ====================================================================
     
-
-async def GetSnmp(bus: MessageBus):
-    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
-    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
-    return obj.get_interface('com.novus.ns.snmp')
-

@@ -1,7 +1,7 @@
 
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from commands import runCmd
 from typing import Optional
 import aiofiles
@@ -47,10 +47,6 @@ class V3User:
     Permissions: Optional[str] = ''
 
     def from_dict(userDict :dict):
-            for k,v in userDict.items():
-                if v == '':
-                    return None
-
             user = V3User(
                 UserName = userDict.get('UserName'),
                 Version = userDict.get('Version'),
@@ -71,10 +67,6 @@ class V2User:
     SecName:Optional[str] = ''
 
     def from_dict(userDict :dict):
-        for k,v in userDict.items():
-            if v == '':
-                return None
-        
         user = V2User(
             Community = userDict.get('Community'),
             Version = userDict.get('Version'),
@@ -83,6 +75,8 @@ class V2User:
             SecName = userDict.get('SecName')
         )
         return user
+
+
 
 
 
@@ -432,13 +426,14 @@ async def AddV2User(user: V2User):
     await _writeV2User(user)
     await StartSnmpd()
 
-async def ReadV2UserBySecurityName(secName :str) -> V2User:
-    '''look up v2 user'''
+def ReadV2UserByCommunity(community: str) -> V2User:
     u :V2User
-    for u in await ReadV2Users():
-        if u.SecName == secName:
+    for u in ReadV2Users():
+        if u.Community == community:
             return u
     return None
+
+
 
 async def ReadV2Users() -> list[V2User]:
     groups = await _readSnmpGroupsFromFile()
