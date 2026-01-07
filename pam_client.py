@@ -9,14 +9,14 @@ async def main():
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
     # the introspection xml would normally be included in your project, but
     # this is convenient for development
-    introspection = await bus.introspect('test.name', '/test/path')
+    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
 
-    obj = bus.get_proxy_object('test.name', '/test/path', introspection)
-    interface = obj.get_interface('test.interface')
+    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
+    interface = obj.get_interface('com.novus.ns.pam')
     #properties = obj.get_interface('org.freedesktop.DBus.Properties')
 
-    user = input("username?")
-    password = input("password?")
+    user = input("username?: ")
+    password = input("password?: ")
     ## call methods on the interface (this causes the media player to play)
     resp = await interface.call_authenticate(user, password)
     print(resp)

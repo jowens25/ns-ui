@@ -177,6 +177,8 @@ async def help_me():
     global introspections, bus
 
 
+    print(__name__)
+
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
 

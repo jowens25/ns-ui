@@ -10,26 +10,16 @@ async def main():
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
     # the introspection xml would normally be included in your project, but
     # this is convenient for development
-    introspection = await bus.introspect('test.name', '/test/path')
+    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
 
-    obj = bus.get_proxy_object('test.name', '/test/path', introspection)
-    interface = obj.get_interface('test.interface')
+    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
+    snmp = obj.get_interface('com.novus.ns.snmp')
     #properties = obj.get_interface('org.freedesktop.DBus.Properties')
 
     ## call methods on the interface (this causes the media player to play)
-    resp = await interface.call_get_v2_users()
-    pprint(resp)
-    #volume = await player.get_volume()
-    #print(f'current volume: {volume}, setting to 0.5')
-#
-    #await player.set_volume(0.5)
-#
-    ## listen to signals
-    #def on_properties_changed(interface_name, changed_properties, invalidated_properties):
-    #    for changed, variant in changed_properties.items():
-    #        print(f'property changed: {changed} - {variant.value}')
-#
-    #properties.on_properties_changed(on_properties_changed)
+    resp = await snmp.call_is_active()
+    print(resp)
+
 
     await loop.create_future()
 
