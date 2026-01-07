@@ -6,21 +6,22 @@ import asyncio
 loop = asyncio.get_event_loop()
 from dbus_next.constants import BusType
 
-async def main():
-    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
-    # the introspection xml would normally be included in your project, but
-    # this is convenient for development
+
+async def GetSnmp(bus: MessageBus):
     introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
-
     obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
-    snmp = obj.get_interface('com.novus.ns.snmp')
-    #properties = obj.get_interface('org.freedesktop.DBus.Properties')
+    return obj.get_interface('com.novus.ns.snmp')
 
-    ## call methods on the interface (this causes the media player to play)
-    resp = await snmp.call_is_active()
-    print(resp)
 
+async def test_snmp_client():
+    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+
+    snmp = await GetSnmp(bus)
+
+    print(await snmp.call_get_v2_user_by_security_name('comuser_3'))
 
     await loop.create_future()
 
-loop.run_until_complete(main())
+
+if __name__ == "__main__":
+    loop.run_until_complete(test_snmp_client())

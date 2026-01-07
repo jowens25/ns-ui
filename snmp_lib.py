@@ -38,13 +38,29 @@ class Group:
 
 @dataclass
 class V3User:
-    UserName: Optional[str] = None
-    Version: Optional[str] = None
-    AuthType: Optional[str] = None
-    AuthPassphrase: Optional[str] = None
-    PrivType: Optional[str] = None
-    PrivPassphrase: Optional[str] = None
-    Permissions: Optional[str] = None
+    UserName: Optional[str] = ''
+    Version: Optional[str] = ''
+    AuthType: Optional[str] = ''
+    AuthPassphrase: Optional[str] = ''
+    PrivType: Optional[str] = ''
+    PrivPassphrase: Optional[str] = ''
+    Permissions: Optional[str] = ''
+
+    def from_dict(userDict :dict):
+            for k,v in userDict.items():
+                if v == '':
+                    return None
+
+            user = V3User(
+                UserName = userDict.get('UserName'),
+                Version = userDict.get('Version'),
+                AuthType = userDict.get('AuthType'),
+                AuthPassphrase = userDict.get('AuthPassphrase'),
+                PrivType = userDict.get('PrivType'),
+                PrivPassphrase = userDict.get('PrivPassphrase'),
+                Permissions = userDict.get('Permissions')
+            )
+            return user
 
 @dataclass
 class V2User:
@@ -75,60 +91,55 @@ class V2User:
 # ====================================================================        
 async def _readSnmpGroupsFromFile() -> list[Group]:
     groups = []
-    async with aiofiles.open(snmp_config_file, "r") as f:
-        content = await f.readlines()
-        
-    async for line in content:
-        line = line.strip("\n")
-        if line.startswith("group"):
-            g = Group()
-            fields = line.split(" ")
-            if len(fields) == 4:
-                g.Permissions = fields[1]
-                g.Version = fields[2]
-                g.SecName = fields[3]
-                groups.append(g)
-    pass #endfor  
+    async with aiofiles.open(snmp_config_file, "r") as f:        
+        async for line in f:
+            line = line.strip("\n")
+            if line.startswith("group"):
+                g = Group()
+                fields = line.split(" ")
+                if len(fields) == 4:
+                    g.Permissions = fields[1]
+                    g.Version = fields[2]
+                    g.SecName = fields[3]
+                    groups.append(g)
+        pass #endfor  
     return groups
 
 async def _readV2UsersFromFile() -> list[V2User]:
     v2s = []
     async with aiofiles.open(snmp_config_file, "r") as f:
-        content = await f.readlines()
-    async for line in content:
-        line = line.strip("\n")
-        if line.startswith("com2sec"):
-            v2 = V2User()
-            fields = line.split(" ")
-            if len(fields) == 4:
-                v2.SecName = fields[1]
-                v2.Source = fields[2]
-                v2.Community = fields[3]
-                v2s.append(v2)
-    pass #endfor
+        async for line in f:
+            line = line.strip("\n")
+            if line.startswith("com2sec"):
+                v2 = V2User()
+                fields = line.split(" ")
+                if len(fields) == 4:
+                    v2.SecName = fields[1]
+                    v2.Source = fields[2]
+                    v2.Community = fields[3]
+                    v2s.append(v2)
+        pass #endfor
     return v2s
 
 async def _readV3UsersFromFile() -> list[V3User]:
     v3s = []
     try:
-        async with aiofiles.open(_getPersistentConfPath(), "r") as f:
-            content = await f.readlines()
+        async with aiofiles.open(await _getPersistentConfPath(), "r") as f:
+            async for line in f:
+                line = line.strip("\n")
+                if line.startswith("usmUser"):
+                    v3 = V3User()
+                    fields = line.split(" ")
+                    if len(fields) == 12:
+                    
+                        v3.UserName = fields[4].strip('"')
 
-        async for line in content:
-            line = line.strip("\n")
-            if line.startswith("usmUser"):
-                v3 = V3User()
-                fields = line.split(" ")
-                if len(fields) == 12:
-                
-                    v3.UserName = fields[4].strip('"')
-
-                    v3.AuthType = USM_OID_MAP.get(fields[7], f"Unknown")
-                    #v3.AuthPassphrase = fields[3]
-                    v3.PrivType = USM_OID_MAP.get(fields[9], f"Unknown")
-                    #v3.PrivPassphrase = fields[5]
-                    v3s.append(v3)
-        pass # endfor
+                        v3.AuthType = USM_OID_MAP.get(fields[7], f"Unknown")
+                        #v3.AuthPassphrase = fields[3]
+                        v3.PrivType = USM_OID_MAP.get(fields[9], f"Unknown")
+                        #v3.PrivPassphrase = fields[5]
+                        v3s.append(v3)
+            pass # endfor
     except FileNotFoundError:
         return v3s
     return v3s
@@ -145,15 +156,14 @@ async def _writeV2User(user :V2User):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
     
-    async for i, line in enumerate(content):
-        line = line.strip("\n")
-        if line.startswith("#com2sec"):
-            userIndex = lineCount + 2
-        if line.startswith("#group"):
-            groupIndex = lineCount + 3
-        
-        lineCount = lineCount + 1
-    pass # endfor 
+        for line in content:
+            line = line.strip("\n")
+            if line.startswith("#com2sec"):
+                userIndex = lineCount + 2
+            if line.startswith("#group"):
+                groupIndex = lineCount + 3
+            lineCount = lineCount + 1
+        pass # endfor 
 
 
     newUserLine = f"com2sec comuser_{comNumber} {user.Source} {user.Community}\n"
@@ -279,13 +289,11 @@ async def _deleteV3UserFromConfig(user: V3User):
 
 async def _getPersistentDir() -> str:
     async with aiofiles.open(snmp_config_file, "r") as f:
-        content = await f.readlines()
-        
-    async for i, line in enumerate(content):
-        if line.startswith("persistentDir"): 
-            fields = line.split(" ")
-            if len(fields) == 2:
-                return fields[1].strip("\n")
+        async for line in f:
+            if line.startswith("persistentDir"): 
+                fields = line.split(" ")
+                if len(fields) == 2:
+                    return fields[1].strip("\n")
     pass #endfor
     return None
 
@@ -372,14 +380,20 @@ async def AddV3User(user: V3User):
     await StartSnmpd() # real user created
     await _deleteV3UserCreateDirective(user)
 
+async def ReadV3UserByUsername(username: str) -> V3User:
+    u :V3User
+    async for u in (await ReadV3Users()):
+        if u.UserName == username:
+            return u
+    return None
 
 async def ReadV3Users() -> list[V3User]:
-    groups = _readSnmpGroupsFromFile()
-    v3s = _readV3UsersFromFile()
+    groups = await _readSnmpGroupsFromFile()
+    v3s = await _readV3UsersFromFile()
     g: Group
-    async for g in groups:
+    for g in groups:
         v3: V3User
-        async for v3 in v3s:
+        for v3 in v3s:
             if g.SecName == v3.UserName:
                 print(g.SecName)
                 v3.Permissions = g.Permissions
@@ -418,11 +432,11 @@ async def AddV2User(user: V2User):
     await _writeV2User(user)
     await StartSnmpd()
 
-async def GetV2UserBySecurityName(user :V2User) -> V2User:
+async def ReadV2UserBySecurityName(secName :str) -> V2User:
     '''look up v2 user'''
     u :V2User
-    async for u in await ReadV2Users():
-        if u.SecName == user.SecName:
+    for u in await ReadV2Users():
+        if u.SecName == secName:
             return u
     return None
 
@@ -430,9 +444,9 @@ async def ReadV2Users() -> list[V2User]:
     groups = await _readSnmpGroupsFromFile()
     v2s = await _readV2UsersFromFile()
     g: Group
-    async for g in groups:
+    for g in groups:
         v2: V2User
-        async for v2 in v2s:
+        for v2 in v2s:
             if g.SecName == v2.SecName:
                 v2.SecName = g.SecName
                 v2.Permissions = g.Permissions
@@ -444,7 +458,7 @@ async def ReadV2Users() -> list[V2User]:
 async def EditV2User(user: V2User):
     '''edit v2 user'''
     print("EditV2User")
-    existingUser = await GetV2UserBySecurityName(user)
+    existingUser = await ReadV2UserBySecurityName(user)
 
     if not existingUser:
         print("USER NOT FOUND")
@@ -454,7 +468,6 @@ async def EditV2User(user: V2User):
     await DeleteV2User(existingUser)
     await _writeV2User(user)
     await StartSnmpd()
-
 
 async def DeleteV2User(user: V2User):
     '''delete v2 user'''
@@ -466,7 +479,7 @@ async def DeleteV2User(user: V2User):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
 
-    async for i, line in enumerate(content):
+    async for line in content:
         if line.startswith("com2sec") and all(p in line for p in _user):
             content.remove(line)
         if line.startswith("group") and all(p in line for p in _group):
@@ -474,3 +487,6 @@ async def DeleteV2User(user: V2User):
 
     async with aiofiles.open(snmp_config_file, "w") as f:
         await f.writelines(content)
+
+
+

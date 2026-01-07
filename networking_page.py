@@ -3,7 +3,7 @@ from dataclasses import asdict
 from pprint import pprint
 from typing import List, Optional
 from nicegui import ui, app, binding
-from networking import *
+from networking_lib import *
 
 from dbus_next.signature import Variant
 from dbus_next.errors import DBusError

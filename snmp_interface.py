@@ -11,27 +11,79 @@ class SnmpInterface(ServiceInterface):
 
 
     @method()
-    async def GetV2Users(self) -> 'aa{ss}':
-        return [asdict(u) for u in ReadV2Users()]
-    
-    @method()
-    async def GetV3Users(self) -> 'aa{ss}':
-        return [asdict(u) for u in ReadV3Users()]
-    
-    @method()
-    async def AddV2User(self, v2User: 'a{ss}') -> 'b':
-        user = V2User.from_dict(v2User)
-        if user:
-            AddV2User(user)
-            return True
-        else:
-            return False
-        
-    @method()
-    async def Reset(self) -> 's':
-        return await ResetSnmpd()
+    async def Stop(self) -> 'b':
+        await StopSnmpd()
+        return await IsActiveSnmpd()
 
+    @method()
+    async def Start(self) -> 'b':
+        await StartSnmpd()
+        return await IsActiveSnmpd()
+    
+    @method()
+    async def Restart(self) -> 'b':
+        await RestartSnmpd()
+        return await IsActiveSnmpd()
+    
     @method()
     async def IsActive(self) -> 'b':
         return await IsActiveSnmpd()
+    
+
+# ====================================================================
+# V3 USERS
+# ====================================================================
+    @method()
+    async def CreateV3User(self, v3User: 'a{ss}') -> 'b':
+        return await AddV3User(V3User.from_dict(v3User))
+
+    @method()
+    async def GetV3UserByUsername(self, username :'s') -> 'aa{ss}':
+        return asdict(await ReadV3UserByUsername(username))
+
+    @method()
+    async def GetV3Users(self) -> 'aa{ss}':
+        return [asdict(u) for u in (await ReadV3Users())]
+
+    @method()
+    async def ModifyV3User(self, initUser: 'a{ss}', finalUser: 'a{ss}'):
+        await EditV3User(V3User.from_dict(initUser), V3User.from_dict(finalUser))
+
+    @method()
+    async def RemoveV3User(self, v3User: 'a{ss}'):
+        await DeleteV3User(V3User.from_dict(v3User))
+    
+# ====================================================================
+# V2 USERS
+# ====================================================================
+
+    @method()
+    async def CreateV2User(self, v2User: 'a{ss}') -> 'b':
+        return await AddV2User(V2User.from_dict(v2User))
+
+    @method()
+    async def GetV2UserBySecurityName(self, secName :'s') -> 'a{ss}':
+        return asdict(await ReadV2UserBySecurityName(secName))
+
+    @method()
+    async def GetV2Users(self) -> 'aa{ss}':
+        return [asdict(u) for u in await ReadV2Users()]
+
+    @method()
+    async def ModifyV2User(self, initUser: 'a{ss}', finalUser: 'a{ss}'):
+        await EditV2User(V2User.from_dict(initUser), V2User.from_dict(finalUser))
+
+    @method()
+    async def RemoveV2User(self, v2User: 'a{ss}'):
+        await DeleteV2User(V2User.from_dict(v2User))
+
+# ====================================================================
+# 
+# ====================================================================
+    
+
+async def GetSnmp(bus: MessageBus):
+    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
+    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
+    return obj.get_interface('com.novus.ns.snmp')
 
