@@ -50,6 +50,8 @@ async def root():
         ui.image("assets/NOVUS_LOGO.svg").classes("w-48")
         ui.label(f'Welcome {app.storage.user["username"]}!')
 
+        ui.button("Request Admin").classes("bg-secondary").props("flat color=accent")
+
         label = ui.label()
 
         async def update_date():
