@@ -42,18 +42,11 @@ def _isValidIp(v: str) -> bool:
     except ValueError:
         return False
     
+def _isValidSnmpDirective(v: str) ->bool:
+    return True if v in ['default', 'other'] else False
+    
 def _isValidNetworkOrIp(v :str) -> bool:
-    return _isValidIp(v) or _isValidNetwork(v)
-
-
-
-def IsV2User(community: str) -> bool:
-    return any(u.Community == community for u in ReadV2Users())
-
-def IsV3User(username: str) -> bool:
-    return any(u.UserName == username for u in ReadV3Users())
-
-
+    return _isValidIp(v) or _isValidNetwork(v) or _isValidSnmpDirective(v)
 
 
 
@@ -140,7 +133,7 @@ def add_v3_dialog():
                     cancel_button = ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
     return dialog
 
-def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str, card):
+def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str, version :str):
 
     table = ui.table(
             title=tab_title,
@@ -153,27 +146,11 @@ def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str, ca
     
     table.add_slot(f'body-cell-{col_param}', f'''
             <q-td :props="props">
-                <a :href="'/snmp/'+ props.row.{col_param}" class="text-accent cursor-pointer hover:underline"> {{{{ props.value }}}} </a>
+                <a :href="'/snmp/{version}/'+ props.row.{col_param}" class="text-accent cursor-pointer hover:underline"> {{{{ props.value }}}} </a>
             </q-td>
         ''')
-    
-    with table.add_slot(f'body-cell-{col_param}'):
-        # Dynamic text from cell value, styled as perfect link
-        ui.button(
-            {{'props.value'}},  # Shows the actual cell content
-            on_click=lambda: card({'props.row[col_param]'})
-        ).props(
-            "flat dense color=primary no-caps unelevated round borderless"
-        ).classes(
-            "text-primary no-shadow no-outline hover:underline hover:text-accent"
-            " text-sm font-medium cursor-pointer no-padding"
-        ).style("text-decoration: none")
 
-    #ith table.add_slot(f'body-cell-{{{{ props.value }}}}'):
-    #   #ui.link(col_param).classes("text-accent cursor-pointer hover:underline")
-    #   ui.label(col_param).classes("text-accent cursor-pointer hover:underline").on('click', lambda: card())
 
-    
     table.props(f'visible-columns={visible_cols}')  # Only show these
     
     with table.add_slot('top-right'):
@@ -231,28 +208,20 @@ async def snmp_page():
         v2Users = await snmp.call_get_v2_users()
         v3Users = await snmp.call_get_v3_users()
      
-        table("V2 Users", v2Users, "Community", add_v2_dialog(), "Community,Version,Source,GroupName", edit_delete_v2_user_card)  # Only show these
-        table("V3 Users", v3Users, "UserName", add_v3_dialog(), "UserName,Version,GroupName,AuthType,PrivType", edit_delete_v3_user_card)
+        table("V2 Users", v2Users, "Community", add_v2_dialog(), "Community,Version,Source,GroupName", "v2")  # Only show these
+        table("V3 Users", v3Users, "UserName", add_v3_dialog(), "UserName,Version,GroupName,AuthType,PrivType", "v3")
         
 
 
-async def snmp_user_page(user: str):
-
-    snmp = await GetSnmp(dbus.Bus)
-
-
+async def snmp_user_page(version :str, user: str):
     with ui.row():
         ui.link('SNMP', '/snmp')
         ui.label('>')
         ui.label(user)
 
-        user = await snmp.call_
-
-        if IsV2User(user):
+        if version == "v2":
             await edit_delete_v2_user_card(user)
-        
-        if IsV3User(user):
-            #await user_card(user, "v3")
+        if version == "v3":
             await edit_delete_v3_user_card(user)
 
 
@@ -269,24 +238,28 @@ def disable_group(fields):
 
 
 async def edit_delete_v2_user_card(community):
-    user = GetV2UserByCommunity(community)
+    snmp = await GetSnmp(dbus.Bus)
+    user = await snmp.call_get_v2_user_by_community(community)
+    v2User = V2User(**user)
+    print(v2User)
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
-            version = ui.select(label="Version", options=["v2c", "v1"], value=user.Version).classes("w-full")
-            permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup'], value=user.Permissions).classes("w-full")
-            community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}, value=user.Community).classes("w-full")
-            source = ui.input("Source / IP Address", validation={"Please enter a valid ip address or valid cidr address": lambda value: _isValidNetworkOrIp(value)}, value=user.Source).classes("w-full")
+            version = ui.select(label="Version", options=["v2c", "v1"]).classes("w-full").bind_value(v2User, "Version")
+            permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup']).classes("w-full").bind_value(v2User, "Permissions")
+            community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}).classes("w-full").bind_value(v2User, "Community")
+            source = ui.input("Source / IP Address", validation={"Please enter a valid ip address or valid cidr address": lambda value: _isValidNetworkOrIp(value)}).classes("w-full").bind_value(v2User, "Source")
             with ui.row().classes("items-center justify-between gap-4 w-full"):
 
-                def on_save_cb():
+
+
+                async def on_save_cb():
                     disable_group(group)
                     save_button.enabled = False
                     edit_button.enabled = True
-                    user.Community = community.value
-                    user.Version = version.value
-                    user.Permissions = permissions.value
-                    user.Source = source.value
-                    EditV2User(user)
+                    print(v2User)
+                    await snmp.call_modify_v2_user(asdict(v2User))
+     
+                    #EditV2User(user)
                     ui.navigate.back()
 
                 def on_edit_cb():
@@ -302,7 +275,7 @@ async def edit_delete_v2_user_card(community):
                             ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
                     result = await dialog
                     if result:
-                        DeleteV2User(user)
+                        await snmp.call_delete_v2_user(asdict(v2User))
                         ui.navigate.back()
                         ui.notify(f'User {user.Community} deleted...')
                     else:

@@ -66,6 +66,7 @@ class SnmpInterface(ServiceInterface):
         return await AddV2User(V2User.from_dict(v2User))
 
     @method()
+
     async def GetV2UserByCommunity(self, community :'s') -> 'a{ss}':
         return asdict(await ReadV2UserByCommunity(community))
 
@@ -74,8 +75,8 @@ class SnmpInterface(ServiceInterface):
         return [asdict(u) for u in await ReadV2Users()]
 
     @method()
-    async def ModifyV2User(self, initUser: 'a{ss}', finalUser: 'a{ss}'):
-        await EditV2User(V2User.from_dict(initUser), V2User.from_dict(finalUser))
+    async def ModifyV2User(self, editUser: 'a{ss}'):
+        await EditV2User(V2User.from_dict(editUser))
 
     @method()
     async def RemoveV2User(self, v2User: 'a{ss}'):

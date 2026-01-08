@@ -295,7 +295,7 @@ async def _setPersistentDir(path):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
     
-    async for i, line in enumerate(content):
+    for i, line in enumerate(content):
         if line.startswith("persistentDir"): 
             content[i] = f"persistentDir {path}\n"
             break
@@ -426,13 +426,19 @@ async def AddV2User(user: V2User):
     await _writeV2User(user)
     await StartSnmpd()
 
-def ReadV2UserByCommunity(community: str) -> V2User:
+async def ReadV2UserByCommunity(community: str) -> V2User:
     u :V2User
-    for u in ReadV2Users():
+    for u in await ReadV2Users():
         if u.Community == community:
             return u
     return None
 
+async def ReadV2UserBySecurityName(secName: str) -> V2User:
+    u :V2User
+    for u in await ReadV2Users():
+        if u.SecName == secName:
+            return u
+    return None
 
 
 async def ReadV2Users() -> list[V2User]:
@@ -453,7 +459,7 @@ async def ReadV2Users() -> list[V2User]:
 async def EditV2User(user: V2User):
     '''edit v2 user'''
     print("EditV2User")
-    existingUser = await ReadV2UserBySecurityName(user)
+    existingUser = await ReadV2UserBySecurityName(user.SecName)
 
     if not existingUser:
         print("USER NOT FOUND")
@@ -474,7 +480,7 @@ async def DeleteV2User(user: V2User):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
 
-    async for line in content:
+    for line in content:
         if line.startswith("com2sec") and all(p in line for p in _user):
             content.remove(line)
         if line.startswith("group") and all(p in line for p in _group):

@@ -21,7 +21,7 @@ from dbus import dbus
 @ui.page('/networking/{interface_name}')
 
 @ui.page('/snmp')
-@ui.page('/snmp/{user}')
+@ui.page('/snmp/{version}/{user}')
 
 @ui.page('/ntp')
 
