@@ -14,6 +14,56 @@ from dbus_next.aio import MessageBus
 from dbus import dbus
 
 
+
+
+@binding.bindable_dataclass
+class Ipv4:
+    AddressData: Optional[list[dict[str, Variant]]] = None
+    Addresses:   Optional[list[list[int]]] = None
+    Dns:         Optional[list[int]] = None
+    DnsData:     Optional[list[str]] = None
+    DnsSearch:   Optional[str] = ''
+    RouteData:   Optional[list[dict[str]]] = None
+
+@binding.bindable_dataclass
+class Ipv4Address:
+    Address: Optional[str] = None
+    Prefix: Optional[int] = None
+
+@binding.bindable_dataclass
+class Ip6Address:
+    Address: Optional[str] = None
+    Prefix: Optional[int] = None
+
+@binding.bindable_dataclass
+class ConnectionSettings:
+    connection: Optional[dict[str, Variant]]
+    ipv4:       Optional[Ipv4]
+    ipv6:       Optional[dict[str, Variant]]
+    proxy:      Optional[dict[str, Variant]]
+
+@binding.bindable_dataclass
+class Connection:
+    Autoconnect:     Optional[bool]
+    Id:              Optional[str] 
+    InterfaceName:   Optional[str]
+    Permissions:     Optional[list[str]]        
+    Timestamp:       Optional[int]      
+    Type:            Optional[str] 
+    Uuid:            Optional[str] 
+
+@binding.bindable_dataclass
+class Connection:
+    Autoconnect:           Optional[bool] = None
+    
+    def to_dbus(self):
+        return {Variant('b', self.Autoconnect),}
+
+
+
+
+
+
 def GetNetworkManager(bus: MessageBus):
     file_name = 'org.freedesktop.NetworkManager.xml'
     with open("introspection/"+file_name, "r") as f:
@@ -66,6 +116,47 @@ def GetConnection(bus: MessageBus, path : str):
     obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
     return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
 
+
+
+
+async def GetSettings(dev: ProxyInterface) -> dict:
+    active_connection_path = await dev.get_active_connection()
+    if len(active_connection_path) > 1:
+        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
+        connection_path = await activeConnection.get_connection()
+        connection = GetConnection(dbus.Bus, connection_path)
+        settings = await connection.call_get_settings()
+    return settings
+
+async def GetIp4Addresses(settings :dict) -> List[Ipv4Address]:
+    ip4Addresses: List[Ip4Address] = []
+
+    ipv4 = settings.get('ipv4')
+    addrData = ipv4.get('address-data').value
+    for addr in addrData:
+        a = addr.get('address').value
+        p = addr.get('prefix').value
+        addr = Ip4Address(a, p)
+        ip4Addresses.append(addr)
+
+    return ip4Addresses
+
+async def GetIp6Addresses(settings :dict) -> List[Ip6Address]:
+    ip4Addresses: List[Ip6Address] = []
+
+    ipv6 = settings.get('ipv6')
+    addrData = ipv6.get('address-data').value
+    for addr in addrData:
+        a = addr.get('address').value
+        p = addr.get('prefix').value
+        addr = Ip6Address(a, p)
+        ip4Addresses.append(addr)
+
+    return ip4Addresses
+
+
+    
+    
 
 
 def addressDataToAddress(addressdata: list[dict]) -> list:
@@ -155,8 +246,13 @@ def combineAddresses(ipv4AddressData, ipv6AddressData) -> str:
 
 
 
-        
 
+async def GetConnectionFromDevice(device :ProxyInterface) -> ProxyInterface:
+    active_connection_path = await device.get_active_connection()
+    if len(active_connection_path) > 1:
+        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
+        connection_path = await activeConnection.get_connection()
+        return GetConnection(dbus.Bus, connection_path)
 
 async def GetInterfacesAndAddresses() -> list:
 
@@ -188,26 +284,43 @@ async def GetInterfacesAndAddresses() -> list:
 
 
 
-@binding.bindable_dataclass
-class Connection:
-    Autoconnect:           Optional[bool] = None
+def GetIp4Gateway(settings :dict) -> str:
+    return settings['ipv4']['gateway'].value
+
+def SetIp4Gateway(settings :dict, gw :str):
+    settings['ipv4']['gateway'].value = gw
+
+
+def GetIp4Method(settings :dict) -> str:
+    return settings['ipv4']['method'].value
+
+def SetIp4Method(settings :dict, method :str):
+    settings['ipv4']['method'].value = method
+
+
+
+
+
+def from_variant(random_dict :dict) -> dict:
+    for k,v in random_dict.items():
+        random_dict[k]=v.value
+    return random_dict
+
+
+def unpackSettings(init_settings :dict) -> dict:
+    settings = {}
+    settings['connection'] = init_settings['connection']
+    settings['ipv4'] = init_settings['ipv4']
+    settings['ipv6'] = init_settings['ipv6']
+    settings['proxy'] = init_settings['proxy']
+
+    c = Connection(from_variant(settings['connection'] ))
+
     
+        
 
-    def to_dbus(self):
-        return {Variant('b', self.Autoconnect),}
-
-
-@binding.bindable_dataclass
-class Ipv4:
-    AddressData: Optional[list[dict[str]]] = None
-    Addresses:   Optional[list[list[int]]] = None
-    Dns:         Optional[list[int]] = None
-    DnsData:     Optional[list[str]] = None
-    DnsSearch:   Optional[str] = ''
-    RouteData:   Optional[list[dict[str]]] = None
-  
-
-
+    print(c)
+    return settings
 
 @binding.bindable_dataclass
 class Device:
@@ -247,3 +360,6 @@ def ip4_gateway_to_dbus(gw: str):
 def ipv4_method_to_dbus(method :str):
     return Variant('s', method)
 
+
+
+#async def GetIp4Gateway(settings :dict) -> Ip4Gateway:

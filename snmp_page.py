@@ -18,148 +18,132 @@ from snmp_client import GetSnmp
 snmp_config_file = "/etc/snmp/snmpd.conf"
 default_persistent_dir_path = "/var/lib/snmp"
 
-
-
 from snmp_lib import V3User, V2User
 
 
-    
-def _getUsersDict(users):
-    return [asdict(i) for i in users]
-    
-
-def _isValidNetwork(v :str) -> bool:
-    try:
-        ipaddress.ip_network(v)
-        return True
-    except ValueError:
-        return False
-
-def _isValidIp(v: str) -> bool:
-    try:
-        ipaddress.ip_address(v)
-        return True
-    except ValueError:
-        return False
-    
-def _isValidSnmpDirective(v: str) ->bool:
-    return True if v in ['default', 'other'] else False
-    
-def _isValidNetworkOrIp(v :str) -> bool:
-    return _isValidIp(v) or _isValidNetwork(v) or _isValidSnmpDirective(v)
-
-
-
+sourceValidation = {"Please enter a valid ip address, network or default": lambda value: len(value) > 0}
+passphraseValidation = {"Passphrase must be at least 8 characters": lambda value: len(value) >= 8,  
+                        "Passphrase must be 24 or less characaters": lambda value: 24 >= len(value)}
+usernameValidation = {"Username must be at least 5 characters": lambda value: len(value) >= 5, 
+                      "Username must be 24 or less characaters": lambda value: 24 >= len(value)}
 
 def validate_group(group: list):
     return [x.validate() for x in group]
-
-
-
-
-
-
-def add_v2_dialog():
-    v2 = V2User()
-    with ui.dialog() as dialog:
-        with ui.card().classes("w-full"):
-            with ui.column().classes("w-full"):
-                version = ui.select(label="Version", options=["v2c", "v1"], value="v2c").classes("w-full")
-                permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup'], value="rwnoauthgroup").classes("w-full")
-                community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}).classes("w-full")
-                source = ui.input("Source / IP Address", value=None, validation={"Please enter a valid ip address or valid cidr address": lambda value: IsValidNetworkOrIp(value)}).classes("w-full")
-
-                with ui.row().classes("items-center justify-between gap-4 w-full"):
-
-                    def on_save_cb():
-                        user = V2User()
-                        user.Version = version.value
-                        user.Permissions = permissions.value
-                        user.Source = source.value
-                        user.Community = community.value
-                        if all(validate_group([version, permissions, community, source])):
-                            AddV2User(user)
-                            dialog.close()
-                        else:
-                            ui.notify("Please correct the errors", type='negative')
-                            
-
-                    def on_cancel_cb():
-                        dialog.close()
-
-                    save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
-                    cancel_button = ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
-    return dialog
-
-
-
-        
-def add_v3_dialog():
     
-    with ui.dialog() as dialog:
+
+@ui.refreshable
+async def v3table():
+    snmp = await GetSnmp(dbus.Bus)
+    v3Users = await snmp.call_get_v3_users()
+    with ui.dialog() as createV3Dialog:
+        v3 = V3User()
+        v3.Version = "usm"
+        v3.Permissions = "rwprivgroup"
+        v3.AuthType = "SHA"
+        v3.PrivType = "AES"
         with ui.card().classes("w-full"):
             with ui.column().classes("w-full"):
-                version = ui.input(label="Version", value="usm").classes("w-full")
-                username = ui.input(label="Username", validation={"Please enter a username": lambda value: len(value) > 0}).classes("w-full")
-                permissions = ui.select(label="Permissions", options=["roprivgroup", "rwprivgroup"], value="rwprivgroup").classes("w-full")
-                auth_type = ui.select(label="Auth Alg", options=['SHA', 'MD5'], value="SHA").classes("w-full")
-                auth_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
-                priv_type = ui.select(label="Priv Alg", options=["AES", "DES"], value="AES").classes("w-full")
-                priv_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
-
+                version = ui.input(label="Version").classes("w-full").bind_value(v3, "Version")
+                version.disable()
+                username = ui.input(label="Username", validation=usernameValidation).classes("w-full").bind_value(v3, "UserName")
+                permissions = ui.select(label="Permissions", options=["roprivgroup", "rwprivgroup"]).classes("w-full").bind_value(v3, "Permissions")
+                auth_type = ui.select(label="Auth Alg", options=['SHA', 'MD5']).classes("w-full").bind_value(v3, "AuthType")
+                auth_pass = ui.input(label="Auth Passphrase", validation=passphraseValidation).classes("w-full").bind_value(v3, "AuthPassphrase")
+                priv_type = ui.select(label="Priv Alg", options=["AES", "DES"]).classes("w-full").bind_value(v3, "PrivType")
+                priv_pass = ui.input(label="Auth Passphrase", validation=passphraseValidation).classes("w-full").bind_value(v3, "PrivPassphrase")
                 with ui.row().classes("items-center justify-between gap-4 w-full"):
-
-                    def on_save_cb():
-                        user = V3User(
-                            Version=version.value,
-                            UserName=username.value,
-                            Permissions=permissions.value,
-                            AuthType=auth_type.value,
-                            AuthPassphrase=auth_pass.value,
-                            PrivType=priv_type.value,
-                            PrivPassphrase=priv_pass.value
-                        )
-                
+                    
+                    async def on_save_cb():
                         if all(validate_group([version, username, permissions, auth_type, auth_pass, priv_type, priv_pass])):
-                            AddV3User(user)
-                            dialog.close()
+                            print("did we validatie ")
+                            await snmp.call_create_v3_user(asdict(v3))
+                            await v3table.refresh()
+                            createV3Dialog.close()
                         else:
                             ui.notify("Please correct the errors", type='negative')
 
                     def on_cancel_cb():
-                        dialog.close()
+                        createV3Dialog.close()
 
-                    save_button = ui.button("save", on_click= on_save_cb).props("flat color=accent align=left") 
-                    cancel_button = ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
-    return dialog
-
-def table(tab_title :str, row_elements, col_param, dialog, visible_cols :str, version :str):
+                    ui.button("save", on_click=on_save_cb).props("flat color=accent align=left") 
+                    ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
 
     table = ui.table(
-            title=tab_title,
-            rows=row_elements,
+            title="V3 Users",
+            rows=v3Users,
             column_defaults={
                 "align": "left",
                 "headerClasses": "uppercase text-primary",
             },
         ).classes("w-full")
     
-    table.add_slot(f'body-cell-{col_param}', f'''
-            <q-td :props="props">
-                <a :href="'/snmp/{version}/'+ props.row.{col_param}" class="text-accent cursor-pointer hover:underline"> {{{{ props.value }}}} </a>
-            </q-td>
-        ''')
+    table.add_slot(f'body-cell-UserName', f''' <q-td :props="props">
+                   <a :href="'/snmp/v3/'+ props.row.UserName" class="text-accent cursor-pointer hover:underline"> {{{{ props.value }}}} </a>
+                   </q-td> ''')
 
-
-    table.props(f'visible-columns={visible_cols}')  # Only show these
+    table.props(f'visible-columns={"UserName,Version,GroupName,AuthType,PrivType"}')  # Only show these
     
     with table.add_slot('top-right'):
-        ui.button(icon="add", on_click = dialog.open).props(
+        ui.button(icon="add", on_click = createV3Dialog.open).props(
             "flat color=accent align=left").classes("w-full").props("dense")
     
 
 
 
+
+@ui.refreshable
+async def v2table():
+    snmp = await GetSnmp(dbus.Bus)
+    v2Users = await snmp.call_get_v2_users()
+    
+    with ui.dialog() as createV2Dialog:
+        v2 = V2User()
+        v2.Version = "v2c"
+        v2.Permissions = "rwnoauthgroup"
+        v2.Source = "default"
+        with ui.card().classes("w-full"):
+            with ui.column().classes("w-full"):
+                version = ui.select(label="Version", options=["v2c", "v1"]).classes("w-full").bind_value(v2, "Version")
+                permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup']).classes("w-full").bind_value(v2, "Permissions")
+                community = ui.input("Community", 
+                                     validation={'Community required': lambda value: len(value) > 0}).classes("w-full").bind_value(v2, "Community")
+                source = ui.input("Source / IP Address", 
+                                  validation=sourceValidation).classes("w-full").bind_value(v2, "Source")
+                with ui.row().classes("items-center justify-between gap-4 w-full"):
+
+                    async def on_save_cb():
+                        if all(validate_group([version, permissions, community, source])):
+                            await snmp.call_create_v2_user(asdict(v2))
+                            await v2table.refresh()
+                            createV2Dialog.close()
+                        else:
+                            ui.notify("Please correct the errors", type='negative')
+                        
+                    def on_cancel_cb():
+                        createV2Dialog.close()
+                    ui.button("save", on_click=on_save_cb).props("flat color=accent align=left") 
+                    ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
+
+    table = ui.table(
+            title="V2 Users",
+            rows=v2Users,
+            column_defaults={
+                "align": "left",
+                "headerClasses": "uppercase text-primary",
+            },
+        ).classes("w-full")
+    
+    table.add_slot(f'body-cell-Community', f'''
+            <q-td :props="props">
+                <a :href="'/snmp/v2/'+ props.row.Community" class="text-accent cursor-pointer hover:underline"> {{{{ props.value }}}} </a>
+            </q-td>
+        ''')
+
+    table.props(f'visible-columns={"Community,Version,Source,GroupName"}')  # Only show these
+    
+    with table.add_slot('top-right'):
+        ui.button(icon="add", on_click = createV2Dialog.open).props(
+            "flat color=accent align=left").classes("w-full").props("dense")
         
 
 async def snmp_page():
@@ -197,6 +181,8 @@ async def snmp_page():
                     ui.button('Reset', on_click=lambda: dialog.submit("reset")).props("flat color=accent align=left")    
             if await dialog == "reset":
                 await snmp.call_reset()
+                v2table.refresh()
+                v3table.refresh()
             
         
         with ui.card().classes("w-full"):
@@ -205,11 +191,8 @@ async def snmp_page():
             ui.button("Reset SNMPD Config", on_click=snmp_reset_cb).props("flat color=accent align=left dense")
 
 
-        v2Users = await snmp.call_get_v2_users()
-        v3Users = await snmp.call_get_v3_users()
-     
-        table("V2 Users", v2Users, "Community", add_v2_dialog(), "Community,Version,Source,GroupName", "v2")  # Only show these
-        table("V3 Users", v3Users, "UserName", add_v3_dialog(), "UserName,Version,GroupName,AuthType,PrivType", "v3")
+        await v2table()  # Only show these
+        await v3table()
         
 
 
@@ -241,25 +224,20 @@ async def edit_delete_v2_user_card(community):
     snmp = await GetSnmp(dbus.Bus)
     user = await snmp.call_get_v2_user_by_community(community)
     v2User = V2User(**user)
-    print(v2User)
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
             version = ui.select(label="Version", options=["v2c", "v1"]).classes("w-full").bind_value(v2User, "Version")
             permissions = ui.select(label="Permissions", options=['rwnoauthgroup', 'ronoauthgroup']).classes("w-full").bind_value(v2User, "Permissions")
             community = ui.input("Community", validation={'Community required': lambda value: len(value) > 0}).classes("w-full").bind_value(v2User, "Community")
-            source = ui.input("Source / IP Address", validation={"Please enter a valid ip address or valid cidr address": lambda value: _isValidNetworkOrIp(value)}).classes("w-full").bind_value(v2User, "Source")
+            source = ui.input("Source / IP Address", validation=sourceValidation).classes("w-full").bind_value(v2User, "Source")
             with ui.row().classes("items-center justify-between gap-4 w-full"):
-
-
 
                 async def on_save_cb():
                     disable_group(group)
                     save_button.enabled = False
                     edit_button.enabled = True
-                    print(v2User)
                     await snmp.call_modify_v2_user(asdict(v2User))
-     
-                    #EditV2User(user)
+                    await v2table.refresh()
                     ui.navigate.back()
 
                 def on_edit_cb():
@@ -269,15 +247,16 @@ async def edit_delete_v2_user_card(community):
 
                 async def on_delete_cb():
                     with ui.dialog() as dialog, ui.card():
-                        ui.label(f'Are you sure you want to delete {user.Community}?')
+                        ui.label(f'Are you sure you want to delete {v2User.Community}?')
                         with ui.row():
                             ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
                             ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
                     result = await dialog
                     if result:
-                        await snmp.call_delete_v2_user(asdict(v2User))
+                        await snmp.call_remove_v2_user(asdict(v2User))
+                        v2table.refresh()
                         ui.navigate.back()
-                        ui.notify(f'User {user.Community} deleted...')
+                        ui.notify(f'User {v2User.Community} deleted...')
                     else:
                         dialog.close()
 
@@ -290,43 +269,39 @@ async def edit_delete_v2_user_card(community):
                 disable_group(group)
                 edit_button.enabled = True
                 save_button.enabled = False
+    
 
 
 
 
     
 async def edit_delete_v3_user_card(username):
-    inituser = GetV3UserByUsername(username)
+    snmp = await GetSnmp(dbus.Bus)
+    userData = await snmp.call_get_v3_user_by_username(username)
+    initUser = V3User(**userData)
+    finalUser = V3User(**userData)
 
     with ui.card().classes("w-full"):
         with ui.column().classes("w-full"):
-
-            version = ui.input(label="Version", value="usm").classes("w-full")
-            username = ui.input(label="Username", value=inituser.UserName, validation={"Please enter a username": lambda value: len(value) > 0}).classes("w-full")
-            permissions = ui.select(label="Permissions", value=inituser.Permissions, options=["roprivgroup", "rwprivgroup"]).classes("w-full")
-            auth_type = ui.select(label="Auth Alg", value=inituser.AuthType, options=['SHA', 'MD5']).classes("w-full")
-            auth_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
-            priv_type = ui.select(label="Priv Alg", value=inituser.PrivType, options=["AES", "DES"]).classes("w-full")
-            priv_pass = ui.input(label="Auth Passphrase", validation={"Passphrase must be at least 8 characters": lambda value: len(value) >= 8}).classes("w-full")
+    
+            version = ui.input(label="Version").classes("w-full").bind_value(finalUser, "Version")
+            version.disable()
+            username = ui.input(label="Username", validation=usernameValidation).classes("w-full").bind_value(finalUser, "UserName")
+            permissions = ui.select(label="Permissions", options=["roprivgroup", "rwprivgroup"]).classes("w-full").bind_value(finalUser, "Permissions")
+            auth_type = ui.select(label="Auth Alg", options=['SHA', 'MD5']).classes("w-full").bind_value(finalUser, "AuthType")
+            auth_pass = ui.input(label="Auth Passphrase", validation=passphraseValidation).classes("w-full").bind_value(finalUser, "AuthPassphrase")
+            priv_type = ui.select(label="Priv Alg", options=["AES", "DES"]).classes("w-full").bind_value(finalUser, "PrivType")
+            priv_pass = ui.input(label="Auth Passphrase", validation=passphraseValidation).classes("w-full").bind_value(finalUser, "PrivPassphrase")
 
             with ui.row().classes("items-center justify-between gap-4 w-full"):
 
-                def on_save_cb():
+                async def on_save_cb():
                         disable_group(group)
                         save_button.enabled = False
                         edit_button.enabled = True
-                        finaluser = V3User(
-                            Version=version.value,
-                            UserName=username.value,
-                            Permissions=permissions.value,
-                            AuthType=auth_type.value,
-                            AuthPassphrase=auth_pass.value,
-                            PrivType=priv_type.value,
-                            PrivPassphrase=priv_pass.value
-                            )
-
                         if all(validate_group([version, username, permissions, auth_type, auth_pass, priv_type, priv_pass])):
-                            EditV3User(inituser, finaluser)
+                            await snmp.call_modify_v3_user(asdict(initUser), asdict(finalUser))
+                            #EditV3User(inituser, finaluser)
                             ui.navigate.back()
                         else:
                             ui.notify("Please correct the errors", type='negative')
@@ -340,15 +315,15 @@ async def edit_delete_v3_user_card(username):
 
                 async def on_delete_cb():
                     with ui.dialog() as dialog, ui.card():
-                        ui.label(f'Are you sure you want to delete {inituser.UserName}?')
+                        ui.label(f'Are you sure you want to delete {initUser.UserName}?')
                         with ui.row():
                             ui.button('Yes', on_click=lambda: dialog.submit(True)).props("flat color=accent align=left")
                             ui.button('No', on_click=lambda: dialog.submit(False)).props("flat color=accent align=left")
                     result = await dialog
                     if result:
-                        DeleteV3User(inituser)
+                        await snmp.call_remove_v3_user(asdict(initUser))
                         ui.navigate.back()
-                        ui.notify(f'User {inituser.UserName} deleted...')
+                        ui.notify(f'User {initUser.UserName} deleted...')
                     else:
                         dialog.close()
 

@@ -196,7 +196,7 @@ async def _writeV3UserCreateDirective(user: V3User):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
     
-    async for i, line in enumerate(content):
+    for i, line in enumerate(content):
         line = line.strip("\n")
         if line.startswith("#createUser"):
             createUserIndex = lineCount + 2
@@ -237,7 +237,7 @@ async def _deleteV3UserFromStorage(user: V3User):
     async with aiofiles.open(await _getPersistentConfPath()) as f:
         content = await f.readlines()
 
-    async for i, line in enumerate(content):
+    for i, line in enumerate(content):
         if line.startswith("usmUser"):
 
             fields = line.split(" ")
@@ -257,7 +257,7 @@ async def _deleteV3UserCreateDirective(user: V3User):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
 
-    async for i, line in enumerate(content):
+    for i, line in enumerate(content):
         if line.startswith("createUser") and all(p in line for p in _props):
             content.remove(line)
 
@@ -273,7 +273,7 @@ async def _deleteV3UserFromConfig(user: V3User):
     async with aiofiles.open(snmp_config_file, "r") as f:
         content = await f.readlines()
         
-        async for i, line in enumerate(content):
+        for i, line in enumerate(content):
             if line.startswith("group") and all(p in line for p in _props):
                 content.remove(line)
 
@@ -376,7 +376,7 @@ async def AddV3User(user: V3User):
 
 async def ReadV3UserByUsername(username: str) -> V3User:
     u :V3User
-    async for u in (await ReadV3Users()):
+    for u in (await ReadV3Users()):
         if u.UserName == username:
             return u
     return None

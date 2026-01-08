@@ -38,11 +38,11 @@ class SnmpInterface(ServiceInterface):
 # V3 USERS
 # ====================================================================
     @method()
-    async def CreateV3User(self, v3User: 'a{ss}') -> 'b':
-        return await AddV3User(V3User.from_dict(v3User))
+    async def CreateV3User(self, v3User: 'a{ss}'):
+        await AddV3User(V3User.from_dict(v3User))
 
     @method()
-    async def GetV3UserByUsername(self, username :'s') -> 'aa{ss}':
+    async def GetV3UserByUsername(self, username :'s') -> 'a{ss}':
         return asdict(await ReadV3UserByUsername(username))
 
     @method()
@@ -62,11 +62,10 @@ class SnmpInterface(ServiceInterface):
 # ====================================================================
 
     @method()
-    async def CreateV2User(self, v2User: 'a{ss}') -> 'b':
-        return await AddV2User(V2User.from_dict(v2User))
+    async def CreateV2User(self, v2User: 'a{ss}'):
+        await AddV2User(V2User.from_dict(v2User))
 
     @method()
-
     async def GetV2UserByCommunity(self, community :'s') -> 'a{ss}':
         return asdict(await ReadV2UserByCommunity(community))
 

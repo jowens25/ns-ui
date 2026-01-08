@@ -118,7 +118,6 @@ async def ntp_page():
 
 
 
-
         def build_plot():
             # initial read
             with open('data.txt', 'r') as f:

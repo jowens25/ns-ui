@@ -65,6 +65,8 @@ async def interface_card(iface :str):
 
     hwaddr = await device.get_hw_address()
     flags = await device.get_interface_flags()
+    carrier = processInterfaceFlags(flags)
+
     autoConnect = await device.get_autoconnect()
     state = await device.get_state()
     deviceState = processDeviceState(state)
@@ -74,20 +76,11 @@ async def interface_card(iface :str):
 
     dev = Device(autoConnect, state)
 
-    carrier = processInterfaceFlags(flags)
-
-    if len(active_connection_path) > 1:
-        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
-        connection_path = await activeConnection.get_connection()
-        connection = GetConnection(dbus.Bus, connection_path)
-        #current_settings = await connection.call_get_settings()
-
     if len(ip4_config_path) > 1:
         ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
         ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
         ip4AddressData = await ip4Config.get_address_data()
         ip6AddressData = await ip6Config.get_address_data()
-
         addresses = combineAddresses(ip4AddressData, ip6AddressData)
 
 
@@ -162,33 +155,17 @@ async def interface_card(iface :str):
 
 async def edit_connection(device: ProxyInterface):
 
-    active_connection_path = await device.get_active_connection()
 
-    if len(active_connection_path) > 1:
-        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
-        connection_path = await activeConnection.get_connection()
-        connection = GetConnection(dbus.Bus, connection_path)
-        settings = await connection.call_get_settings()
-    
-    print("INITIAL SETTINGS")
-    pprint(settings)
+    ip6Addresses: List[Ipv6Address] = []
+   
+    settings = await GetSettings(device)
+    connection = await GetConnectionFromDevice(device)
 
-    ip4Addresses: List[Ip4Address] = []
-    ip4Gateway = Ip4Gateway()
+    ip4Addresses = await GetIp4Addresses(settings)
+    ip4Gateway = GetIp4Gateway(settings)
 
     #dnsServers: List[str] = []
     #dnsSearch: List[str] = []
-
-
-    def load_ip4_addresses(settings :dict):
-        ipv4 = settings.get('ipv4')
-        addrData = ipv4.get('address-data').value
-        for addr in addrData:
-            a = addr.get('address').value
-            p = addr.get('prefix').value
-            addr = Ip4Address(a, p)
-            ip4Addresses.append(addr)
-        ip_address_list.refresh()
 
     def add_ip_address(a:str=None, p:str=None, g:str=None):
         addr = Ip4Address(a, p)
@@ -199,13 +176,35 @@ async def edit_connection(device: ProxyInterface):
         ip4Addresses.remove(addr)
         ip_address_list.refresh()
 
+    def get_ip4_method():
+        ipv4 = settings.get('ipv4')
+        method = ipv4.get('method')
+        if method:
+            return method.value
+        else:
+            return ''
+    
+    def set_ip4_method(method):
+        options=["disabled", "auto", "manual", "link-local"]
+        if method in options:
+            settings['ipv4']['method'] = Variant('s', method)
+
+
     @ui.refreshable
-    def ip_address_list():
+    async def ip_address_list():
         for addr in ip4Addresses:
             with ui.row():
                 ui.input(label="Address").props("dense").classes("flex-1").bind_value(addr, "Address")
                 ui.input(label="Prefix or netmask").props("dense").classes("flex-1").bind_value(addr, "Prefix")
-                ui.input(label="Gateway").props("dense").classes("flex-1").bind_value(ip4Gateway, "Address")
+                ui.input(label="Gateway",value=ip4Gateway).props("dense").classes("flex-1")
+                ui.button(icon="delete", on_click=lambda a=addr: remove_ip_address(a)).props("flat color=accent").props("dense")
+    
+    @ui.refreshable
+    async def dns_list():
+        for dns in ip4Addresses:
+            with ui.row():
+                ui.input(label="Address").props("dense").classes("flex-1").bind_value(addr, "Address")
+                ui.input(label="Gateway",value=settings['ipv4']['gateway'].value).props("dense").classes("flex-1")
                 ui.button(icon="delete", on_click=lambda a=addr: remove_ip_address(a)).props("flat color=accent").props("dense")
     
 
@@ -292,20 +291,9 @@ async def edit_connection(device: ProxyInterface):
     #        case _:
     #            print("default")
 #
-        set_ip4_method(e.value)
+        SetIp4Method(settings, e.value)
 #
-    def get_ip4_method():
-        ipv4 = settings.get('ipv4')
-        method = ipv4.get('method')
-        if method:
-            return method.value
-        else:
-            return ''
-    
-    def set_ip4_method(method):
-        options=["disabled", "auto", "manual", "link-local"]
-        if method in options:
-            settings['ipv4']['method'] = Variant('s', method)
+
     
     #def remove_dns_server_box(item):
     #    dns_section.remove(item)
@@ -362,12 +350,12 @@ async def edit_connection(device: ProxyInterface):
                         ).props("flat color=accent").props("dense")
                         
                 address_section = ui.column().classes("items-center justify-between gap-4 w-full")
+                await ip_address_list()
 
-                ip_address_list()
 
-                conn = Connection(Autoconnect=True)
-
-                conn.to_dbus()
+                #conn = Connection(Autoconnect=True)
+#
+                #conn.to_dbus()
                
                 ui.separator()
                 
@@ -408,7 +396,7 @@ async def edit_connection(device: ProxyInterface):
                 #route_section = ui.column().classes("items-center justify-between gap-4 w-full")
                 #ui.separator()
 
-                load_ip4_addresses(settings)
+                #load_ip4_addresses(settings)
 
                 #load_ip4_dns(settings)
 #
@@ -416,8 +404,7 @@ async def edit_connection(device: ProxyInterface):
 
                 #print(settings['ipv4']['dns-data'])
 
-                address_mode.value = get_ip4_method()                           
-
+                address_mode.value = GetIp4Method(settings)                           
 
                 with ui.row().classes("items-center justify-between gap-4 w-full"):
 
