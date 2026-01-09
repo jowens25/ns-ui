@@ -192,7 +192,17 @@ def GetIp4Addresses(settings :dict) -> List[Ip4Address]:
         ip4Addresses.append(addr)
     return ip4Addresses
 
-def GetIp4Routes(settings :dict) -> List[Ip4Route]
+def GetIp4Routes(settings :dict) -> List[Ip4Route]:
+    routes: List[Ip4Route] = []
+    ipv4 = settings.get('ipv4')
+    addrData = ipv4.get('route-data').value
+    for addr in addrData:
+        a = addr.get('address').value
+        p = addr.get('prefix').value
+        
+        addr = Ip4Address(a, p)
+        ip4Addresses.append(addr)
+    return ip4Addresses
 
 def GetIp4DnsServers(settings :dict) -> List[Ip4DnsServer]:
     servers: List[Ip4DnsServer] = []
