@@ -13,7 +13,7 @@ from root import root_page
 from snmp_page import snmp_page, snmp_user_page
 from ntp import ntp_page
 from fpga_page import fpga_page
-
+from tests_page import tests_page
 from dbus import dbus
 
 
@@ -30,6 +30,8 @@ from dbus import dbus
 @ui.page('/terminal')
 
 @ui.page('/fpga')
+
+@ui.page('/tests')
 
 @ui.page('/')
 async def root():
@@ -113,6 +115,12 @@ async def root():
             on_click=lambda: ui.navigate.to('/accounts'),
             icon="group",
         ).props("flat color=white align=left").classes("full-width")
+
+        ui.button(
+            "Tests",
+            on_click=lambda: ui.navigate.to('/tests'),
+            icon="group",
+        ).props("flat color=white align=left").classes("full-width")
 #
         ui.separator()
 
@@ -137,6 +145,7 @@ async def root():
                   '/accounts': accounts_page, 
                   '/terminal': terminal_page,
                   '/fpga': fpga_page,
+                  '/tests': tests_page,
                   })
 
 
