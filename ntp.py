@@ -143,7 +143,9 @@ async def ntp_page():
             plot.update()
 
         # call this whenever you get new data
-        socket_received.subscribe(lambda _data: refresh_plot())
+        #socket_received.subscribe(lambda _data: refresh_plot())
+
+        ui.timer(1, refresh_plot)
 
             
         with ui.card():

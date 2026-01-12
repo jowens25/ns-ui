@@ -1,11 +1,10 @@
-
-import asyncio
-from nicegui import ui, app, background_tasks
+import sys
+from nicegui import ui, app
 from lib.date import get_date
 from mysocket.mysocket import socket_setup, socket_cleanup
 
 from networking_page import network_page, interface_page
-from accounts import accounts_page
+from accounts import accounts_page, accounts_user_page
 from terminal import terminal_page
 from theme import init_colors
 from login import login_page
@@ -25,7 +24,9 @@ from dbus import dbus
 
 @ui.page('/ntp')
 
+
 @ui.page('/accounts')
+@ui.page('/accounts/{user}')
 
 @ui.page('/terminal')
 
@@ -143,6 +144,7 @@ async def root():
                   '/snmp': snmp_page, 
                   '/snmp/{version}/{user}': snmp_user_page,
                   '/accounts': accounts_page, 
+                  '/accounts/{user}': accounts_user_page,
                   '/terminal': terminal_page,
                   '/fpga': fpga_page,
                   '/tests': tests_page,
@@ -157,7 +159,6 @@ async def startup():
     await dbus.setup()
     await socket_setup()
 
-
 @app.on_shutdown
 async def shutdown():
     await dbus.cleanup()
@@ -166,8 +167,15 @@ async def shutdown():
 
 if __name__ in {"__main__", "__mp_main__"}:
 
+
+    
+    
+    if len(sys.argv) == 0:
+        sys.exit()
+
+    print(sys.argv[1])
     ui.run(
-        port=8080,
+        port=int(sys.argv[1]),
         reload=True,
         storage_secret="your-secret-key",
         title="Novus Configuration Tool",

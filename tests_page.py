@@ -56,8 +56,13 @@ async def tests_page():
                 p2.update()
 
 
-            ui.timer(5, callback=update_plots)
+            timer = ui.timer(5, callback=update_plots)
 
+            def toggle_timer():
+                if timer.active:
+                    timer.deactivate()
+                else:
+                    timer.activate()
 
 
             def get_down_latest():
@@ -71,6 +76,9 @@ async def tests_page():
                 df.to_excel("temp.xlsx", index=False, header=True)
 
                 ui.download.file('temp.xlsx')
+
+            
+        ui.button("Toggle Refresh", on_click=toggle_timer).classes("bg-accent")
 
         ui.button("Download latest", on_click=get_down_latest ).classes("bg-accent")
 

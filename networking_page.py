@@ -126,21 +126,18 @@ async def interface_card(nm :ProxyInterface, iface :str):
                 if result == "disable":
                     await nm.call_deactivate_connection(active_connection_path)
 
-            #pprint(settings)
-            #print(settings['connection'])
+
+
             ui.switch("Connected").on('click', lambda e: connection_sw_cb(e)).props("flat color=accent").bind_value_from(BindState, "state", backward= lambda v: v==100)
-            #print(dev.State)
 
 
         ui.separator()
         
         async def autoConnectCallback(e):
-            settings = await GetSettings(device)
-            GetAutoConnect
+            #settings = await GetSettings(device)
             settings['connection']['autoconnect'] = Variant('b', e.value)
             await connection.call_update2(settings, 0x1, {})
-            await device.call_reapply(settings, 0, 0)
-            settings = await GetSettings(device)
+            #await device.call_reapply(settings, 0, 0)
 
 
         with ui.column().classes("flex-1 gap-4"):  # Fixed width for labels
@@ -175,9 +172,36 @@ async def interface_card(nm :ProxyInterface, iface :str):
                 ui.label("IPv6").classes("font-bold w-8")
                 ui.label(addressDataToString(ip6AddressData))
                 ui.label("Edit").classes("text-accent cursor-pointer hover:underline").on('click', lambda: edit_ip4_connection(device))
+    with ui.card():
+        ui.label("SETTINGS JSON: ").classes("h5-text")
+        with ui.row().classes("w-full"):
+            ui.json_editor({'content': {'json': settings_to_dict(settings)}} ).classes("w-full")
+        #terminal = ui.xterm()
+        #ui.timer(0, lambda: terminal.write(str(settings)), once=True)
 
-                
-                
+
+def settings_to_dict(obj):
+    """Recursively convert dbus_next Variant objects to Python types."""
+    
+    # Handle Variant objects
+    if isinstance(obj, Variant):
+        return settings_to_dict(obj.value)
+    
+    # Handle dictionaries
+    elif isinstance(obj, dict):
+        return {key: settings_to_dict(val) for key, val in obj.items()}
+    
+    # Handle lists
+    elif isinstance(obj, list):
+        return [settings_to_dict(item) for item in obj]
+    
+    # Handle tuples (like in the 'addresses' field)
+    elif isinstance(obj, tuple):
+        return tuple(settings_to_dict(item) for item in obj)
+    
+    # Base case: return the object as-is (str, int, bool, bytes, etc.)
+    else:
+        return obj
 
 async def edit_ip4_connection(device: ProxyInterface):
 
@@ -380,6 +404,8 @@ async def edit_ip4_connection(device: ProxyInterface):
                                 settings['ipv4'].pop('routes', None)
                                 settings['ipv4'].pop('addresses', None)
                                 settings['ipv4'].pop('gateway', None)
+
+                                #if 
 
                             
                             if method == 'manual':
