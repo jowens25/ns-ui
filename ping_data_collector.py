@@ -8,9 +8,9 @@ async def ping_it():
 
     while True:
 
-        yield ping('192.168.0.100', count=1)
+        yield ping('8.8.8.8', count=10)
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(0)
 
 async def main():
     global path
@@ -18,7 +18,7 @@ async def main():
     async for host in ping_it():
         print(host)
         if host.is_alive:
-        
+            print(host.jitter)
             with open(path, 'a') as f:
                 f.write(f"{time.time()},{host.rtts[0]}\r\n")
                 f.close()

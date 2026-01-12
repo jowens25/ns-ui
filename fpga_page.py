@@ -6,7 +6,7 @@ import os
 
 async def fpga_page():
     with ui.column() as pageContainer:
-        ui.label("NTP").classes("text-h5")
+        ui.label("FPGA Bitstream flasher").classes("text-h5")
         with ui.row():
 
             with ui.card():

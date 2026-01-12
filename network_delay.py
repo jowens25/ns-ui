@@ -2,6 +2,12 @@
 import requests
 from bs4 import BeautifulSoup as bs
 from datetime import datetime, timezone
+import numpy as np
+
+
+def calculate_last_50_jitter(delays):
+    delays = delays[-50:]
+    return np.sum(np.abs(np.diff(delays)))/(len(delays)-1)
 
 def file_name_to_time(name):
     timestamp_seconds = float(name.split("_")[0])
