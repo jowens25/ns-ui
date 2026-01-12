@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs
 from datetime import datetime, timezone
 
 def file_name_to_time(name):
-    timestamp_seconds = name.split("_")[0]
+    timestamp_seconds = float(name.split("_")[0])
     return  datetime.fromtimestamp(timestamp_seconds, timezone.utc)
 
 def get_latest_data(references :list[str]):

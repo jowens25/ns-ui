@@ -11,7 +11,6 @@ async def tests_page():
         ui.label("Network Delay Test Data").classes("text-h5")
 
 
-
         def build_plot():
 
             start, ts, delays = get_network_delay_data_locally()
@@ -35,14 +34,13 @@ async def tests_page():
         def refresh_plot():
             # re-read file and update trace data
 
-            start, ts, delays = get_network_delay_data_locally()
+            _, ts, delays = get_network_delay_data_locally()
 
-
-            # update the existing figure instead of creating a new one
+            fig.data[0].x = list(range(len(delays)))
             fig.data[0].y = delays
             plot.update()
 
-        ui.timer(10, callback=refresh_plot)
+        ui.timer(1, callback=refresh_plot)
 
 
             
