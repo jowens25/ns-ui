@@ -23,6 +23,33 @@ def get_latest_data(references :list[str]):
 
     return max(ts, key=ts.get)
 
+
+def get_files_to_view():
+    host = "http://10.1.10.96:8000"
+    rsp = requests.get(host)
+    soup = bs(rsp.content, "html.parser")
+    references = soup.find_all("a", href=True)
+    print(references)
+    return references
+
+
+def get_data_by_name(name :str):
+    host = "http://10.1.10.96:8000"
+
+    rsp = requests.get(host+"/"+name)
+
+    lines = rsp.content.decode('utf-8').splitlines()
+
+    ts = []
+    delays = []
+    for i, line in enumerate(lines):
+        if i != 0:
+            values = line.split(",")
+            ts.append(float(values[0]))
+            delays.append(float(values[1]))
+
+    return file_name_to_time(name), ts, delays
+
 def get_network_delay_data_locally():
 
     host = "http://10.1.10.96:8000"
