@@ -8,16 +8,28 @@ from pam_interface import PamInterface
 
 
 async def main():
-    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
+
+    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+    
     snmp = SnmpInterface('com.novus.ns.snmp')
     bus.export('/com/novus/ns', snmp)
 
     pam = PamInterface('com.novus.ns.pam')
     bus.export('/com/novus/ns', pam)
 
+    #sock = SocketInterface('com.novus.ns.sock')
+
+    #asyncio.create_task(sock.setup())
+    #await sock.setup()
+
+    #bus.export('/com/novus/ns', sock)
+
     print("Starting ns service... com.novus.ns")
+    
     await bus.request_name('com.novus.ns')
     await asyncio.Event().wait()
+
+
 
 asyncio.run(main())

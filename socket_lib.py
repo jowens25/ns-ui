@@ -3,60 +3,76 @@ import socket
 import time
 from dataclasses import dataclass, asdict
 import asyncio
-from asyncio import StreamWriter, StreamReader
 from nicegui import Event, app
 
-from collections import deque
-socket_received = Event()
-
-socket_writer = None
-socket_reader = None
-
-async def socket_setup():
-    global socket_reader, socket_writer
-    try: 
-        socket_reader, socket_writer = await asyncio.open_unix_connection("/tmp/serial.sock")
-        print("SOCKET OPENED")
-        await read_socket()
-    
-    except FileNotFoundError:
-        print("SOCKET NOT AVAILABLE")
-        socket_received.emit("Socket Not Available")
-
-        #raise 
 
 
-    except asyncio.CancelledError:
-        print("SOCKET LISTENER CANCELLED")
-        raise
+
+class Socket:
+    def __init__(self):
+        self.reader = None
+        self.writer = None
+        self.socket_received = Event()
+
+
+    async def setup(self):
+        try: 
+            self.reader, self.writer = await asyncio.open_unix_connection("/tmp/serial.sock")
+            print("SOCKET OPENED")
+
+        except FileNotFoundError:
+            print("SOCKET NOT AVAILABLE")
+            self.socket_received.emit("Socket Not Available")
+            raise 
+
+        except asyncio.CancelledError:
+            print("SOCKET LISTENER CANCELLED")
+            raise
+
+        finally:
+            await self.cleanup()
         
-    finally:
-        await socket_cleanup()
-        
-async def socket_cleanup():
-    global socket_writer
-
-    print("SOCKET LISTENER CLOSED")
-    if socket_writer:
-        socket_writer.close()
-        await socket_writer.wait_closed()
-
+    async def cleanup(self):
+        print("SOCKET LISTENER CLOSED")
+        if self.writer:
+            self.writer.close()
+            await self.writer.wait_closed()
 
         
+    async def listen(self):
+        while True:
+            data = await self.reader.read(128)
+            if data:
+                self.socket_received.emit(data.decode('utf-8', errors='ignore'))
+            else:
+                break
         
-async def read_socket():
-    global socket_reader
-    while True:
-        data = await socket_reader.read(128)
-        if data:
-            record_data(data)
-            # Emit event with the data - any subscribed UI can receive it
-            socket_received.emit(data.decode('utf-8', errors='ignore'))
-        else:
-            # Socket closed by remote end
-            break
-        
-        #get_data()
+
+    async def write(self, command: str):
+        command = command+"\r\n"
+        self.writer.write(command.encode())
+        await self.writer.drain()
+
+
+    async def read_until_response(self) -> str:
+        response_received = asyncio.Event()
+
+        while True:
+            data = await self.reader.read(128)
+            if data:
+                lines = data.decode('utf-8', errors='ignore').splitlines()
+                for line in lines:
+                    if any(marker in line for marker in ["$ER", "$RR", "$WR", "$GPNTL"]):
+                        return line
+            try:
+                await asyncio.wait_for(response_received.wait(), timeout=2.0)
+            except asyncio.TimeoutError:
+                return "timeout waiting for response"
+
+    async def writeRead(self, command: str) -> str:
+        await self.write(command)
+
+
 
 
 
@@ -77,11 +93,6 @@ def record_data(data):
 
 
 
-async def write_socket(command: str):
-    global socket_writer
-    command = command+"\r\n"
-    socket_writer.write(command.encode())
-    await socket_writer.drain()
 
 
 

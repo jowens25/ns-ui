@@ -1,5 +1,5 @@
 import asyncio
-from mysocket.mysocket import socket_received, write_socket, socket_reader, socket_writer, socket_setup
+#from mysocket.mysocket import socket_received, write_socket, socket_reader, socket_writer, socket_setup
 from rest_api import APIClient
 from nicegui import ui, app, background_tasks, events
 

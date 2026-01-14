@@ -5,6 +5,7 @@ from dbus_next.service import ServiceInterface, method
 
 from snmp_lib import *
 
+
 class SnmpInterface(ServiceInterface):
     def __init__(self, name):
         super().__init__(name)
@@ -84,4 +85,5 @@ class SnmpInterface(ServiceInterface):
 # ====================================================================
 # 
 # ====================================================================
-    
+
+snmpInterface = SnmpInterface('com.novus.ns.snmp')
