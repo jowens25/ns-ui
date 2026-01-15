@@ -206,20 +206,29 @@ def settings_to_dict(obj):
 async def edit_ip4_connection(device: ProxyInterface):
 
     settings = await GetSettings(device)
+
+    ipv4 = Ip4(
+
+    )
+
+    ipv4.AddressData = GetIp4Addresses(settings)
+
+    ipv4.Addresses = None
+    ipv4.Dns
+    ipv4.DnsData
+    ipv4.DnsSearch
+    ipv4.Gateway
+    ipv4.IgnoreAutoDns
+    ipv4.IgnoreAutoRoutes
+    ipv4.Method
+    ipv4.RouteData
+    ipv4.Routes
+
     connection = await GetConnectionFromDevice(device)
 
-    #remove depreciated
-    settings["ipv4"].pop('addresses', None)
-    settings["ipv4"].pop('dns', None)
-    settings["ipv4"].pop('routes', None)
-
-    settings["ipv6"].pop('addresses', None)
-    settings["ipv6"].pop('dns', None)
-    settings["ipv6"].pop('routes', None)
-
-    addresses = GetIp4Addresses(settings)
-    gateway = GetIp4Gateway(settings)
     method = GetIp4Method(settings)
+    gateway = GetIp4Gateway(settings)
+    addresses = GetIp4Addresses(settings)
     dnsServers = GetIp4DnsServers(settings)
     dnsSearches = GetIp4DnsSearches(settings)
     routes = GetIp4Routes(settings)
@@ -263,11 +272,7 @@ async def edit_ip4_connection(device: ProxyInterface):
         routes.remove(route)
         route_list.refresh()
 
-    
-    def set_ip4_method(method):
-        options=["disabled", "auto", "manual", "link-local"]
-        if method in options:
-            settings['ipv4']['method'] = Variant('s', method)
+
 
 
     @ui.refreshable
@@ -305,91 +310,23 @@ async def edit_ip4_connection(device: ProxyInterface):
                 ui.button(icon="delete", on_click=lambda d=route: remove_route(d)).props("flat color=accent").props("dense")
 
 
-    
-    
-
-
-
-    def on_method_change(e):
-    #    match e.value:
-    #        case "disabled":                
-    #            ip_address_button.disable()
-    #            dns_switch.disable()
-    #            dns_button.disable()
-    #            search_switch.disable()
-    #            search_button.disable()
-    #            route_switch.disable()
-    #            route_button.disable()
-    #            dns_switch.value = False
-    #            search_switch.value = False
-    #            route_switch.value = False
-    #            
-    #        case "auto":
-    #            ip_address_button.enable()
-    #            dns_switch.enable()
-    #            dns_button.enable()
-    #            search_switch.enable()
-    #            search_button.enable()
-    #            route_switch.enable()
-    #            route_button.enable()
-    #            
-    #            dns_switch.value = True
-    #            search_switch.value = True
-    #            route_switch.value = True
-    #            
-    #        case "manual":
-    #            ip_address_button.enable()
-    #            dns_switch.disable()
-    #            dns_button.enable()
-    #            search_switch.disable()
-    #            search_button.enable()
-    #            route_switch.disable()
-    #            route_button.enable()
-    #            
-    #            dns_switch.value = False
-    #            search_switch.value = False
-    #            route_switch.value = False
-#
-    #        case "link-local":
-    #            ip_address_button.disable()
-    #            dns_switch.disable()
-    #            dns_button.disable()
-    #            search_switch.disable()
-    #            search_button.disable()
-    #            route_switch.disable()
-    #            route_button.enable()
-    #            
-    #            dns_switch.value = False
-    #            search_switch.value = False
-    #            route_switch.value = False
-#
-    #        
-    #        case _:
-    #            print("default")
-#
-        SetIp4Method(settings, e.value)
-#
-
-
+    ###
     with ui.dialog() as dialog:
         with ui.card().classes("w-full self-start max-h-[90vh] overflow-y-auto"):
             ui.label("IPv4 settings").classes("text-h5")
             with ui.column().classes("w-full"):
 
-
                 ### ADDRESSES
                 with ui.row().classes("w-full justify-between"):  
                     ui.label("Addresses")
                     with ui.row():
-                        ui.select(
-                            options=["disabled", "auto", "manual"], 
-                            on_change=on_method_change).props("dense").classes("w-24").bind_value(method, "Method")
 
+                        def on_method_change(e):
+                            SetIp4Method(settings, e.value)
 
-                        ip_address_button = ui.button(
-                            icon="add",
-                            on_click=add_ip_address,
-                        ).props("flat color=accent").props("dense")
+                        ui.select(options=["disabled", "auto", "manual"], on_change=on_method_change).props("dense").classes("w-24").bind_value(method, "Method")
+
+                        ip_address_button = ui.button( icon="add", on_click=add_ip_address).props("flat color=accent").props("dense")
                         
                 with ui.column().classes("items-center justify-between gap-4 w-full"):
                     await ip_address_list()
@@ -438,36 +375,9 @@ async def edit_ip4_connection(device: ProxyInterface):
 
                     async def on_save_cb():
 
+                        try:
 
-                        if True:
-
-                            if method == 'auto':
-                                settings['ipv4']['method'] = ipv4_method_to_dbus(method)
-                                settings['ipv4'].pop('address-data', None)
-                                settings['ipv4'].pop('routes', None)
-                                settings['ipv4'].pop('addresses', None)
-                                settings['ipv4'].pop('gateway', None)
-
-                                #if 
-
-                            
-                            if method == 'manual':
-                                settings['ipv4']['method'] = ipv4_method_to_dbus(method)
-                                settings['ipv4']['gateway'] = ip4_gateway_to_dbus(gateway)
-                                settings['ipv4']['address-data'] = ip4_addresses_to_dbus(addresses)
-                                settings['ipv4'].pop('addresses', None)
-                                settings['ipv4'].pop('routes', None)
-
-                            if method == 'disabled':
-                                settings['ipv4']['method'] = ipv4_method_to_dbus(method)
-                                settings['ipv4'].pop('address-data', None)
-                                settings['ipv4'].pop('routes', None)
-                                settings['ipv4'].pop('addresses', None)
-                                settings['ipv4'].pop('gateway', None)
-                                settings['ipv4'].pop('dns-data', None)
-                                settings['ipv4'].pop('dns-search', None)
-                                settings['ipv4'].pop('route-data', None)
-                                settings['ipv4'].pop('dns', None)
+                            apply_settings(settings)
 
                             try:
                                 await connection.call_update2(settings, 0x1, {})
@@ -481,9 +391,9 @@ async def edit_ip4_connection(device: ProxyInterface):
                             pprint(settings)
 
             
-                            #AddV3User(user)
                             dialog.close()
-                        else:
+                        except Exception as e:
+                            print(e)
                             ui.notify("Please correct the errors", type='negative')
 
                     def on_cancel_cb():

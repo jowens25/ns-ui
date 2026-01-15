@@ -13,27 +13,61 @@ from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
 from dbus import dbus
 
-
-@binding.bindable_dataclass
-class Connection:
-    Id: Optional[str] = ''
+class ConnectionDetails:
+    Id:          Optional[str] = ''
     Permissions: Optional[list[str]] = None
-    #Timestamp: Optional
+    Timestamp:   Optional[int] = 0
+    Type:        Optional[str] = ''
+    Uuid:        Optional[str] = ''
 
-
-@binding.bindable_dataclass
-class Ip4:
-    AddressData: Optional[list[dict[str, Variant]]] = None
-    Addresses:   Optional[list[list[int]]] = None
-    Dns:         Optional[list[int]] = None
-    DnsData:     Optional[list[str]] = None
-    DnsSearch:   Optional[str] = ''
-    RouteData:   Optional[list[dict[str]]] = None
-
-@binding.bindable_dataclass
-class Ip4Address:
+class IpAddress:
     Address: Optional[str] = None
     Prefix: Optional[int] = None
+
+class IpRoute:
+    Dest: Optional[str] = None
+    Prefix: Optional[int] = None
+    NextHop: Optional[str] = None
+    Metric: Optional[int] = None
+
+class Ip4:
+    AddressData:      Optional[list[IpAddress]] = None
+    Addresses:        Optional[list[list[int]]] = None
+    Dns:              Optional[list[list[int]]] = None
+    DnsData:          Optional[list[str]] = None
+    DnsSearch:        Optional[list[str]] = None
+    Gateway:          Optional[str] = ''
+    IgnoreAutoDns:    Optional[bool] = False
+    IgnoreAutoRoutes: Optional[bool] = False
+    Method:           Optional[str] = ''
+    RouteData:        Optional[list[IpRoute]] = None
+    Routes:           Optional[list[list[int]]] = None
+
+
+class Ip6:
+    AddrGenMod:       Optional[str] = ''
+    AddressData:      Optional[list[IpAddress]] = None
+    Addresses:        Optional[list[list[int]]] = None
+    Dns:              Optional[list[list[int]]] = None
+    DnsData:          Optional[list[str]] = None
+    DnsSearch:        Optional[list[str]] = None
+    Gateway:          Optional[str] = ''
+    IgnoreAutoDns:    Optional[bool] = False
+    IgnoreAutoRoutes: Optional[bool] = False
+    Method:           Optional[str] = ''
+    RouteData:        Optional[list[IpRoute]] = None
+    Routes:           Optional[list[list[int]]] = None
+
+@binding.bindable_dataclass
+class Settings:
+    Connection: Optional[ConnectionDetails] = None
+    Ipv4:       Optional[Ip4] = None
+    Ipv6:       Optional[Ip6] = None
+    Proxy:      Optional[str]  = ''
+
+
+
+
 
 @binding.bindable_dataclass
 class Ip4Route:
@@ -41,6 +75,8 @@ class Ip4Route:
     Prefix: Optional[int] = None
     NextHop: Optional[str] = None
     Metric: Optional[int] = None
+
+
 
 @binding.bindable_dataclass
 class Ip4DnsServer:
@@ -72,29 +108,7 @@ class Ipv6Address:
     Address: Optional[str] = None
     Prefix: Optional[int] = None
 
-@binding.bindable_dataclass
-class ConnectionSettings:
-    connection: Optional[dict[str, Variant]]
-    ipv4:       Optional[Ip4]
-    ipv6:       Optional[dict[str, Variant]]
-    proxy:      Optional[dict[str, Variant]]
 
-@binding.bindable_dataclass
-class Connection:
-    Autoconnect:     Optional[bool]
-    Id:              Optional[str] 
-    InterfaceName:   Optional[str]
-    Permissions:     Optional[list[str]]        
-    Timestamp:       Optional[int]      
-    Type:            Optional[str] 
-    Uuid:            Optional[str] 
-
-@binding.bindable_dataclass
-class Connection:
-    Autoconnect:           Optional[bool] = None
-    
-    def to_dbus(self):
-        return {Variant('b', self.Autoconnect),}
 
 
 
@@ -131,7 +145,6 @@ class Ip4DnsSearch:
 @binding.bindable_dataclass
 class Ip4Gateway:
     Address: Optional[str] = ''
-
 
 
 
@@ -196,8 +209,25 @@ async def GetSettings(dev: ProxyInterface) -> dict:
         activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
         connection_path = await activeConnection.get_connection()
         connection = GetConnection(dbus.Bus, connection_path)
-        settings = await connection.call_get_settings()
-    return settings
+        connection_settings = await connection.call_get_settings()
+
+        #settings = Settings(**connection_settings)
+
+    return connection_settings
+
+
+def unpack_settings(settings: dict) -> Settings:
+
+    
+
+    connection = ConnectionDetails(
+        settings['connection']['id'].value,
+        settings['connection']['permissions'].value,
+        settings['connection']['timestamp'].value,
+        settings['connection']['type'].value,
+        settings['connection']['uuid'].value,
+    )
+
 
 def GetIp4Addresses(settings :dict) -> List[Ip4Address]:
     ip4Addresses: List[Ip4Address] = []
@@ -475,26 +505,30 @@ def SetIp4Method(settings :dict, method :str):
 
 
 
+def apply_settings(settings: dict):
+
+    # remove depreciated 
+    settings["ipv4"].pop('addresses', None)
+    settings["ipv4"].pop('dns', None)
+    settings["ipv4"].pop('routes', None)
+
+    settings["ipv6"].pop('addresses', None)
+    settings["ipv6"].pop('dns', None)
+    settings["ipv6"].pop('routes', None)
 
 
-def from_variant(random_dict :dict) -> dict:
-    for k,v in random_dict.items():
-        random_dict[k]=v.value
-    return random_dict
-
-
-def unpackSettings(init_settings :dict) -> dict:
-    settings = {}
-    settings['connection'] = init_settings['connection']
-    settings['ipv4'] = init_settings['ipv4']
-    settings['ipv6'] = init_settings['ipv6']
-    settings['proxy'] = init_settings['proxy']
-
-    c = Connection(from_variant(settings['connection'] ))
-
+    settings['ipv4']['method'] = ipv4_method_to_dbus(method)
+    if method == 'auto':
+        settings['ipv4'].pop('address-data', None)
+        settings['ipv4'].pop('gateway', None)
     
-    print(c)
-    return settings
+    if method == 'manual':
+        settings['ipv4']['gateway'] = ip4_gateway_to_dbus(gateway)
+        settings['ipv4']['address-data'] = ip4_addresses_to_dbus(addresses)
+    if method == 'disabled':
+        print()
+
+
 
 
     
