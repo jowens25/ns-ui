@@ -1,78 +1,120 @@
-import os
 import socket
-import time
 from dataclasses import dataclass, asdict
 import asyncio
 from nicegui import Event, app
 
+from dbus_next.service import ServiceInterface, method, signal
+from dbus_next.aio import MessageBus
 
 
 
-class Socket:
-    def __init__(self):
-        self.reader = None
-        self.writer = None
-        self.socket_received = Event()
-
-
-    async def setup(self):
-        try: 
-            self.reader, self.writer = await asyncio.open_unix_connection("/tmp/serial.sock")
-            print("SOCKET OPENED")
-
-        except FileNotFoundError:
-            print("SOCKET NOT AVAILABLE")
-            self.socket_received.emit("Socket Not Available")
-            raise 
-
-        except asyncio.CancelledError:
-            print("SOCKET LISTENER CANCELLED")
-            raise
-
-        finally:
-            await self.cleanup()
-        
-    async def cleanup(self):
-        print("SOCKET LISTENER CLOSED")
-        if self.writer:
-            self.writer.close()
-            await self.writer.wait_closed()
-
-        
-    async def listen(self):
+async def socket_stream(self):
+    try: 
+        reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
+        print("SOCKET OPENED")
         while True:
-            data = await self.reader.read(128)
-            if data:
-                self.socket_received.emit(data.decode('utf-8', errors='ignore'))
+            line = (await reader.readline()).decode('utf-8', errors='ignore')
+            if line:
+                yield line
             else:
                 break
+    except FileNotFoundError:
+        print("SOCKET NOT AVAILABLE")
+        #self.socket_received.emit("Socket Not Available")
+        raise 
+    except asyncio.CancelledError:
+        print("SOCKET LISTENER CANCELLED")
+        if writer:
+            writer.close()
+            await writer.wait_closed()
+        raise
+    finally:
+        print("SOCKET LISTENER CLOSED")
+        if writer:
+            writer.close()
+            await writer.wait_closed()
+        
+ 
+
+
+async def sendCommands(commands: list[str], get_responses :bool = False) -> list[str]:
+    rx = asyncio.Event()
+    reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
+    responses = []
+    for command in commands:
+        command = command+"\r\n"
+        writer.write(command.encode())
+        await writer.drain()
+
+        if get_responses:
+            try:
+                #await asyncio.wait_for(rx, 2.0)
+
+                while True:
+                    line = (await reader.readline()).decode('utf-8', errors='ignore')
+                    if line:
+                        if any(line.startswith(marker) for marker in ["$ER", "$RR", "$WR", "$GPNTL", "$BAUD"]):
+                            responses.append(line)
+                            break
+                            #rx.set()
+
+                    #await rx.wait()
+
+                
+            except TimeoutError:
+                responses.append("TimeoutError: no response?")
+
+    writer.close()
+    await writer.wait_closed()  
+
+    return responses
+
         
 
-    async def write(self, command: str):
-        command = command+"\r\n"
-        self.writer.write(command.encode())
-        await self.writer.drain()
 
 
-    async def read_until_response(self) -> str:
-        response_received = asyncio.Event()
-
-        while True:
-            data = await self.reader.read(128)
-            if data:
-                lines = data.decode('utf-8', errors='ignore').splitlines()
-                for line in lines:
-                    if any(marker in line for marker in ["$ER", "$RR", "$WR", "$GPNTL"]):
-                        return line
-            try:
-                await asyncio.wait_for(response_received.wait(), timeout=2.0)
-            except asyncio.TimeoutError:
-                return "timeout waiting for response"
-
-    async def writeRead(self, command: str) -> str:
-        await self.write(command)
-
-
+#class SocketInterface(ServiceInterface):
+#    def __init__(self, name):
+#        super().__init__(name)
+#
+#        self.socket = Socket()
+#
+#        asyncio.create_task(self._setup_and_listen())
+#
+#    async def _setup_and_listen(self):
+#
+#        try:
+#
+#            await self.socket.setup()
+#
+#            async for line in self.socket.listen():
+#                self.Rx(line)
+#
+#        except Exception as e:
+#            print(f"Socket error: {e}")
+#        finally:
+#            await self.socket.cleanup()
+#    
+#
+#    @method()
+#    async def WriteReadCommand(self, cmd :'s') -> 's':
+#        return await self.socket.writeRead(cmd)
+#    
+#
+#
+#    @signal()
+#    def Rx(self, msg :'s') -> 's':
+#        return msg
+#
+#    #@signal()
+#
+    
+#async def GetSocket(bus: MessageBus):
+#    #introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
+#    with open("socket.xml", "r") as f:
+#        introspection = f.read()
+#    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
+#    return obj.get_interface('com.novus.ns.socket')
 
 
 
@@ -177,3 +219,5 @@ def LoadConfig(file_name: str):
                 return
             
             print(rsp)
+
+

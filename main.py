@@ -1,7 +1,6 @@
 import sys
 from nicegui import ui, app
 from lib.date import get_date
-from socket_lib import socket_setup, socket_cleanup
 
 from networking_page import network_page, interface_page
 from accounts import accounts_page, accounts_user_page

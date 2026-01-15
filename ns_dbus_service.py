@@ -7,23 +7,24 @@ from snmp_interface import SnmpInterface
 from pam_interface import PamInterface
 
 
-async def main():
 
+snmpInterface = None
+pamInterface = None
+socketInterface = None
+
+async def main():
+    global snmpInterface, pamInterface, socketInterface
 
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
     
-    snmp = SnmpInterface('com.novus.ns.snmp')
-    bus.export('/com/novus/ns', snmp)
+    snmpInterface = SnmpInterface('com.novus.ns.snmp')
+    bus.export('/com/novus/ns', snmpInterface)
 
-    pam = PamInterface('com.novus.ns.pam')
-    bus.export('/com/novus/ns', pam)
+    pamInterface = PamInterface('com.novus.ns.pam')
+    bus.export('/com/novus/ns', pamInterface)
 
-    #sock = SocketInterface('com.novus.ns.sock')
-
-    #asyncio.create_task(sock.setup())
-    #await sock.setup()
-
-    #bus.export('/com/novus/ns', sock)
+    #socketInterface = SocketInterface('com.novus.ns.socket')
+    #bus.export('/com/novus/ns', socketInterface)
 
     print("Starting ns service... com.novus.ns")
     

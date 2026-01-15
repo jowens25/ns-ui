@@ -15,6 +15,13 @@ from dbus import dbus
 
 
 @binding.bindable_dataclass
+class Connection:
+    Id: Optional[str] = ''
+    Permissions: Optional[list[str]] = None
+    #Timestamp: Optional
+
+
+@binding.bindable_dataclass
 class Ip4:
     AddressData: Optional[list[dict[str, Variant]]] = None
     Addresses:   Optional[list[list[int]]] = None
@@ -30,7 +37,7 @@ class Ip4Address:
 
 @binding.bindable_dataclass
 class Ip4Route:
-    Address: Optional[str] = None
+    Dest: Optional[str] = None
     Prefix: Optional[int] = None
     NextHop: Optional[str] = None
     Metric: Optional[int] = None
@@ -46,6 +53,17 @@ class Ip4DnsSearch:
 @binding.bindable_dataclass
 class Ip4Method:
     Method: Optional[str] = ''
+
+
+@binding.bindable_dataclass
+
+class Ip4DnsMethod:
+    Auto: Optional[bool] = False
+
+@binding.bindable_dataclass
+class Ip4RouteMethod:
+    Auto: Optional[bool] = False
+
 
 
 
@@ -195,14 +213,15 @@ def GetIp4Addresses(settings :dict) -> List[Ip4Address]:
 def GetIp4Routes(settings :dict) -> List[Ip4Route]:
     routes: List[Ip4Route] = []
     ipv4 = settings.get('ipv4')
-    addrData = ipv4.get('route-data').value
-    for addr in addrData:
-        a = addr.get('address').value
-        p = addr.get('prefix').value
-        
-        addr = Ip4Address(a, p)
-        ip4Addresses.append(addr)
-    return ip4Addresses
+    routeData = ipv4.get('route-data').value
+    for route in routeData:
+        a = route.get('dest').value
+        p = route.get('prefix').value
+        n = route.get('next-hop').value
+        m = route.get('metric').value
+        addr = Ip4Route(a, p, n, m)
+        routes.append(addr)
+    return routes
 
 def GetIp4DnsServers(settings :dict) -> List[Ip4DnsServer]:
     servers: List[Ip4DnsServer] = []
@@ -212,6 +231,27 @@ def GetIp4DnsServers(settings :dict) -> List[Ip4DnsServer]:
         servers.append(Ip4DnsServer(dns))
     return servers
 
+
+def GetIp4DnsMethod(settings :dict) -> Ip4DnsMethod:
+    ipv4 = settings.get('ipv4')
+    # if it exisits its true so auto is false
+    ignore = ipv4.get('ignore-auto-dns', None)
+    # if it doesnt its false so auto is true
+    if ignore:
+        return Ip4DnsMethod(False)
+    else:
+        return Ip4DnsMethod(True)
+
+
+def GetIp4RouteMethod(settings :dict) -> Ip4RouteMethod:
+    ipv4 = settings.get('ipv4')
+    # if it exisits its true so auto is false
+    ignore = ipv4.get('ignore-auto-routes', None)
+    # if it doesnt its false so auto is true
+    if ignore:
+        return Ip4RouteMethod(False)
+    else:
+        return Ip4RouteMethod(True)
 
 def GetIp4DnsSearches(settings :dict) -> List[Ip4DnsSearch]:
     searches: List[Ip4DnsSearch] = []
@@ -420,7 +460,7 @@ async def GetInterfacesAndAddresses() -> list:
 
 def GetIp4Gateway(settings :dict) -> str:
     ipv4 = settings.get('ipv4')
-    gw = ipv4.get('gateway')
+    gw = ipv4.get('gateway').value
 
     return Ip4Gateway(gw)
 

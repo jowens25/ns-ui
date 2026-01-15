@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup as bs
 from datetime import datetime, timezone
 import numpy as np
-
+import sys
 
 def calculate_last_50_jitter(delays):
     delays = delays[-50:]
@@ -26,17 +26,28 @@ def get_latest_data(references :list[str]):
 
 def get_files_to_view():
     host = "http://10.1.10.96:8000"
-    rsp = requests.get(host)
-    soup = bs(rsp.content, "html.parser")
-    references = soup.find_all("a", href=True)
-    print(references)
-    return references
+    try:
+        rsp = requests.get(host, timeout=0.1)
+        soup = bs(rsp.content, "html.parser")
+        references = soup.find_all("a", href=True)
+        print(references)
+        return references
+    except Exception as e:
+        print(e)
+        raise
+
 
 
 def get_data_by_name(name :str):
     host = "http://10.1.10.96:8000"
 
-    rsp = requests.get(host+"/"+name)
+    try:
+        rsp = requests.get(host+"/"+name)
+    except Exception as e:
+        print(e)
+        sys.exit()
+        
+
 
     lines = rsp.content.decode('utf-8').splitlines()
 
@@ -54,7 +65,13 @@ def get_network_delay_data_locally():
 
     host = "http://10.1.10.96:8000"
 
-    rsp = requests.get(host)
+    try:
+        rsp = requests.get(host)
+    except Exception as e:
+        print(e)
+        sys.exit()
+
+    #rsp = requests.get(host)
     soup = bs(rsp.content, "html.parser")
 
     references = soup.find_all("a", href=True) #["href"]

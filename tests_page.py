@@ -14,8 +14,11 @@ pio.templates.default = "plotly_dark"
 
 from network_delay import get_network_delay_data_locally, calculate_last_50_jitter, get_files_to_view, get_data_by_name
 
-selected_file = get_files_to_view()[0]['href']
-
+try:
+    selected_file = get_files_to_view()[0]['href']
+except Exception as e:
+    print(e)
+    
 def set_selected_file(f):
     global selected_file
     selected_file = f

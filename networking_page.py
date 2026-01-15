@@ -208,11 +208,23 @@ async def edit_ip4_connection(device: ProxyInterface):
     settings = await GetSettings(device)
     connection = await GetConnectionFromDevice(device)
 
+    #remove depreciated
+    settings["ipv4"].pop('addresses', None)
+    settings["ipv4"].pop('dns', None)
+    settings["ipv4"].pop('routes', None)
+
+    settings["ipv6"].pop('addresses', None)
+    settings["ipv6"].pop('dns', None)
+    settings["ipv6"].pop('routes', None)
+
     addresses = GetIp4Addresses(settings)
     gateway = GetIp4Gateway(settings)
     method = GetIp4Method(settings)
     dnsServers = GetIp4DnsServers(settings)
     dnsSearches = GetIp4DnsSearches(settings)
+    routes = GetIp4Routes(settings)
+    dnsMethod = GetIp4DnsMethod(settings)
+    routeMethod = GetIp4RouteMethod(settings)
 
 
     def add_ip_address(a:str=None, p:str=None, g:str=None):
@@ -242,14 +254,15 @@ async def edit_ip4_connection(device: ProxyInterface):
         dnsSearches.remove(search)
         dns_search_list.refresh()
 
+    
+    def add_route(Address :str=None, Prefix :str=None, NextHop :str=None, Metric :str=None):
+        routes.append(Ip4Route(Address, Prefix, NextHop, Metric))
+        route_list.refresh()
+    
+    def remove_route(route):
+        routes.remove(route)
+        route_list.refresh()
 
-    def get_ip4_method():
-        ipv4 = settings.get('ipv4')
-        method = ipv4.get('method')
-        if method:
-            return method.value
-        else:
-            return ''
     
     def set_ip4_method(method):
         options=["disabled", "auto", "manual", "link-local"]
@@ -279,6 +292,20 @@ async def edit_ip4_connection(device: ProxyInterface):
             with ui.row():
                 ui.input(label="Server").props("dense").classes("flex-1").bind_value(search, "Search")
                 ui.button(icon="delete", on_click=lambda d=search: remove_dns_search(d)).props("flat color=accent").props("dense")
+    
+    @ui.refreshable
+    async def route_list():
+        for route in routes:
+            with ui.row():
+                ui.input(label="Server").props("dense").classes("flex-1").bind_value(route, "Dest")
+                ui.input(label="Prefix or netmask").props("dense").classes("flex-1").bind_value(route, "Prefix")
+                ui.input(label="Next Hop").props("dense").classes("flex-1").bind_value(route, "NextHop")
+                ui.input(label="Metric").props("dense").classes("flex-1").bind_value(route, "Metric")
+
+                ui.button(icon="delete", on_click=lambda d=route: remove_route(d)).props("flat color=accent").props("dense")
+
+
+    
     
 
 
@@ -348,9 +375,11 @@ async def edit_ip4_connection(device: ProxyInterface):
         with ui.card().classes("w-full self-start max-h-[90vh] overflow-y-auto"):
             ui.label("IPv4 settings").classes("text-h5")
             with ui.column().classes("w-full"):
-                with ui.row().classes("w-full justify-between"):
-                    ui.label("Addresses")
 
+
+                ### ADDRESSES
+                with ui.row().classes("w-full justify-between"):  
+                    ui.label("Addresses")
                     with ui.row():
                         ui.select(
                             options=["disabled", "auto", "manual"], 
@@ -364,37 +393,51 @@ async def edit_ip4_connection(device: ProxyInterface):
                         
                 with ui.column().classes("items-center justify-between gap-4 w-full"):
                     await ip_address_list()
+                    print()
+                ###
 
+                ### DNS SERVER
                 ui.separator()
-                
                 with ui.row().classes("w-full justify-between"):
                     ui.label("DNS Servers")
                     with ui.row():
-                        dns_server_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
+                        dns_server_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24").bind_value(dnsMethod, "Auto")
                         dns_server_button = ui.button(
                             icon="add",
                             on_click=add_dns_server,
                         ).props("flat color=accent").props("dense")
                 with ui.column().classes("items-center justify-between gap-4 w-full"):
                     await dns_server_list()
+                ###
 
-
+                ### DNS SEARCH
                 ui.separator()
-                
                 with ui.row().classes("w-full justify-between"):
                     ui.label("DNS Searches")
                     with ui.row():
-                        dns_search_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24")
                         dns_search_button = ui.button(
                             icon="add",
                             on_click=add_dns_search,
                         ).props("flat color=accent").props("dense")
                 with ui.column().classes("items-center justify-between gap-4 w-full"):
                     await dns_search_list()
-            
+                ###
+
+                ### ROUTES
+                ui.separator()
+                with ui.row().classes("w-full justify-between"):
+                    ui.label("Routes")
+                    with ui.row():
+                        route_switch = ui.switch("Automatic").props("flat color=accent").props("dense").classes("w-24").bind_value(routeMethod, "Auto")
+                        route_button = ui.button(icon="add", on_click=add_route).props("flat color=accent").props("dense")
+                with ui.column().classes("items-center justify-between gap-4 w-full"):
+                    await route_list()
+                ###
+
                 with ui.row().classes("items-center justify-between gap-4 w-full"):
 
                     async def on_save_cb():
+
 
                         if True:
 

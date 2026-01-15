@@ -17,5 +17,3 @@ class PamInterface(ServiceInterface):
 
             return False
 
-
-pamInterface = PamInterface('com.novus.ns.pam')

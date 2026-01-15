@@ -85,5 +85,3 @@ class SnmpInterface(ServiceInterface):
 # ====================================================================
 # 
 # ====================================================================
-
-snmpInterface = SnmpInterface('com.novus.ns.snmp')

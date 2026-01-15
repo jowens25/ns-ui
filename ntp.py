@@ -1,9 +1,11 @@
 import asyncio
-from socket_lib import socket_received, write_socket, socket_reader, socket_writer, socket_setup
+#from socket_lib import socket_received, write_socket
 from rest_api import APIClient
 from nicegui import ui, app, background_tasks, events
-        
+
+from socket_lib import *
 import plotly.graph_objects as go
+from dbus import dbus
 
 api = APIClient(base_url="http://localhost:5000")
 from dataclasses import dataclass, field
@@ -104,7 +106,12 @@ async def ntp_page():
         ui.label("NTP").classes("text-h5")
         with ui.row():
             term = ui.xterm({'convertEol': True})
-            socket_received.subscribe(lambda data: term.write(data))
+
+            def rx_cb(msg):
+                term.write(msg)
+
+            #socketInterface = await GetSocket(dbus.Bus)
+            #socketInterface.on_rx(rx_cb)
 
             term.on_data(lambda e: term.write(e.data.replace('\r', '\n\r').replace('\x7f', '\x1b[0D\x1b[0K')))
 
