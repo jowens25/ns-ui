@@ -13,6 +13,7 @@ from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
 from dbus import dbus
 
+@binding.bindable_dataclass
 class ConnectionDetails:
     Id:          Optional[str] = ''
     Permissions: Optional[list[str]] = None
@@ -30,6 +31,7 @@ class IpRoute:
     NextHop: Optional[str] = None
     Metric: Optional[int] = None
 
+@binding.bindable_dataclass
 class Ip4:
     AddressData:      Optional[list[IpAddress]] = None
     Addresses:        Optional[list[list[int]]] = None
@@ -218,8 +220,6 @@ async def GetSettings(dev: ProxyInterface) -> dict:
 
 def unpack_settings(settings: dict) -> Settings:
 
-    
-
     connection = ConnectionDetails(
         settings['connection']['id'].value,
         settings['connection']['permissions'].value,
@@ -227,6 +227,8 @@ def unpack_settings(settings: dict) -> Settings:
         settings['connection']['type'].value,
         settings['connection']['uuid'].value,
     )
+
+    pprint(connection)
 
 
 def GetIp4Addresses(settings :dict) -> List[Ip4Address]:
@@ -253,14 +255,20 @@ def GetIp4Routes(settings :dict) -> List[Ip4Route]:
         routes.append(addr)
     return routes
 
+
+
+
 def GetIp4DnsServers(settings :dict) -> List[Ip4DnsServer]:
     servers: List[Ip4DnsServer] = []
     ipv4 = settings.get('ipv4')
-    dnsData = ipv4.get('dns-data').value
-    for dns in dnsData:
-        servers.append(Ip4DnsServer(dns))
-    return servers
-
+    dnsData = ipv4.get('dns-data')
+    #dnsData = ipv4.get('dns-data').value
+    if dnsData:
+        for dns in dnsData.value:
+            servers.append(Ip4DnsServer(dns))
+        return servers
+    else:
+        return []
 
 def GetIp4DnsMethod(settings :dict) -> Ip4DnsMethod:
     ipv4 = settings.get('ipv4')
@@ -286,11 +294,13 @@ def GetIp4RouteMethod(settings :dict) -> Ip4RouteMethod:
 def GetIp4DnsSearches(settings :dict) -> List[Ip4DnsSearch]:
     searches: List[Ip4DnsSearch] = []
     ipv4 = settings.get('ipv4')
-    dnsData = ipv4.get('dns-search').value
-    for s in dnsData:
-        searches.append(Ip4DnsSearch(s))
-    return searches
-
+    dnsData = ipv4.get('dns-search')
+    if dnsData != None:
+        for s in dnsData.value:
+            searches.append(Ip4DnsSearch(s))
+        return searches
+    else:
+        return []
 
 def GetIp4Method(settings :dict) -> Ip4Method:
     ipv4 = settings.get('ipv4')
@@ -490,9 +500,12 @@ async def GetInterfacesAndAddresses() -> list:
 
 def GetIp4Gateway(settings :dict) -> str:
     ipv4 = settings.get('ipv4')
-    gw = ipv4.get('gateway').value
-
-    return Ip4Gateway(gw)
+    gw = ipv4.get('gateway')
+    if gw:
+    #gw = ipv4.get('gateway').value
+        return Ip4Gateway(gw.value)
+    else:
+        return Ip4Gateway()
 
 def SetIp4Gateway(settings :dict, gw :str):
     settings['ipv4']['gateway'].value = gw

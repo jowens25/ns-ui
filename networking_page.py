@@ -95,7 +95,7 @@ async def interface_card(nm :ProxyInterface, iface :str):
         settings = await connection.call_get_settings()
         autoconnect["auto"] = GetAutoConnect(settings)
         
-        pprint(settings)
+        #pprint(settings)
 
     #dev = Device(autoConnect, state)
 
@@ -207,22 +207,24 @@ async def edit_ip4_connection(device: ProxyInterface):
 
     settings = await GetSettings(device)
 
-    ipv4 = Ip4(
+    unpack_settings(settings)
 
-    )
-
-    ipv4.AddressData = GetIp4Addresses(settings)
-
-    ipv4.Addresses = None
-    ipv4.Dns
-    ipv4.DnsData
-    ipv4.DnsSearch
-    ipv4.Gateway
-    ipv4.IgnoreAutoDns
-    ipv4.IgnoreAutoRoutes
-    ipv4.Method
-    ipv4.RouteData
-    ipv4.Routes
+    #ipv4 = Ip4(
+#
+    #)
+#
+    #ipv4.AddressData = GetIp4Addresses(settings)
+#
+    #ipv4.Addresses = None
+    #ipv4.Dns
+    #ipv4.DnsData
+    #ipv4.DnsSearch
+    #ipv4.Gateway
+    #ipv4.IgnoreAutoDns
+    #ipv4.IgnoreAutoRoutes
+    #ipv4.Method
+    #ipv4.RouteData
+    #ipv4.Routes
 
     connection = await GetConnectionFromDevice(device)
 
