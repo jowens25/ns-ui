@@ -23,7 +23,6 @@ from dbus import dbus
 
 @ui.page('/ntp')
 
-
 @ui.page('/accounts')
 @ui.page('/accounts/{user}')
 
@@ -35,12 +34,9 @@ from dbus import dbus
 
 @ui.page('/')
 async def root():
-    
 
     init_colors()
-        
     if not app.storage.user.get("authenticated", False):
-        
         ui.navigate.to("/login")
         return
 
@@ -51,7 +47,6 @@ async def root():
         )
         ui.image("assets/NOVUS_LOGO.svg").classes("w-48")
         ui.label(f'Welcome {app.storage.user["username"]}!')
-
         ui.button("Request Admin").classes("bg-secondary").props("flat color=accent")
 
         label = ui.label()
@@ -62,71 +57,59 @@ async def root():
         ui.timer(1.0, update_date)
 
 
+    async def nav(path :str):
+        ui.navigate.to(path)
+        left_drawer.hide()
 
-    
-
-   
 
     with ui.left_drawer(bordered=True).classes("bg-dark") as left_drawer:
 
 
-        #ui.button(
-        #    "Overview - root",
-        #    on_click=lambda: ui.navigate.to('/'),
-        #    icon="dashboard",
-        #).props("flat color=white align=left").classes("full-width")
-#
         ui.button(
             "Networking",
-            on_click=lambda:ui.navigate.to('/networking'),
-                              
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
-#
-#
-        ui.button(
-            "NTP",
-            on_click=lambda: ui.navigate.to('/ntp'),
+            on_click=lambda:nav('/networking'),
             icon="settings_ethernet",
         ).props("flat color=white align=left").classes("full-width")
 
-        ui.button("Terminal", on_click=lambda: ui.navigate.to('/terminal'), icon="terminal").props("flat color=white align=left").classes("full-width")
-#
+
         ui.button(
-            "FPGA",
-            on_click=lambda: ui.navigate.to('/fpga'),
+            "NTP",
+            on_click=lambda: nav('/ntp'),
             icon="settings_ethernet",
         ).props("flat color=white align=left").classes("full-width")
-#
-        #ui.button(
-        #    "Access",
-        #    on_click=lambda: ui.navigate.to('/access'),
-        #    icon="settings_ethernet",
-        #).props("flat color=white align=left").classes("full-width")
+
+        ui.button("Terminal", on_click=lambda: nav('/terminal'), icon="terminal").props("flat color=white align=left").classes("full-width")
+
+        ui.button(
+            "FPGA",
+            on_click=lambda: nav('/fpga'),
+            icon="settings_ethernet",
+        ).props("flat color=white align=left").classes("full-width")
+
 
         ui.button(
             "SNMP",
-            on_click=lambda: ui.navigate.to('/snmp'),
+            on_click=lambda: nav('/snmp'),
             icon="settings_applications",
         ).props("flat color=white align=left").classes("full-width")
 
         ui.button(
             "Accounts",
-            on_click=lambda: ui.navigate.to('/accounts'),
+            on_click=lambda: nav('/accounts'),
             icon="group",
         ).props("flat color=white align=left").classes("full-width")
 
         ui.button(
             "Tests",
-            on_click=lambda: ui.navigate.to('/tests'),
+            on_click=lambda: nav('/tests'),
             icon="group",
         ).props("flat color=white align=left").classes("full-width")
-#
+
         ui.separator()
 
         ui.button(
             "Logout",
-            on_click=lambda: (app.storage.user.clear(), ui.navigate.to("/login")),
+            on_click=lambda: (app.storage.user.clear(), nav("/login")),
             icon="logout",
         ).props("flat color=negative align=left").classes("full-width")
 

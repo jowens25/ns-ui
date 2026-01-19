@@ -88,7 +88,7 @@ class Device:
     Ip6ConfigPath :  Optional[str] = ''
 
 
-#@binding.bindable_dataclass
+@binding.bindable_dataclass
 class InterfaceData:
     Name:               Optional[str] = ''
     HardwareAddress:    Optional[str] = ''
@@ -102,7 +102,7 @@ class InterfaceData:
     AutoConnect:        Optional[bool] = False
     _dev_path:          Optional[str] = ''
     _act_con_path:      Optional[str] = ''
-    
+
 
 
 async def GetInterfaceData(nm: ProxyInterface, iface :str) -> InterfaceData:
@@ -286,10 +286,10 @@ def SetIp(ip: Ipv4v6, version: str, settings :dict) -> dict:
     settings[version]['gateway'] = Variant('s', ip.Gateway)
 
     # ignore auto dns
-    settings[version]['ignore-auto-dns'] = Variant('b', ip.IgnoreAutoDns)
+    settings[version]['ignore-auto-dns'] = Variant('b',  ( ip.IgnoreAutoDns))
 
     # ignore auto routes
-    settings[version]['ignore-auto-routes'] = Variant('b', ip.IgnoreAutoRoutes)
+    settings[version]['ignore-auto-routes'] = Variant('b', ( ip.IgnoreAutoRoutes))
 
     # method  
     settings[version]['method'] = Variant('s', ip.Method)
