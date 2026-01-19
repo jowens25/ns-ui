@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import asdict
+from dataclasses import asdict, field
 from pprint import pprint
 from typing import List, Optional
 from nicegui import ui, app, binding
@@ -13,7 +13,6 @@ from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
 from dbus import dbus
 
-@binding.bindable_dataclass
 class ConnectionDetails:
     Id:          Optional[str] = ''
     Permissions: Optional[list[str]] = None
@@ -21,98 +20,58 @@ class ConnectionDetails:
     Type:        Optional[str] = ''
     Uuid:        Optional[str] = ''
 
+@binding.bindable_dataclass
 class IpAddress:
     Address: Optional[str] = None
     Prefix: Optional[int] = None
 
+@binding.bindable_dataclass
+class DnsServer:
+    Server: Optional[str] = ''
+
+@binding.bindable_dataclass
 class IpRoute:
     Dest: Optional[str] = None
     Prefix: Optional[int] = None
     NextHop: Optional[str] = None
     Metric: Optional[int] = None
 
+
 @binding.bindable_dataclass
-class Ip4:
-    AddressData:      Optional[list[IpAddress]] = None
-    Addresses:        Optional[list[list[int]]] = None
-    Dns:              Optional[list[list[int]]] = None
-    DnsData:          Optional[list[str]] = None
-    DnsSearch:        Optional[list[str]] = None
-    Gateway:          Optional[str] = ''
-    IgnoreAutoDns:    Optional[bool] = False
-    IgnoreAutoRoutes: Optional[bool] = False
-    Method:           Optional[str] = ''
-    RouteData:        Optional[list[IpRoute]] = None
-    Routes:           Optional[list[list[int]]] = None
+class Ipv4v6:
+    AddressData:      Optional[list[IpAddress]] = field(default_factory=list) # used
+    #Addresses:        Optional[list[list[int]]] = field(default_factory=list) # not used
+    #Dns:              Optional[list[list[int]]] = field(default_factory=list) # not used
+    DnsData:          Optional[list[DnsServer]] = field(default_factory=list) # used
+    DnsSearch:        Optional[list[DnsServer]] = field(default_factory=list) # used 
+    Gateway:          Optional[str] = ''                                      # used
+    IgnoreAutoDns:    Optional[bool] = False                                  # used 
+    IgnoreAutoRoutes: Optional[bool] = False                                  # used
+    Method:           Optional[str] = ''                                      # used
+    RouteData:        Optional[list[IpRoute]] = field(default_factory=list)   # used
+    #Routes:           Optional[list[list[int]]] = field(default_factory=list) # not used
 
-
-class Ip6:
-    AddrGenMod:       Optional[str] = ''
-    AddressData:      Optional[list[IpAddress]] = None
-    Addresses:        Optional[list[list[int]]] = None
-    Dns:              Optional[list[list[int]]] = None
-    DnsData:          Optional[list[str]] = None
-    DnsSearch:        Optional[list[str]] = None
-    Gateway:          Optional[str] = ''
-    IgnoreAutoDns:    Optional[bool] = False
-    IgnoreAutoRoutes: Optional[bool] = False
-    Method:           Optional[str] = ''
-    RouteData:        Optional[list[IpRoute]] = None
-    Routes:           Optional[list[list[int]]] = None
+#@binding.bindable_dataclass
+#class Ip6:
+#    AddrGenMod:       Optional[int] = 0
+#    AddressData:      Optional[list[IpAddress]] = field(default_factory=list)
+#    #Addresses:        Optional[list[list[int]]] = None
+#    #Dns:              Optional[list[list[int]]] = None
+#    DnsData:          Optional[list[DnsServer]] = field(default_factory=list)
+#    DnsSearch:        Optional[list[DnsServer]] = field(default_factory=list)
+#    Gateway:          Optional[str] = ''
+#    IgnoreAutoDns:    Optional[bool] = False
+#    IgnoreAutoRoutes: Optional[bool] = False
+#    Method:           Optional[str] = ''
+#    RouteData:        Optional[list[IpRoute]] = field(default_factory=list)
+#    #Routes:           Optional[list[list[int]]] = None
 
 @binding.bindable_dataclass
 class Settings:
     Connection: Optional[ConnectionDetails] = None
-    Ipv4:       Optional[Ip4] = None
-    Ipv6:       Optional[Ip6] = None
+    Ipv4:       Optional[Ipv4v6] = None
+    Ipv6:       Optional[Ipv4v6] = None
     Proxy:      Optional[str]  = ''
-
-
-
-
-
-@binding.bindable_dataclass
-class Ip4Route:
-    Dest: Optional[str] = None
-    Prefix: Optional[int] = None
-    NextHop: Optional[str] = None
-    Metric: Optional[int] = None
-
-
-
-@binding.bindable_dataclass
-class Ip4DnsServer:
-    Address: Optional[str] = ''
-
-@binding.bindable_dataclass
-class Ip4DnsSearch:
-    Address: Optional[str] = ''
-
-@binding.bindable_dataclass
-class Ip4Method:
-    Method: Optional[str] = ''
-
-
-@binding.bindable_dataclass
-
-class Ip4DnsMethod:
-    Auto: Optional[bool] = False
-
-@binding.bindable_dataclass
-class Ip4RouteMethod:
-    Auto: Optional[bool] = False
-
-
-
-
-@binding.bindable_dataclass
-class Ipv6Address:
-    Address: Optional[str] = None
-    Prefix: Optional[int] = None
-
-
-
-
 
 
 @binding.bindable_dataclass
@@ -129,26 +88,61 @@ class Device:
     Ip6ConfigPath :  Optional[str] = ''
 
 
+#@binding.bindable_dataclass
+class InterfaceData:
+    Name:               Optional[str] = ''
+    HardwareAddress:    Optional[str] = ''
+    StateString:        Optional[str] = ''
+    StateNumber:        Optional[int] = 0
+    Active:             Optional[bool] = False
+    Status:             Optional[str] = ''
+    Carrier:            Optional[str] = ''
+    Ip4:                Optional[str] = ''
+    Ip6:                Optional[str] = ''
+    AutoConnect:        Optional[bool] = False
+    _dev_path:          Optional[str] = ''
+    _act_con_path:      Optional[str] = ''
+    
 
 
-@binding.bindable_dataclass
-class Ip4Address:
-    Address: Optional[str] = None
-    Prefix: Optional[int] = None
+async def GetInterfaceData(nm: ProxyInterface, iface :str) -> InterfaceData:
+    i = InterfaceData()
 
-@binding.bindable_dataclass
-class Ip4DnsServer:
-    Server: Optional[str] = None
-
-@binding.bindable_dataclass
-class Ip4DnsSearch:
-    Search: Optional[str] = None
-
-@binding.bindable_dataclass
-class Ip4Gateway:
-    Address: Optional[str] = ''
+    i._dev_path = await nm.call_get_device_by_ip_iface(iface)
+    dev = GetDevice(dbus.Bus, i._dev_path)
 
 
+    i.Name = iface
+    i.HardwareAddress = await dev.get_hw_address()
+    i.StateNumber = await dev.get_state()
+    i.StateString = processDeviceState(i.StateNumber)
+    i.Active = True if i.StateNumber == 100 else False
+    i.Carrier = processInterfaceFlags(await dev.get_interface_flags())
+
+    ip4_config_path = await dev.get_ip4_config()
+    ip6_config_path = await dev.get_ip6_config()
+
+    i._act_con_path = await dev.get_active_connection()
+
+    if len(i._act_con_path) > 1:
+        activeConnection = GetActiveConnection(dbus.Bus, i._act_con_path)
+        connection_path = await activeConnection.get_connection()
+        connection = GetConnection(dbus.Bus, connection_path)
+        settings = await connection.call_get_settings()
+        i.AutoConnect = settings['connection'].get('autoconnect', Variant('b', True)).value
+
+
+    if len(ip4_config_path) > 1:
+        ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
+        ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
+        ip4AddressData = await ip4Config.get_address_data()
+        ip6AddressData = await ip6Config.get_address_data()
+        i.Ip4 = addressDataToString(ip4AddressData)
+        i.Ip6 = addressDataToString(ip6AddressData)
+
+        i.Status = combineAddresses(ip4AddressData, ip6AddressData)
+
+    return i
 
 def GetNetworkManager(bus: MessageBus):
     file_name = 'org.freedesktop.NetworkManager.xml'
@@ -203,8 +197,6 @@ def GetConnection(bus: MessageBus, path : str):
     return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
 
 
-
-
 async def GetSettings(dev: ProxyInterface) -> dict:
     active_connection_path = await dev.get_active_connection()
     if len(active_connection_path) > 1:
@@ -212,115 +204,130 @@ async def GetSettings(dev: ProxyInterface) -> dict:
         connection_path = await activeConnection.get_connection()
         connection = GetConnection(dbus.Bus, connection_path)
         connection_settings = await connection.call_get_settings()
-
-        #settings = Settings(**connection_settings)
-
     return connection_settings
 
 
-def unpack_settings(settings: dict) -> Settings:
-
-    connection = ConnectionDetails(
-        settings['connection']['id'].value,
-        settings['connection']['permissions'].value,
-        settings['connection']['timestamp'].value,
-        settings['connection']['type'].value,
-        settings['connection']['uuid'].value,
-    )
-
-    pprint(connection)
-
-
-def GetIp4Addresses(settings :dict) -> List[Ip4Address]:
-    ip4Addresses: List[Ip4Address] = []
-    ipv4 = settings.get('ipv4')
-    addrData = ipv4.get('address-data').value
-    for addr in addrData:
-        a = addr.get('address').value
-        p = addr.get('prefix').value
-        addr = Ip4Address(a, p)
-        ip4Addresses.append(addr)
-    return ip4Addresses
-
-def GetIp4Routes(settings :dict) -> List[Ip4Route]:
-    routes: List[Ip4Route] = []
-    ipv4 = settings.get('ipv4')
-    routeData = ipv4.get('route-data').value
-    for route in routeData:
-        a = route.get('dest').value
-        p = route.get('prefix').value
-        n = route.get('next-hop').value
-        m = route.get('metric').value
-        addr = Ip4Route(a, p, n, m)
-        routes.append(addr)
-    return routes
 
 
 
+def GetIp(version: str, settings: dict) -> Ipv4v6:
 
-def GetIp4DnsServers(settings :dict) -> List[Ip4DnsServer]:
-    servers: List[Ip4DnsServer] = []
-    ipv4 = settings.get('ipv4')
-    dnsData = ipv4.get('dns-data')
-    #dnsData = ipv4.get('dns-data').value
-    if dnsData:
-        for dns in dnsData.value:
-            servers.append(Ip4DnsServer(dns))
-        return servers
-    else:
-        return []
+    ip = Ipv4v6()
 
-def GetIp4DnsMethod(settings :dict) -> Ip4DnsMethod:
-    ipv4 = settings.get('ipv4')
-    # if it exisits its true so auto is false
-    ignore = ipv4.get('ignore-auto-dns', None)
-    # if it doesnt its false so auto is true
-    if ignore:
-        return Ip4DnsMethod(False)
-    else:
-        return Ip4DnsMethod(True)
+    ip_settings = settings.get(version)
+
+    ip_settings: dict
+    if ip_settings:    
+        addrData = ip_settings.get('address-data')
+        if addrData:
+            for addr in addrData.value:
+                a = addr.get('address').value
+                p = addr.get('prefix').value
+                ip.AddressData.append(IpAddress(a, p))
+        
+        dnsData = ip_settings.get('dns-data')
+        if dnsData:
+            for dns in dnsData.value:
+                ip.DnsData.append(DnsServer(dns))
+        
+        dnsSearch = ip_settings.get('dns-search')
+        if dnsSearch:
+            for dns in dnsSearch.value:
+                ip.DnsSearch.append(DnsServer(dns))
+
+        gateway = ip_settings.get('gateway')
+        if gateway:
+            ip.Gateway = gateway.value
+
+        ignoreAutoDns = ip_settings.get('ignore-auto-dns')
+        if ignoreAutoDns:
+            ip.IgnoreAutoDns = ignoreAutoDns.value
+
+        
+        ignoreAutoRoutes = ip_settings.get('ignore-auto-routes')
+        if ignoreAutoRoutes:
+            ip.IgnoreAutoRoutes = ignoreAutoRoutes.value
+
+        method = ip_settings.get('method')
+        if method:
+            ip.Method = method.value
+        
+
+        routeData = ip_settings.get('route-data')
+        if routeData:
+            for route in routeData.value:
+                a = route.get('dest').value
+                p = route.get('prefix').value
+                n = route.get('next-hop').value
+                m = route.get('metric').value
+                ip.RouteData.append(IpRoute(a, p, n, m))
+
+    return ip
 
 
-def GetIp4RouteMethod(settings :dict) -> Ip4RouteMethod:
-    ipv4 = settings.get('ipv4')
-    # if it exisits its true so auto is false
-    ignore = ipv4.get('ignore-auto-routes', None)
-    # if it doesnt its false so auto is true
-    if ignore:
-        return Ip4RouteMethod(False)
-    else:
-        return Ip4RouteMethod(True)
 
-def GetIp4DnsSearches(settings :dict) -> List[Ip4DnsSearch]:
-    searches: List[Ip4DnsSearch] = []
-    ipv4 = settings.get('ipv4')
-    dnsData = ipv4.get('dns-search')
-    if dnsData != None:
-        for s in dnsData.value:
-            searches.append(Ip4DnsSearch(s))
-        return searches
-    else:
-        return []
+def SetIp(ip: Ipv4v6, version: str, settings :dict) -> dict:
 
-def GetIp4Method(settings :dict) -> Ip4Method:
-    ipv4 = settings.get('ipv4')
-    meth = ipv4.get('method').value
-    return Ip4Method(meth)
+    #remove depreciated 
+    settings[version].pop("addresses", None)
+    settings[version].pop("dns", None)
+    settings[version].pop("routes", None)
+
+    # address data
+    settings[version]['address-data'] = addresses_to_dbus(ip.AddressData)
+
+    # dns data
+    settings[version]['dns-data'] = dns_to_dbus(ip.DnsData)
+
+    # dns search
+    settings[version]['dns-search'] = dns_to_dbus(ip.DnsSearch)
+
+    # gateway
+    settings[version]['gateway'] = Variant('s', ip.Gateway)
+
+    # ignore auto dns
+    settings[version]['ignore-auto-dns'] = Variant('b', ip.IgnoreAutoDns)
+
+    # ignore auto routes
+    settings[version]['ignore-auto-routes'] = Variant('b', ip.IgnoreAutoRoutes)
+
+    # method  
+    settings[version]['method'] = Variant('s', ip.Method)
+
+    #route data
+    settings[version]['route-data'] = route_to_dbus(ip.RouteData)
+
+    return settings
 
 
-async def GetIp6Addresses(settings :dict) -> List[Ipv6Address]:
-    ip4Addresses: List[Ipv6Address] = []
 
-    ipv6 = settings.get('ipv6')
-    addrData = ipv6.get('address-data').value
-    for addr in addrData:
-        a = addr.get('address').value
-        p = addr.get('prefix').value
-        addr = Ipv6Address(a, p)
-        ip4Addresses.append(addr)
 
-    return ip4Addresses
+def addresses_to_dbus(ip :list[IpAddress]):
+    return Variant('aa{sv}', [{'address': Variant('s', i.Address), 'prefix': Variant('u', int(i.Prefix))} for i in ip])
 
+def dns_to_dbus(dns :list[DnsServer]):
+    return Variant('as', [d.Server for d in dns])
+
+def route_to_dbus(route: list[IpRoute]):
+    return Variant('aa{sv}', [{'dest': Variant('s', r.Dest), 
+                               'prefix': Variant('u', int(r.Prefix)),
+                               'next-hop': Variant('s', r.NextHop),
+                               'metric': Variant('u', int(r.Metric)),
+                               } for r in route])
+
+
+
+
+
+def ApplyModes(version :str, settings :dict) -> dict:
+
+    if settings[version]['method'].value == 'auto':
+        settings[version].pop('gateway', None)
+    
+    if settings[version]['method'].value == 'disabled':
+        settings[version].pop('gateway', None)
+    
+    return settings
 
     
     
@@ -412,9 +419,6 @@ def combineAddresses(ipv4AddressData, ipv6AddressData) -> str:
     return formatAddressString(addresses)
 
 
-def GetAutoConnect(settings :dict) -> bool:
-    return settings['connection'].get('autoconnect', Variant('b', True)).value
-
 
 
 async def GetDeviceFromInterface(iface :str) -> Device:
@@ -498,67 +502,12 @@ async def GetInterfacesAndAddresses() -> list:
 
 
 
-def GetIp4Gateway(settings :dict) -> str:
-    ipv4 = settings.get('ipv4')
-    gw = ipv4.get('gateway')
-    if gw:
-    #gw = ipv4.get('gateway').value
-        return Ip4Gateway(gw.value)
-    else:
-        return Ip4Gateway()
-
-def SetIp4Gateway(settings :dict, gw :str):
-    settings['ipv4']['gateway'].value = gw
 
 
 
 
-def SetIp4Method(settings :dict, method :str):
-    settings['ipv4']['method'].value = method
 
 
-
-def apply_settings(settings: dict):
-
-    # remove depreciated 
-    settings["ipv4"].pop('addresses', None)
-    settings["ipv4"].pop('dns', None)
-    settings["ipv4"].pop('routes', None)
-
-    settings["ipv6"].pop('addresses', None)
-    settings["ipv6"].pop('dns', None)
-    settings["ipv6"].pop('routes', None)
-
-
-    settings['ipv4']['method'] = ipv4_method_to_dbus(method)
-    if method == 'auto':
-        settings['ipv4'].pop('address-data', None)
-        settings['ipv4'].pop('gateway', None)
-    
-    if method == 'manual':
-        settings['ipv4']['gateway'] = ip4_gateway_to_dbus(gateway)
-        settings['ipv4']['address-data'] = ip4_addresses_to_dbus(addresses)
-    if method == 'disabled':
-        print()
-
-
-
-
-    
-def ip4_addresses_to_dbus(ip :list[Variant]):
-    return Variant('aa{sv}', [{'address': Variant('s', i.Address), 'prefix': Variant('u', int(i.Prefix))} for i in ip])
-
-def dns_servers_to_dbus(servers :list[str]):
-    return Variant('as', servers)
-
-def dns_searches_to_dbus(search: list[str]):
-    return Variant('as', search)
-
-def ip4_gateway_to_dbus(gw: str):
-    return Variant('s', gw)
-
-def ipv4_method_to_dbus(method :str):
-    return Variant('s', method)
 
 
 
