@@ -9,6 +9,7 @@ from dbus import dbus
 
 async def network_page():
 
+
     with ui.column():
 
         interfaces = await GetInterfacesAndAddresses()
@@ -48,66 +49,39 @@ async def network_page():
         )
 
 
-async def interface_page(interface_name: str):
-    nm = GetNetworkManager(dbus.Bus)
-    
-    dev_path = await nm.call_get_device_by_ip_iface(interface_name)
 
-    device = GetDevice(dbus.Bus, dev_path)
-    
-    interface = await GetInterfaceData(nm, interface_name)
+@ui.refreshable
+async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface):
 
-
-    def state_changed_cb(u):
-        status.refresh()
-    nm.on_state_changed(state_changed_cb)
-    
-    #async def edit_and_refresh(version):
-    #    await edit_ip_connection(version, device)
-    #    status.refresh()
-        
-    
-    @ui.refreshable
-    async def header():
-        #interface = await GetInterfaceData(nm, interface_name)
-
+    with ui.card():
         with ui.row():
             ui.link("Networking", "/networking")
             ui.label(">")
             ui.label(interface.Name)
-            
             with ui.row().classes("w-full items-center justify-between"):
-                    ui.label().classes("text-h6").bind_text(interface, "Name")
-                    ui.label().classes("text-h6").bind_text(interface, "HardwareAddress")
+                ui.label().classes("text-h6").bind_text(interface, "Name")
+                ui.label().classes("text-h6").bind_text(interface, "HardwareAddress")
+                async def connection_sw_cb(e):
+                    action = "enable" if e.sender.value else "disable"
+                    with ui.dialog() as dialog, ui.card():
+                        ui.label(f"Are you sure you want to {action} this connection?")
+                        with ui.row():
+                            ui.button(
+                                "Cancel", on_click=lambda: dialog.submit("Cancel")
+                            ).props("flat color=accent align=left")
+                            ui.button(
+                                f"{action}", on_click=lambda: dialog.submit(action)
+                            ).props("flat color=accent align=left")
+                    result = await dialog
+                    if result == "enable":
+                        await nm.call_activate_connection("/", interface._dev_path, "/")
+                    elif result == "disable":
+                        await nm.call_deactivate_connection(interface._act_con_path)
 
-                    async def connection_sw_cb(e):
-                        action = "enable" if e.sender.value else "disable"
-                        with ui.dialog() as dialog, ui.card():
-                            ui.label(f"Are you sure you want to {action} this connection?")
-                            with ui.row():
-                                ui.button(
-                                    "Cancel", on_click=lambda: dialog.submit("Cancel")
-                                ).props("flat color=accent align=left")
-                                ui.button(
-                                    f"{action}", on_click=lambda: dialog.submit(action)
-                                ).props("flat color=accent align=left")
-                        result = await dialog
-                        if result == "enable":
-                            await nm.call_activate_connection("/", interface._dev_path, "/")
-                        elif result == "disable":
-                            await nm.call_deactivate_connection(interface._act_con_path)
-                        
-                        #header.refresh()
-                        return None
-                    
-                    ui.switch("Connected").on("click", lambda e: connection_sw_cb(e)).props(
+                ui.switch("Connected").on("click", lambda e: connection_sw_cb(e)).props(
                     "flat color=accent"
                 ).bind_value(interface, "Active")
-                    
-
-    @ui.refreshable
-    async def status():
-        interface = await GetInterfaceData(nm, interface_name)
+        ui.separator()
 
         with ui.column().classes("flex-1 gap-4"):
             with ui.row().classes("flex-1 gap-16"):
@@ -142,7 +116,7 @@ async def interface_page(interface_name: str):
                 ui.label().bind_text_from(interface, "Ip4")
                 ui.label("Edit").classes(
                     "text-accent cursor-pointer hover:underline"
-                ).on("click", lambda: edit_and_refresh('ipv4'))
+                ).on("click", lambda: edit_ip_connection('ipv4', device))
                 
                 
             with ui.row().classes("flex-1 gap-16"):
@@ -150,118 +124,40 @@ async def interface_page(interface_name: str):
                 ui.label().bind_text_from(interface, "Ip6")
                 ui.label("Edit").classes(
                     "text-accent cursor-pointer hover:underline"
-                ).on("click", lambda: edit_and_refresh('ipv6'))
-    
+                ).on("click", lambda: edit_ip_connection('ipv6', device))
 
-    with ui.card() as interface_card:
-        await header()
-        ui.separator()
-        await status()        
-        
-    return interface_card
+
+
+async def interface_page(interface_name: str):
+
+    nm = GetNetworkManager(dbus.Bus)
+
+    dev_path = await nm.call_get_device_by_ip_iface(interface_name)
+
+    device = GetDevice(dbus.Bus, dev_path)
+
+    interface = await GetInterfaceData(nm, interface_name)
+
+    await interface_card(nm, device, interface)
     
-    #    
-#
-    #async def interface_card():
-    #    
-    #    interface = await GetInterfaceData(nm, interface_name)
-#
-    #    with ui.card().classes("w-full"):
-    #        
-#
-    #            ui.separator()
-#
-    #            with ui.column().classes("flex-1 gap-4"):  # Fixed width for labels
-    #                with ui.row().classes("flex-1 gap-16"):
-    #                    ui.label("Status").classes("font-bold w-8")
-    #                    ui.label().bind_text_from(interface, "Status")
-    #                with ui.row().classes("flex-1 gap-16"):
-    #                    ui.label("State").classes("font-bold w-8")
-    #                    ui.label().bind_text_from(interface, "StateString")
-    #                with ui.row().classes("flex-1 gap-16"):
-    #                    ui.label("Carrier").classes("font-bold w-8")
-    #                    ui.label().bind_text_from(interface, "Carrier")
-    #                with ui.row().classes("flex-1 gap-16"):
-    #                    ui.label("General").classes("font-bold w-8")
-#
-    #                    async def auto_connect_cb(e):
-    #                        return
-    #                        device = GetDevice(dbus.Bus, interface._dev_path)
-    #                        settings = await GetSettings(device)
-    #                        settings["connection"]["autoconnect"] = Variant(
-    #                            "b", e.value
-    #                        )
-    #                        # await connection.call_update2(settings, 0x1, {})
-    #                        # await device.call_reapply(settings, 0, 0)
-#
-    #                    ui.checkbox(
-    #                        "Connect automatically", on_change=auto_connect_cb
-    #                    ).props("flat color=accent dense").bind_value(
-    #                        interface, "AutoConnect"
-    #                    )
-    #                    
-    #                    
-    #                with ui.row().classes("flex-1 gap-16"):
-    #                    ui.label("IPv4").classes("font-bold w-8")
-    #                    ui.label().bind_text_from(interface, "Ip4")
-    #                    ui.label("Edit").classes(
-    #                        "text-accent cursor-pointer hover:underline"
-    #                    ).on("click", lambda: edit_and_refresh('ipv4'))
-    #                    
-    #                    
-    #                with ui.row().classes("flex-1 gap-16"):
-    #                    ui.label("IPv6").classes("font-bold w-8")
-    #                    ui.label().bind_text_from(interface, "Ip6")
-    #                    ui.label("Edit").classes(
-    #                        "text-accent cursor-pointer hover:underline"
-    #                    ).on("click", lambda: edit_and_refresh('ipv6'))
-#
-    #    return  # end of interface card
-    #
-    #
-    #
-    #
-    #@ui.refreshable
-    #async def header():
-    #    with ui.row().classes("w-full items-center justify-between"):
-    #            ui.label().classes("text-h6").bind_text(interface, "Name")
-    #            ui.label().classes("text-h6").bind_text(interface, "HardwareAddress")
-#
-    #            async def connection_sw_cb(e):
-    #                action = "enable" if e.sender.value else "disable"
-    #                with ui.dialog() as dialog, ui.card():
-    #                    ui.label(f"Are you sure you want to {action} this connection?")
-    #                    with ui.row():
-    #                        ui.button(
-    #                            "Cancel", on_click=lambda: dialog.submit("Cancel")
-    #                        ).props("flat color=accent align=left")
-    #                        ui.button(
-    #                            f"{action}", on_click=lambda: dialog.submit(action)
-    #                        ).props("flat color=accent align=left")
-    #                result = await dialog
-    #                if result == "enable":
-    #                    await nm.call_activate_connection("/", interface._dev_path, "/")
-    #                elif result == "disable":
-    #                    await nm.call_deactivate_connection(interface._act_con_path)
-    #                
-#
-    #                #interface_card.refresh()
-    #                #interface.Active = (await GetInterfaceData(nm, interface.Name)).Active
-#
-#
-    #            ui.switch("Connected").on("click", lambda e: connection_sw_cb(e)).props(
-    #                "flat color=accent"
-    #            ).bind_value(interface, "Active")
-    #
-    #    
-    #with ui.row():
-    #    ui.link("Networking", "/networking")
-    #    ui.label(">")
-    #    ui.label(interface_name)
-    #    
-    #    with ui.column().classes("w-full"):
-    #        await interface_card()
-#
+    async def state_changed_cb(u1, u2, u3):
+        print(u1, u2, u3)
+        # Re-fetch the interface data to get the new state
+        updated_interface = await GetInterfaceData(nm, interface_name)
+        
+        # Update the existing interface object's properties
+        # This will trigger the UI bindings to update automatically
+        interface.Status = updated_interface.Status
+        interface.StateString = updated_interface.StateString
+        interface.StateNumber = updated_interface.StateNumber
+        interface.Carrier = updated_interface.Carrier
+        interface.Active = updated_interface.Active
+        interface.Ip4 = updated_interface.Ip4
+        interface.Ip6 = updated_interface.Ip6
+        # Add any other properties that might change
+    
+    device.on_state_changed(state_changed_cb)
+
 
 
 
