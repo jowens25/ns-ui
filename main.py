@@ -13,9 +13,10 @@ from ntp import ntp_page
 from fpga_page import fpga_page
 from tests_page import tests_page
 from dbus import dbus
-
+from firewalld_page import firewall_page
 
 @ui.page('/networking')
+@ui.page('/networking/firewall')
 @ui.page('/networking/{interface_name}')
 
 @ui.page('/snmp')
@@ -121,6 +122,7 @@ async def root():
     ui.sub_pages({
                     '/': root_page, 
                   '/networking': network_page, 
+                  '/networking/firewall': firewall_page,
                   '/networking/{interface_name}': interface_page,
                   '/ntp' : ntp_page,
                   '/snmp': snmp_page, 

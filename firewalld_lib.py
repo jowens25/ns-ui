@@ -15,19 +15,44 @@ from dbus_next.aio import MessageBus
 from dbus import dbus
 
 
-async def GetSnmp(bus: MessageBus):
-    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
-    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
-    return obj.get_interface('com.novus.ns.snmp')
+#async def GetSnmp(bus: MessageBus):
+#    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
+#    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
+#    return obj.get_interface('com.novus.ns.snmp')
+#
+#def GetDevice(bus: MessageBus, path : str):
+#    file_name = 'org.freedesktop.NetworkManager.Device.xml'
+#    with open("introspection/"+file_name, "r") as f:
+#        introspection = f.read()
+#    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+#    return obj.get_interface('org.freedesktop.NetworkManager.Device')
 
-def GetDevice(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.Device.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.Device')
+@binding.bindable_dataclass
+class Service:
+    Version:           Optional[str]  = ''
+    Name:              Optional[str] = ''
+    Description:       Optional[str] = ''
+    Ports:             Optional[list[str]]  = field(default_factory=list)
+    ModuleNames:       Optional[list[str]] = field(default_factory=list)
+    Destinations:      Optional[dict] = field(default_factory=dict)
+    Protocols:         Optional[list[str]] = field(default_factory=list)
+    SourcePorts:       Optional[list[str]] = field(default_factory=list)
+    Includes:          Optional[list[str]] = field(default_factory=list)
+    Helpers:           Optional[list[str]] = field(default_factory=list)
 
+@binding.bindable_dataclass
+class Zone:
+    Name:              Optional[str] = ''
+    Services:          Optional[list[Service]] = field(default_factory=list)
 
+@binding.bindable_dataclass
+class Firewall:
+    Enable:            Optional[bool] = False
+    Status:            Optional[str] = ''
+    ActiveZoneNames:   Optional[dict[dict]] = field(default_factory=dict)
+    AllowedAddresses:  Optional[list[str]] = field(default_factory=list)
+    Services:          Optional[dict[dict]] = field(default_factory=dict)
+    Zones:             Optional[dict[Zone]] = field(default_factory=list)
 
 
 async def GetFirewalld(bus: MessageBus):
@@ -45,8 +70,32 @@ async def GetFirewalldConfig(bus: MessageBus):
     return obj.get_interface('org.fedoraproject.FirewallD1.config')
 
 
+async def GetFirewalldZone(bus: MessageBus):
+    file_name = 'org.fedoraproject.FirewallD1.zone.xml'
+    introspection = await bus.introspect('org.fedoraproject.FirewallD1', '/org/fedoraproject/FirewallD1')
+    #pprint(introspection.tostring())
+    obj = bus.get_proxy_object('org.fedoraproject.FirewallD1', '/org/fedoraproject/FirewallD1', introspection)
+    return obj.get_interface('org.fedoraproject.FirewallD1.zone')
 
 
+
+
+def formatListToString(elements: list[str]) -> str:
+    if len(elements) == 0:
+        return None
+    return ', '.join(elements) if elements else ''
+
+def parseActiveZones(zones :dict) -> dict:
+    rows = []
+    for k, v in zones.items():
+        
+        zone = k
+        interfaces = formatListToString(v.get('interfaces', []))
+        sources = formatListToString(v.get('sources', []))
+
+        rows.append({'zone':zone, 'interfaces':interfaces, 'sources':sources})
+    return rows
+        
 
 
 
@@ -54,15 +103,15 @@ async def GetFirewalldConfig(bus: MessageBus):
 # Firewall DAEMON
 # ====================================================================
 async def StopFirewalld():
-    print("stoping... snmpd")
+    print("stoping... firewalld")
     await runCmd(["systemctl", "stop", "firewalld"])
 
 async def StartFirewalld():
-    print("starting... snmpd")
+    print("starting... firewalld")
     await runCmd(["systemctl", "start", "firewalld"])
 
 async def RestartFirewalld():
-    print("restarting... snmpd")
+    print("restarting... firewalld")
     await runCmd(["systemctl", "restart", "firewalld"])
     
     

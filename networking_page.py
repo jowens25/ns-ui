@@ -7,45 +7,19 @@ from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
 from dbus import dbus
 
+from firewalld_page import firewall_status
+
+
+
 
 async def network_page():
-
-    fire = await GetFirewall(dbus.Bus)
-
     with ui.column():
             
-            ui.label("Firewall").classes("text-h5")
             with ui.card():
-                with ui.row().classes("w-full items-center justify-between"):
-                
-                    ui.label("1 Active Zone")
-                    ui.button("Edit rules and zones").props("flat color=accent align=left")
-                    async def fire_switch_cb(e):
-                        action = "enable" if  e.sender.value else "disable"
-                        with ui.dialog() as dialog, ui.card():
-                            ui.label(f'Are you sure you want to {action} snmp?')
-                            with ui.row():
-                                ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
-                                ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
-
-                        result = await dialog
-                        active = await fire.call_is_active()
-
-                        if result == "enable" and not active:
-                            await fire.call_start()
-
-                        if result == "disable" and active:
-                            await fire.call_stop()
-
-                        e.sender.value = await fire.call_is_active()
-                    fire_service_switch = ui.switch("Firewalld Status").on('click', lambda e: fire_switch_cb(e)).props("flat color=accent align=left dense")
-                    fire_service_switch.value = await fire.call_is_active()
-
-        #with ui.card():
+                await firewall_status(True)
+            
             interfaces = await GetInterfacesAndAddresses()
-
-            ui.label("Networking").classes("text-h5")
-
+            
             interface_table = ui.table(
                 title="Interfaces",
                 rows=interfaces,
@@ -55,7 +29,7 @@ async def network_page():
                     "headerClasses": "uppercase text-primary",
                 },
             )
-
+            
             interface_table.add_slot(
                 "body-cell-name",
                 """
@@ -68,7 +42,6 @@ async def network_page():
                 </q-td>
             """,
             )
-
             interface_table.add_slot(
                 "body-cell-addresses",
                 """
@@ -81,6 +54,7 @@ async def network_page():
         #with ui.card():
 
 
+    
 
 @ui.refreshable
 async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface):
