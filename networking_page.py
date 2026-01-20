@@ -11,42 +11,52 @@ async def network_page():
 
 
     with ui.column():
+            
+            ui.label("Firewall").classes("text-h5")
+            with ui.card():
+                with ui.row().classes("w-full items-center justify-between"):
+                
+                    ui.label("1 Active Zone")
+                    ui.button("Edit rules and zones").props("flat color=accent align=left")
 
-        interfaces = await GetInterfacesAndAddresses()
+        #with ui.card():
+            interfaces = await GetInterfacesAndAddresses()
 
-        ui.label("Networking").classes("text-h5")
+            ui.label("Networking").classes("text-h5")
 
-        interface_table = ui.table(
-            title="Interfaces",
-            rows=interfaces,
-            # rows=[{'d':'v'}],
-            column_defaults={
-                "align": "left",
-                "headerClasses": "uppercase text-primary",
-            },
-        )
+            interface_table = ui.table(
+                title="Interfaces",
+                rows=interfaces,
+                # rows=[{'d':'v'}],
+                column_defaults={
+                    "align": "left",
+                    "headerClasses": "uppercase text-primary",
+                },
+            )
 
-        interface_table.add_slot(
-            "body-cell-name",
-            """
-            <q-td :props="props">
-                <a :href="'/networking/' + props.row.name" 
-                   class="text-accent cursor-pointer hover:underline"
-                   >
+            interface_table.add_slot(
+                "body-cell-name",
+                """
+                <q-td :props="props">
+                    <a :href="'/networking/' + props.row.name" 
+                       class="text-accent cursor-pointer hover:underline"
+                       >
+                        {{ props.value }}
+                    </a>
+                </q-td>
+            """,
+            )
+
+            interface_table.add_slot(
+                "body-cell-addresses",
+                """
+                <q-td :props="props" class="font-bold text-sm">
                     {{ props.value }}
-                </a>
-            </q-td>
-        """,
-        )
+                </q-td>
+            """,
+            )
 
-        interface_table.add_slot(
-            "body-cell-addresses",
-            """
-            <q-td :props="props" class="font-bold text-sm">
-                {{ props.value }}
-            </q-td>
-        """,
-        )
+        #with ui.card():
 
 
 
