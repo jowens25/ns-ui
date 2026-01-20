@@ -1,6 +1,7 @@
 from nicegui import ui, app, binding
 from networking_lib import *
-
+from firewalld_lib import *
+from firewalld_client import *
 from dbus_next.signature import Variant
 from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
@@ -9,6 +10,7 @@ from dbus import dbus
 
 async def network_page():
 
+    fire = await GetFirewall(dbus.Bus)
 
     with ui.column():
             
@@ -18,6 +20,26 @@ async def network_page():
                 
                     ui.label("1 Active Zone")
                     ui.button("Edit rules and zones").props("flat color=accent align=left")
+                    async def fire_switch_cb(e):
+                        action = "enable" if  e.sender.value else "disable"
+                        with ui.dialog() as dialog, ui.card():
+                            ui.label(f'Are you sure you want to {action} snmp?')
+                            with ui.row():
+                                ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
+                                ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
+
+                        result = await dialog
+                        active = await fire.call_is_active()
+
+                        if result == "enable" and not active:
+                            await fire.call_start()
+
+                        if result == "disable" and active:
+                            await fire.call_stop()
+
+                        e.sender.value = await fire.call_is_active()
+                    fire_service_switch = ui.switch("Firewalld Status").on('click', lambda e: fire_switch_cb(e)).props("flat color=accent align=left dense")
+                    fire_service_switch.value = await fire.call_is_active()
 
         #with ui.card():
             interfaces = await GetInterfacesAndAddresses()

@@ -5,15 +5,9 @@ from dbus_next.constants import BusType
 
 from snmp_interface import SnmpInterface
 from pam_interface import PamInterface
-
-
-
-snmpInterface = None
-pamInterface = None
-socketInterface = None
+from firewalld_interface import FirewalldInterface
 
 async def main():
-    global snmpInterface, pamInterface, socketInterface
 
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
     
@@ -22,6 +16,9 @@ async def main():
 
     pamInterface = PamInterface('com.novus.ns.pam')
     bus.export('/com/novus/ns', pamInterface)
+
+    firewallInterface = FirewalldInterface('com.novus.ns.firewall')
+    bus.export('/com/novus/ns', firewallInterface)
 
     #socketInterface = SocketInterface('com.novus.ns.socket')
     #bus.export('/com/novus/ns', socketInterface)
