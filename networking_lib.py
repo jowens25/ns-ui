@@ -344,7 +344,7 @@ def addressDataToAddress(addressdata: list[dict]) -> list:
 
 
 def formatAddressString(addresses: list[str]) -> str:
-    return ', '.join(addresses) if addresses else ' '
+    return ', '.join(addresses) if addresses else ''
 
 def formatInterfaceRow(interface :str, addresses: str):
     return {"name": interface, "addresses": addresses}
@@ -353,6 +353,8 @@ def formatInterfaceRow(interface :str, addresses: str):
 def addressDataToString(addressData):
     addresses = []
     addresses.extend(addressDataToAddress(addressData))
+    if len(addresses) == 0:
+        return "disabled"
     return formatAddressString(addresses)
 
 def dnsDataToString(dnsData):

@@ -28,8 +28,8 @@ from dbus import dbus
 #    return obj.get_interface('org.freedesktop.NetworkManager.Device')
 
 @binding.bindable_dataclass
-class Service:
-    Version:           Optional[str]  = ''
+class ServiceSetting:
+    Version:           Optional[str] = ''
     Name:              Optional[str] = ''
     Description:       Optional[str] = ''
     Ports:             Optional[list[str]]  = field(default_factory=list)
@@ -40,11 +40,17 @@ class Service:
     Includes:          Optional[list[str]] = field(default_factory=list)
     Helpers:           Optional[list[str]] = field(default_factory=list)
 
-@binding.bindable_dataclass
-class Zone:
-    Name:              Optional[str] = ''
-    Services:          Optional[list[Service]] = field(default_factory=list)
 
+@binding.bindable_dataclass
+class ZoneSetting:
+    Description:       Optional[str] = ''
+    Interfaces:        Optional[list[str]] = field(default_factory=list)
+    Services:          Optional[list[str]] = field(default_factory=list)
+    Short:             Optional[str] = ''
+    ServiceSettings:   Optional[dict[ServiceSetting]] = field(default_factory=dict)
+    Sources:           Optional[list[str]] = field(default_factory=list)
+    
+    
 @binding.bindable_dataclass
 class Firewall:
     Enable:            Optional[bool] = False
@@ -52,7 +58,7 @@ class Firewall:
     ActiveZones:       Optional[dict[dict]] = field(default_factory=dict)
     AllowedAddresses:  Optional[list[str]] = field(default_factory=list)
     Services:          Optional[dict[dict]] = field(default_factory=dict)
-    Zones:             Optional[dict[Zone]] = field(default_factory=dict)
+    ZoneSettings:      Optional[dict[ZoneSetting]] = field(default_factory=dict)
 
 
 async def GetFirewalld(bus: MessageBus):
@@ -69,6 +75,19 @@ async def GetFirewalldConfig(bus: MessageBus):
     obj = bus.get_proxy_object('org.fedoraproject.FirewallD1', '/org/fedoraproject/FirewallD1/config', introspection)
     return obj.get_interface('org.fedoraproject.FirewallD1.config')
 
+
+
+async def GetFirewalldConfigZone(bus: MessageBus, path : str):
+    introspection = await bus.introspect('org.fedoraproject.FirewallD1', path)
+    obj = bus.get_proxy_object('org.fedoraproject.FirewallD1', path, introspection)
+    return obj.get_interface('org.fedoraproject.FirewallD1.config.zone')
+
+def GetDevice(bus: MessageBus, path : str):
+    file_name = 'org.freedesktop.NetworkManager.Device.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Device')
 
 async def GetFirewalldZone(bus: MessageBus):
     file_name = 'org.fedoraproject.FirewallD1.zone.xml'

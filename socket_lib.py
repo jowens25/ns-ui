@@ -7,15 +7,17 @@ from dbus_next.service import ServiceInterface, method, signal
 from dbus_next.aio import MessageBus
 
 
-
-async def socket_stream(self):
+socket_receive = Event()
+async def socket_stream():
     try: 
         reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
         print("SOCKET OPENED")
         while True:
             line = (await reader.readline()).decode('utf-8', errors='ignore')
             if line:
-                yield line
+                #yield line
+                socket_receive.emit(line)
+                record_line(line)
             else:
                 break
     except FileNotFoundError:
@@ -36,92 +38,47 @@ async def socket_stream(self):
         
  
 
-
-async def sendCommands(commands: list[str], get_responses :bool = False) -> list[str]:
+async def sendCommands(commands: dict, get_responses :bool = False) -> list[str]:
     rx = asyncio.Event()
     reader, writer = await asyncio.open_unix_connection("/tmp/serial.sock")
-    responses = []
-    for command in commands:
+    responses = {}
+    for name, command in commands.items():
+        print("sending: ", command)
         command = command+"\r\n"
         writer.write(command.encode())
         await writer.drain()
-
+        #print("finsihed drain")
         if get_responses:
             try:
                 #await asyncio.wait_for(rx, 2.0)
 
                 while True:
+                    #print("awaiting for response")
                     line = (await reader.readline()).decode('utf-8', errors='ignore')
                     if line:
                         if any(line.startswith(marker) for marker in ["$ER", "$RR", "$WR", "$GPNTL", "$BAUD"]):
-                            responses.append(line)
+                            print(f'got: {line}')
+                            responses[name] = ParseNtlResponse(line)
+                            #responses.append(line)
                             break
+                            #return line
                             #rx.set()
 
                     #await rx.wait()
 
-                
             except TimeoutError:
-                responses.append("TimeoutError: no response?")
+                responses[name] = "TimeoutError: no response?"
 
     writer.close()
     await writer.wait_closed()  
 
     return responses
-
         
 
 
-
-#class SocketInterface(ServiceInterface):
-#    def __init__(self, name):
-#        super().__init__(name)
-#
-#        self.socket = Socket()
-#
-#        asyncio.create_task(self._setup_and_listen())
-#
-#    async def _setup_and_listen(self):
-#
-#        try:
-#
-#            await self.socket.setup()
-#
-#            async for line in self.socket.listen():
-#                self.Rx(line)
-#
-#        except Exception as e:
-#            print(f"Socket error: {e}")
-#        finally:
-#            await self.socket.cleanup()
-#    
-#
-#    @method()
-#    async def WriteReadCommand(self, cmd :'s') -> 's':
-#        return await self.socket.writeRead(cmd)
-#    
-#
-#
-#    @signal()
-#    def Rx(self, msg :'s') -> 's':
-#        return msg
-#
-#    #@signal()
-#
-    
-#async def GetSocket(bus: MessageBus):
-#    #introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
-#    with open("socket.xml", "r") as f:
-#        introspection = f.read()
-#    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
-#    return obj.get_interface('com.novus.ns.socket')
-
-
-
-def record_data(data):
-    latest = data.decode('utf-8', errors='ignore')
+def record_line(line):
     with open("data.txt", "a") as f:
-        f.writelines(latest)
+        f.writelines(line)
     
     with open("data.txt", "r+") as f:
         lines = f.readlines()
@@ -135,48 +92,27 @@ def record_data(data):
 
 
 
-
-
-
-def ReadWriteSocket(command: str) -> str:
-    command = command + "\r\n"
+async def ReadNtlProperties(module :int, props: dict):
+    cmds = {}
     
-    try:
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.connect("/tmp/serial.sock")
-        sock.settimeout(4.0)  # 4 second timeout
-        
-        try:
-            sock.sendall(command.encode('utf-8'))
-            sock_file = sock.makefile('r')
-            
-            while True:
-                line = sock_file.readline()
-                    
-                if any(marker in line for marker in ["$ER", "$RR", "$WR", "$GPNTL"]):
-                    return line, None
-            
-        finally:
-            sock.close()
-            
-    except socket.timeout:
-        return "timeout"
-    except ConnectionRefusedError as e:
-        print("socket error?")
-        return "port open error"
-    except Exception as e:
-        print(e)
-        return "port write error"
+    for propName, propInt in props.items():
+        cmds[propName] = f"$GPNTL,{module},{propInt},?"
+
+    return await sendCommands(cmds, True)
+    #for r in rsp:
+    #    a["module"] = ParseNtlResponse(r)
+    #return a
+
+async def ReadNtlProperty(module: int, property :int) -> list[str]:
+    rsp = await sendCommands([f"$GPNTL,{module},{property},?"], True)
+
+    return ParseNtlResponse(rsp)
 
 
+async def WriteNtlProperty(module: int, property :int, value :str):
+    return await sendCommands([f"$GPNTL,{module},{property},{value}"], True)
 
 
-
-def ReadNtlProperty(module: int, property :int) -> list[str]:
-    return ReadWriteSocket(f"$GPNTL,{module},{property},?")
-
-def WriteNtlProperty(module: int, property :int, value :str):
-    return ReadWriteSocket(f"$GPNTL,{module},{property},{value}")
 
 def ParseNtlResponse(response :str)->str:
     fields = response.split(",")
@@ -184,40 +120,13 @@ def ParseNtlResponse(response :str)->str:
         module = fields[1]
         property = fields[2]
         value = fields[3]
-        return value
+        return value.strip('\r\n')
               
 
+async def WriteConfig(content :str):
+    commands = {i: line for i, line in enumerate(content.splitlines()) if line.startswith('$WC')}
+    await sendCommands(commands)
 
-def LoadConfig(file_name: str):
 
-    print("LOADING CONFIG...")
-    
-    try:
-        with open(file_name, 'r') as f:
-            data = f.read()
-    except Exception as err:
-        print(f"file err: {err}")
-        return
-    
-    for line in data.split('\n'):
-        # Skip comments
-        if "--" in line:
-            continue
-        
-        # Process $WC commands
-        if "$WC" in line:
-            line = line.strip()  # Remove whitespace and newlines
-            
-            rsp, err = ReadWriteSocket(line)
-            
-            if rsp.startswith("$ER"):
-                print("config load err")
-                return
-            
-            if err is not None:
-                print("config error")
-                return
-            
-            print(rsp)
 
 

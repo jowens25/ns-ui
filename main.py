@@ -1,9 +1,11 @@
+import asyncio
 import sys
 from nicegui import ui, app
 from lib.date import get_date
 
 from networking_page import network_page, interface_page
 from accounts import accounts_page, accounts_user_page
+from socket_lib import socket_stream
 from terminal import terminal_page
 from theme import init_colors
 from login import login_page
@@ -60,7 +62,9 @@ async def root():
 
     async def nav(path :str):
         ui.navigate.to(path)
-        left_drawer.hide()
+        width = await ui.run_javascript('window.innerWidth')
+        if width < 1024:  # Adjust this breakpoint as needed
+            left_drawer.hide()
 
 
     with ui.left_drawer(bordered=True).classes("bg-dark") as left_drawer:
@@ -140,14 +144,17 @@ async def root():
 
 @app.on_startup
 async def startup():
+    global sock_task
     await dbus.setup()
-    #await socket_setup()
+    sock_task = asyncio.create_task(socket_stream())
+
 
 @app.on_shutdown
 async def shutdown():
+    global sock_task
     await dbus.cleanup()
     #await socket_cleanup()
-
+    sock_task.cancel()
 
 if __name__ in {"__main__", "__mp_main__"}:
 

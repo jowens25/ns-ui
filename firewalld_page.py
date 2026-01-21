@@ -9,8 +9,6 @@ from dbus import dbus
 
 
 
-
-
 @ui.refreshable
 async def firewall_status(on_network_page: bool):
 
@@ -18,83 +16,65 @@ async def firewall_status(on_network_page: bool):
     fire = await GetFirewall(dbus.Bus)
     firewall.Enable = await fire.call_is_active()
     firewall.Status = "Enabled" if firewall.Enable else "Disabled"
-    
+    numActiveZones = 0
     if firewall.Enable:
         zone = await GetFirewalldZone(dbus.Bus)
-        firewall.ActiveZones = await zone.call_get_active_zones()
+        numActiveZones = len(await zone.call_get_active_zones())
         
-    with ui.row().classes("w-full items-center justify-between"):
-        with ui.row().classes( "items-center"):
-            ui.label("Firewall").classes("text-h6")
+    
+    with ui.column():
+        with ui.row().classes("w-full items-center justify-between"):
+            with ui.row().classes( "items-center"):
+                ui.label("Firewall").classes("text-h6")
 
-            async def fire_switch_cb(e):
-                action = "enable" if  e.sender.value else "disable"
-                with ui.dialog() as dialog, ui.card():
-                    ui.label(f'Are you sure you want to {action} firewalld?')
-                    with ui.row():
-                        ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
-                        ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
-                result = await dialog
-                active = await fire.call_is_active()
-                if result == "enable" and not active:
-                    await fire.call_start()
-                if result == "disable" and active:
-                    await fire.call_stop()
+                async def fire_switch_cb(e):
+                    action = "enable" if  e.sender.value else "disable"
+                    with ui.dialog() as dialog, ui.card():
+                        ui.label(f'Are you sure you want to {action} firewalld?')
+                        with ui.row():
+                            ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
+                            ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
+                    result = await dialog
+                    active = await fire.call_is_active()
+                    if result == "enable" and not active:
+                        await fire.call_start()
+                    if result == "disable" and active:
+                        await fire.call_stop()
 
-                await firewall_status.refresh()
-            ui.switch(firewall.Status).on('click', lambda e: fire_switch_cb(e)
-                ).props("flat color=accent align=left dense").bind_value(firewall, "Enable").bind_text
+                    await firewall_status.refresh()
+                ui.switch(firewall.Status).on('click', lambda e: fire_switch_cb(e)
+                    ).props("flat color=accent align=left dense").bind_value(firewall, "Enable").bind_text
+
+            if on_network_page:
+                ui.button("Edit rules and zones", on_click=lambda e: ui.navigate.to('/networking/firewall')).props("flat color=accent align=left dense")
+
+            else:
+                ui.button("add new zone").props("color=accent align=left")
         
-        if on_network_page:
-            ui.button("Edit rules and zones", on_click=lambda e: ui.navigate.to('/networking/firewall')).props("flat color=accent align=left")
-            #ui.link( '/networking/firewall').bind_text_from(firewall, "ActiveZones")
-
-        else:
-            ui.button("add new zone").props("color=accent align=left")
-
-            #with ui.row().classes("w-full items-center justify-between"): 
-            #zone_text = f'{len(firewall.ActiveZones)} active zones' if len(firewall.ActiveZones) != 1 else f'{len(firewall.ActiveZones)} active zone'
-    
+        ui.link(f'{numActiveZones} active zones', '/networking/firewall').classes('text-accent')
 
 
-
-def formatInterfacesString(interfaces):
-    interfaces = interfaces.split(",")
-    return formatListToString(interfaces)
-    
-def formatSourcesString(sources):
-    sources = sources.split(",")
-    return formatListToString(sources)
     
     
-    
-def InterfaceText(zone):
-    interfaces = zone.get('interfaces')
-    
-    if interfaces == None:
-        return
-
-    elif len(interfaces) == 1:
+def InterfaceText(zoneSettings :ZoneSetting):
+    interfaces = zoneSettings.Interfaces
+    if len(interfaces) == 1:
         l1 = ui.label("Interface:").classes("font-bold")
     else:
         l1= ui.label("Interfaces:").classes("font-bold")
-    l2 = ui.label().bind_text_from(zone, "interfaces", backward=lambda i: formatInterfacesString(i))
+    l2 = ui.label(formatListToString(interfaces))
     return (l1, l2)
 
-def AllowedAddressText(zone):
-    sources = zone.get('sources')
-    print(sources)
+def AllowedAddressText(zoneSettings :ZoneSetting):
+    sources = zoneSettings.Sources
     l1 = ui.label("Allowed Addresses:").classes("font-bold")
-
-    if sources == None:
+    if len(sources) == 0:
         l2 = ui.label("Entire subnet")
     else:
-        l2 = ui.label().bind_text_from(zone, "sources", backward=lambda i: formatSourcesString(i))
-        
+        l2 = ui.label(formatListToString(sources))
     return (l1, l2)
 
-# TODO get services with zone getServices
-# TODO get service props with getServiceSettings2
+
 def getUdpPorts(ports) -> list:
     out = []
     for p in ports:
@@ -111,16 +91,148 @@ def getTcpPorts(ports) -> list:
 
     return formatListToString(out)
     
-def formatServicesInRows(services :Service):
+def formatServicesInRows(serviceSettings :ServiceSetting):
+    
+
     rows = []
-    for s in services:
+    for n, s in serviceSettings.items():
                     
-        rows.append({"Service": s.Name
+        rows.append({ #"expand": '',
+                     "Service": n
                      ,"UDP": getUdpPorts(s.Ports)
                      ,"TCP": getTcpPorts(s.Ports)
-                     ,"Description": s.Description})
-    
+                     ,"Description": s.Description
+                     #,"remove": ''
+                     })
     return rows
+
+async def removeServiceFromZone(zoneName: str, serviceName:str):
+    
+    print(f'remove {serviceName} from {zoneName}')
+    zone = await GetFirewalldZone(dbus.Bus)
+    
+    res = await zone.call_remove_service(zoneName, serviceName)
+    print("res1: ", res)
+    conf = await GetFirewalldConfig(dbus.Bus)
+    
+    p = await conf.call_get_zone_by_name(zoneName)
+    
+    print(p)
+    
+    configZone = await GetFirewalldConfigZone(dbus.Bus, p)
+    res = await configZone.call_remove_service(serviceName)
+    print(res)
+    return
+
+
+
+
+async def addZoneDialog():
+    with ui.dialog() as dialog:
+        with ui.card():
+            
+            ui.label("nothing")
+            ui.button('close', on_click=dialog.close)
+        
+    return dialog
+
+async def addServiceDialog():
+    with ui.dialog() as dialog:
+        with ui.card():
+            ui.label("nothing")
+            ui.button('close', on_click=dialog.close)
+        
+    return dialog
+
+
+
+
+
+
+async def zone_list(firewall):
+    with ui.column():
+        for zoneName, zoneSetting in firewall.ZoneSettings.items():
+            with ui.card().classes("w-full"):
+                with ui.column():
+                    with ui.row().classes("w-full items-baseline justify-between"):
+                        with ui.row().classes("items-baseline"):
+                            ui.label(f'{zoneName.capitalize()} zone')
+                            InterfaceText(zoneSetting)
+                            
+                        with ui.row():
+                            AllowedAddressText(zoneSetting)
+                            
+                        with ui.row():
+                            addDialog = await addServiceDialog()
+                            ui.button("add services", on_click=addDialog.open).props("color=accent align=left")
+                            ui.button(icon="more_vert").props("flat color=accent align=left")
+                    
+                    services = formatServicesInRows(firewall.ZoneSettings[zoneName].ServiceSettings)
+                    
+                    service_table = ui.table(
+                        rows=services,
+                        column_defaults={
+                            "align": "left",
+                            "headerClasses": "uppercase text-primary",
+                        },
+                        row_key='Service'
+                    )
+                    service_table.props(f'visible-columns={"Service,UDP,TCP"}')  # Only show these
+                    
+                    service_table.add_slot('header', r'''
+                        <q-tr :props="props">
+                            <q-th auto-width />
+                            <q-th v-for="col in props.cols" :key="col.name" :props="props"> {{ col.label }} </q-th>
+                            <q-th auto-width />
+                        </q-tr>
+                    ''')
+                    
+                    async def handle_remove_service(e, zone=zoneName):
+                        await removeServiceFromZone(zone, e.args)
+    
+                    service_table.on('remove-service', handle_remove_service)
+                    
+                    service_table.add_slot('body', r'''
+                    <q-tr :props="props">
+                        <!-- expand button -->
+                        <q-td auto-width>
+                            <q-btn size="sm" color="accent" round dense @click="props.expand = !props.expand" :icon="props.expand ? 'remove' : 'add'" />
+                        </q-td>
+                        <!-- normal columns -->
+                        <q-td v-for="col in props.cols" :key="col.name" :props="props">
+                            {{ col.value }}
+                        </q-td>
+                        <!-- 3-dot menu -->
+                        <q-td auto-width>
+                            <q-btn flat round dense icon="more_vert" color="accent">
+                                <q-menu auto-close>
+                                    <q-list style="min-width: 150px">
+                                        <q-item clickable
+                                            @click="$parent.$emit('remove-service', props.row.Service)">
+                                            <q-item-section class="text-negative">
+                                                Delete
+                                            </q-item-section>
+                                        </q-item>
+                                    </q-list>
+                                </q-menu>
+                            </q-btn>
+                        </q-td>
+                    </q-tr>
+                    <!-- expanded description -->
+                    <q-tr v-show="props.expand" :props="props">
+                        <q-td colspan="100%" style="max-width: 0;">
+                            <div class="text-left"
+                                 style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
+                                {{ props.row.Description }}
+                            </div>
+                        </q-td>
+                    </q-tr>
+                    ''')
+
+    pass # end of this... 
+
+
+
 
 @ui.refreshable
 async def firewall_table():
@@ -134,108 +246,48 @@ async def firewall_table():
         fire = await GetFirewalld(dbus.Bus)
         zone = await GetFirewalldZone(dbus.Bus)
         firewall.ActiveZones = await zone.call_get_active_zones()
-        #print(firewall.ActiveZonesNames)
+        
         for az in firewall.ActiveZones:
-            z = Zone(az)
-            #print(az)
-            services = await zone.call_get_services(az)
-            for s in services:
-                service = Service()
-                service_settings = await fire.call_get_service_settings2(s)
-                
-                includes = service_settings.get('includes', False)
+            
+            zs = ZoneSetting()
+            
+            zoneSettings = await zone.call_get_zone_settings2(az)
+            
+            zs.Description = zoneSettings.get('description', Variant('s', 'description not available')).value
+            zs.Interfaces = zoneSettings.get('interfaces', Variant('as', [])).value
+            zs.Services = zoneSettings.get('services', Variant('as', [])).value
+            zs.Short = zoneSettings.get('short', Variant('s', 'short not available')).value
+            zs.Sources = zoneSettings.get('sources', Variant('as', [])).value
+            
+            for s in zs.Services:
+                serSet = ServiceSetting()
+                serviceSettings = await fire.call_get_service_settings2(s)
+                                
+                includes = serviceSettings.get('includes', False)
                 if includes:
                     for i in includes.value:
-                        ser = Service()
                         ser_set = await fire.call_get_service_settings2(i)
-                        #ser.Name = ser_set.get('short', Variant('s', 'name not available')).value
-                        service.Ports.extend(ser_set.get('ports', Variant('a(ss)', [['port not available', 'protocol not available']])).value)
-                        #ser.Description = ser_set.get('description', Variant('s', 'Description not available')).value
-                        #z.Services.append(ser)
-                        
-                #pprint(service_settings)
-            
-                service.Name = service_settings.get('short', Variant('s', 'name not available')).value
-                service.Ports.extend(service_settings.get('ports', Variant('a(ss)', [['port not available', 'protocol not available']])).value)
-                service.Description = service_settings.get('description', Variant('s', 'Description not available')).value
-                z.Services.append(service)
+                        serSet.Ports.extend(ser_set.get('ports', Variant('a(ss)', [['port not available', 'protocol not available']])).value)
+        
+                                    
+                serSet.Name = serviceSettings.get('short', Variant('s', 'name not available')).value
+                serSet.Ports.extend(serviceSettings.get('ports', Variant('a(ss)', [['port not available', 'protocol not available']])).value)
+                serSet.Description = serviceSettings.get('description', Variant('s', 'Description not available')).value
+                zs.ServiceSettings[s] = serSet
                 #pprint(service_settings)
                 
-            firewall.Zones[az] = z
+            firewall.ZoneSettings[az] = zs
+
+    await zone_list(firewall)
     
-    #pprint(firewall) 
-    async def zone_list():
-        with ui.column():
-            for name, zoneinfo in firewall.Zones.items():
-                zone = firewall.ActiveZones[name]
-                #print("zone", zone)
-                zoneInfo = getZoneInfo(name, zone)
-                #print(zoneInfo)
-                #zoneInfo = firewall.ActiveZoneNames[name]
-                #zoneInfo = parseActiveZones(firewall.ActiveZoneNames[zone.Name])
-                #print(f'zone info? {zoneInfo}')
-                #print("zone:", zone)
-                with ui.card().classes("w-full"):
-                    with ui.column():
-                        with ui.row().classes("w-full items-baseline justify-between"):
-
-                            with ui.row().classes("items-baseline"):
-                                ui.label().bind_text_from(zoneInfo, "name", backward=lambda text: f'{text.capitalize()} zone').classes('text-h6')
-                                InterfaceText(zoneInfo)
-
-                            with ui.row():
-                                AllowedAddressText(zoneInfo)
-                                print()
-                            with ui.row():
-                                ui.button("add services").props("color=accent align=left")
-                                ui.button(icon="more_vert").props("flat color=accent align=left")
-                        
-                        #pprint(firewall.Zones)
-                        services = formatServicesInRows(firewall.Zones[name].Services)
-                        print(services)
+    
+    
+    
+    
+    
 
 
-                        service_table = ui.table(
-                            #title="Interfaces",
-                            rows=services,
-                            #rows=[{'d':'v'}],
-                            column_defaults={
-                                "align": "left",
-                                "headerClasses": "uppercase text-primary",
-                            },
-                            row_key='Service'
-                        )
 
-                        service_table.props(f'visible-columns={"Service,UDP,TCP"}')  # Only show these
-
-                        service_table.add_slot('header', r'''
-                            <q-tr :props="props">
-                                <q-th auto-width />
-                                <q-th v-for="col in props.cols" :key="col.name" :props="props">
-                                    {{ col.label }}
-                                </q-th>
-                            </q-tr>
-                        ''')
-                        service_table.add_slot('body', r'''
-                            <q-tr :props="props">
-                                <q-td auto-width>
-                                    <q-btn size="sm" color="accent" round dense
-                                        @click="props.expand = !props.expand"
-                                        :icon="props.expand ? 'remove' : 'add'" />
-                                </q-td>
-                                <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                                    {{ col.value }}
-                                </q-td>
-                            </q-tr>
-                            <q-tr v-show="props.expand" :props="props">
-                                <q-td colspan="100%" style="max-width: 0;">
-                                    <div class="text-left" style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">{{ props.row.Description }}</div>
-                                </q-td>
-                            </q-tr>
-                        ''')
-
-
-    await zone_list()
 
 
 def daemon_cb(mystr):
