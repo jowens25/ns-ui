@@ -49,10 +49,10 @@ class Zone:
 class Firewall:
     Enable:            Optional[bool] = False
     Status:            Optional[str] = ''
-    ActiveZoneNames:   Optional[dict[dict]] = field(default_factory=dict)
+    ActiveZones:       Optional[dict[dict]] = field(default_factory=dict)
     AllowedAddresses:  Optional[list[str]] = field(default_factory=list)
     Services:          Optional[dict[dict]] = field(default_factory=dict)
-    Zones:             Optional[dict[Zone]] = field(default_factory=list)
+    Zones:             Optional[dict[Zone]] = field(default_factory=dict)
 
 
 async def GetFirewalld(bus: MessageBus):
@@ -85,16 +85,12 @@ def formatListToString(elements: list[str]) -> str:
         return None
     return ', '.join(elements) if elements else ''
 
-def parseActiveZones(zones :dict) -> dict:
-    rows = []
-    for k, v in zones.items():
-        
-        zone = k
-        interfaces = formatListToString(v.get('interfaces', []))
-        sources = formatListToString(v.get('sources', []))
+def getZoneInfo(name :str, zone :dict) -> dict:
 
-        rows.append({'zone':zone, 'interfaces':interfaces, 'sources':sources})
-    return rows
+    interfaces = formatListToString(zone.get('interfaces', []))
+    sources = formatListToString(zone.get('sources', []))
+
+    return {'name':name, 'interfaces':interfaces, 'sources':sources}
         
 
 

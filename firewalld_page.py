@@ -100,14 +100,25 @@ def getUdpPorts(ports) -> list:
     for p in ports:
         if p[1]=='udp':
             out.append(p[0])
-    return out
+
+    return formatListToString(out)
+
+def getTcpPorts(ports) -> list:
+    out = []
+    for p in ports:
+        if p[1]=='tcp':
+            out.append(p[0])
+
+    return formatListToString(out)
     
 def formatServicesInRows(services :Service):
     rows = []
     for s in services:
                     
-        rows.append({"Service": s.Name})
-                     #"UDP": getUdpPorts(s.Ports)})
+        rows.append({"Service": s.Name
+                     ,"UDP": getUdpPorts(s.Ports)
+                     ,"TCP": getTcpPorts(s.Ports)
+                     ,"Description": s.Description})
     
     return rows
 
@@ -122,9 +133,9 @@ async def firewall_table():
     if firewall.Enable:
         fire = await GetFirewalld(dbus.Bus)
         zone = await GetFirewalldZone(dbus.Bus)
-        firewall.ActiveZonesNames = await zone.call_get_active_zones()
-        
-        for az in firewall.ActiveZonesNames:
+        firewall.ActiveZones = await zone.call_get_active_zones()
+        #print(firewall.ActiveZonesNames)
+        for az in firewall.ActiveZones:
             z = Zone(az)
             #print(az)
             services = await zone.call_get_services(az)
@@ -150,29 +161,40 @@ async def firewall_table():
                 z.Services.append(service)
                 #pprint(service_settings)
                 
-            firewall.Zones.append(z)
+            firewall.Zones[az] = z
     
-    pprint(firewall) 
+    #pprint(firewall) 
     async def zone_list():
         with ui.column():
-            for zone in parseActiveZones(firewall.ActiveZonesNames):
+            for name, zoneinfo in firewall.Zones.items():
+                zone = firewall.ActiveZones[name]
+                #print("zone", zone)
+                zoneInfo = getZoneInfo(name, zone)
+                #print(zoneInfo)
+                #zoneInfo = firewall.ActiveZoneNames[name]
+                #zoneInfo = parseActiveZones(firewall.ActiveZoneNames[zone.Name])
+                #print(f'zone info? {zoneInfo}')
+                #print("zone:", zone)
                 with ui.card().classes("w-full"):
                     with ui.column():
                         with ui.row().classes("w-full items-baseline justify-between"):
 
                             with ui.row().classes("items-baseline"):
-                                ui.label().bind_text_from(zone, "zone", backward=lambda text: f'{text.capitalize()} zone').classes('text-h6')
-                                InterfaceText(zone)
+                                ui.label().bind_text_from(zoneInfo, "name", backward=lambda text: f'{text.capitalize()} zone').classes('text-h6')
+                                InterfaceText(zoneInfo)
 
                             with ui.row():
-                                AllowedAddressText(zone)
-
+                                AllowedAddressText(zoneInfo)
+                                print()
                             with ui.row():
                                 ui.button("add services").props("color=accent align=left")
                                 ui.button(icon="more_vert").props("flat color=accent align=left")
-                            
-                        services = formatServicesInRows(firewall.Zones[zone['zone']])
+                        
+                        #pprint(firewall.Zones)
+                        services = formatServicesInRows(firewall.Zones[name].Services)
                         print(services)
+
+
                         service_table = ui.table(
                             #title="Interfaces",
                             rows=services,
@@ -181,31 +203,38 @@ async def firewall_table():
                                 "align": "left",
                                 "headerClasses": "uppercase text-primary",
                             },
+                            row_key='Service'
                         )
 
-                        service_table.add_slot(
-                            "body-cell-name",
-                            """
-                            <q-td :props="props">
-                                <a :href="'/networking/' + props.row.name" 
-                                   class="text-accent cursor-pointer hover:underline"
-                                   >
-                                    {{ props.value }}
-                                </a>
-                            </q-td>
-                        """,
-                        )
-                        
-                        service_table.add_slot(
-                            "body-cell-addresses",
-                            """
-                            <q-td :props="props" class="font-bold text-sm">
-                                {{ props.value }}
-                            </q-td>
-                        """,
-                        )
-                            
-        
+                        service_table.props(f'visible-columns={"Service,UDP,TCP"}')  # Only show these
+
+                        service_table.add_slot('header', r'''
+                            <q-tr :props="props">
+                                <q-th auto-width />
+                                <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                                    {{ col.label }}
+                                </q-th>
+                            </q-tr>
+                        ''')
+                        service_table.add_slot('body', r'''
+                            <q-tr :props="props">
+                                <q-td auto-width>
+                                    <q-btn size="sm" color="accent" round dense
+                                        @click="props.expand = !props.expand"
+                                        :icon="props.expand ? 'remove' : 'add'" />
+                                </q-td>
+                                <q-td v-for="col in props.cols" :key="col.name" :props="props">
+                                    {{ col.value }}
+                                </q-td>
+                            </q-tr>
+                            <q-tr v-show="props.expand" :props="props">
+                                <q-td colspan="100%" style="max-width: 0;">
+                                    <div class="text-left" style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">{{ props.row.Description }}</div>
+                                </q-td>
+                            </q-tr>
+                        ''')
+
+
     await zone_list()
 
 
