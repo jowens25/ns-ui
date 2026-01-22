@@ -64,6 +64,8 @@ async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface)
             ui.link("Networking", "/networking")
             ui.label(">")
             ui.label(interface.Name)
+            ui.label(interface.Active)
+
             with ui.row().classes("w-full items-center justify-between"):
                 ui.label().classes("text-h6").bind_text(interface, "Name")
                 ui.label().classes("text-h6").bind_text(interface, "HardwareAddress")
@@ -83,11 +85,15 @@ async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface)
                         await nm.call_activate_connection("/", interface._dev_path, "/")
                     elif result == "disable":
                         await nm.call_deactivate_connection(interface._act_con_path)
+                    else:
+                        print('canceled')
 
                 ui.switch("Connected").on("click", lambda e: connection_sw_cb(e)).props(
                     "flat color=accent"
-                ).bind_value(interface, "Active")
+                ).bind_value_from(interface, "Active")
         ui.separator()
+        
+        ui.spinner(size='lg').bind_visibility_from(interface, "Active", backward=lambda e: (not e))
 
         with ui.column().classes("flex-1 gap-4"):
             with ui.row().classes("flex-1 gap-16"):
@@ -135,7 +141,6 @@ async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface)
 
 
 async def interface_page(interface_name: str):
-
     nm = GetNetworkManager(dbus.Bus)
 
     dev_path = await nm.call_get_device_by_ip_iface(interface_name)
@@ -147,6 +152,7 @@ async def interface_page(interface_name: str):
     await interface_card(nm, device, interface)
     
     async def state_changed_cb(u1, u2, u3):
+        
         print(u1, u2, u3)
         # Re-fetch the interface data to get the new state
         updated_interface = await GetInterfaceData(nm, interface_name)

@@ -1,9 +1,5 @@
-import asyncio
-import ipaddress
-import json
-import os
-import sys
-import time
+from systemd_lib import *
+
 from nicegui import ui, app
 from dataclasses import dataclass, asdict
 
@@ -12,7 +8,7 @@ from commands import runCmd
 from typing import Optional
 
 from dbus import dbus
-from snmp_client import GetSnmp
+from snmp_client import GetSnmp, snmp_call
 
 
 snmp_config_file = "/etc/snmp/snmpd.conf"
@@ -31,16 +27,10 @@ def validate_group(group: list):
     return [x.validate() for x in group]
     
 
-@ui.refreshable
-async def v3table():
-    snmp = await GetSnmp(dbus.Bus)
-    v3Users = await snmp.call_get_v3_users()
+async def create_v3_user_dialog():
+
     with ui.dialog() as createV3Dialog:
         v3 = V3User()
-        v3.Version = "usm"
-        v3.Permissions = "rwprivgroup"
-        v3.AuthType = "SHA"
-        v3.PrivType = "AES"
         with ui.card().classes("w-full"):
             with ui.column().classes("w-full"):
                 version = ui.input(label="Version").classes("w-full").bind_value(v3, "Version")
@@ -55,8 +45,11 @@ async def v3table():
                     
                     async def on_save_cb():
                         if all(validate_group([version, username, permissions, auth_type, auth_pass, priv_type, priv_pass])):
-                            print("did we validatie ")
-                            await snmp.call_create_v3_user(asdict(v3))
+                            print(asdict(v3))
+                            
+                            snmp = await GetSnmp(dbus.AppBus)
+                            rsp = await snmp.call_create_v3_user(asdict(v3))
+                            print(rsp)
                             await v3table.refresh()
                             createV3Dialog.close()
                         else:
@@ -67,9 +60,19 @@ async def v3table():
 
                     ui.button("save", on_click=on_save_cb).props("flat color=accent align=left") 
                     ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
+    
+    return createV3Dialog     
 
+
+@ui.refreshable
+async def v3table():
+    snmp = await GetSnmp(dbus.AppBus)
+    v3Users = await snmp.call_get_v3_users()
+    print(v3Users)
+    createV3Dialog = await create_v3_user_dialog()
+    
     table = ui.table(
-            title="V3 Users",
+            title="v3 Users",
             rows=v3Users,
             column_defaults={
                 "align": "left",
@@ -93,7 +96,7 @@ async def v3table():
 
 @ui.refreshable
 async def v2table():
-    snmp = await GetSnmp(dbus.Bus)
+    snmp = await GetSnmp(dbus.AppBus)
     v2Users = await snmp.call_get_v2_users()
     
     with ui.dialog() as createV2Dialog:
@@ -125,7 +128,7 @@ async def v2table():
                     ui.button(icon="cancel", on_click=on_cancel_cb).props("flat color=accent align=left")
 
     table = ui.table(
-            title="V2 Users",
+            title="v2 Users",
             rows=v2Users,
             column_defaults={
                 "align": "left",
@@ -146,12 +149,9 @@ async def v2table():
             "flat color=accent align=left").classes("w-full").props("dense")
         
 
-async def snmp_page():
-
-    snmp = await GetSnmp(dbus.Bus)
-
-    with ui.column():
-
+    
+async def snmp_status():
+    with ui.column() as status:
         ui.label("SNMP").classes("text-h5")
         
         async def snmp_switch_cb(e):
@@ -163,15 +163,17 @@ async def snmp_page():
                     ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
         
             result = await dialog
-            active = await snmp.call_is_active()
+            active = await isActive(dbus.AppBus, 'snmpd.service')
+            
             
             if result == "enable" and not active:
-                await snmp.call_start()
+                await systemd_start(dbus.AppBus, 'snmpd.service')
             
             if result == "disable" and active:
-                await snmp.call_stop()
+                await systemd_stop(dbus.AppBus, 'snmpd.service')
 
-            e.sender.value = await snmp.call_is_active()
+
+            e.sender.value = await isActive(dbus.AppBus, 'snmpd.service')
 
         async def snmp_reset_cb(e):
             with ui.dialog() as dialog, ui.card():
@@ -180,6 +182,8 @@ async def snmp_page():
                     ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
                     ui.button('Reset', on_click=lambda: dialog.submit("reset")).props("flat color=accent align=left")    
             if await dialog == "reset":
+                
+                snmp = await GetSnmp(dbus.AppBus)
                 await snmp.call_reset()
                 v2table.refresh()
                 v3table.refresh()
@@ -187,12 +191,26 @@ async def snmp_page():
         
         with ui.card().classes("w-full"):
             snmp_service_switch = ui.switch("SNMPD Status").on('click', lambda e: snmp_switch_cb(e)).props("flat color=accent align=left dense")
-            snmp_service_switch.value = await snmp.call_is_active()
+            snmp_service_switch.value = await isActive(dbus.AppBus, 'snmpd.service')
             ui.button("Reset SNMPD Config", on_click=snmp_reset_cb).props("flat color=accent align=left dense")
+    
+    return status
 
+async def snmp_page():
+    
+    #def props_cb(interface_name, changed_properties, invalidated_properties):
+    #    print("props ch cb")
+    #    #print(changed_properties['ActiveState'])
+    #    status.update()
+    #    
+    #print("registered")
+    #snmpDaemon = await getUnitInterface(dbus.AppBus, "snmpd.service")
+    #snmpDaemon.on_properties_changed(props_cb)
 
-        await v2table()  # Only show these
-        await v3table()
+   
+    await snmp_status()
+    await v2table()  # Only show these
+    await v3table()
         
 
 

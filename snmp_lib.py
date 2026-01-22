@@ -6,6 +6,7 @@ from commands import runCmd
 from typing import Optional
 import aiofiles
 
+from systemd_lib import *
 
 snmp_config_file = "/etc/snmp/snmpd.conf"
 default_persistent_dir_path = "/var/lib/snmp"
@@ -39,12 +40,14 @@ class Group:
 @dataclass
 class V3User:
     UserName: Optional[str] = ''
-    Version: Optional[str] = ''
-    AuthType: Optional[str] = ''
+    Version: Optional[str] = 'usm'
+    AuthType: Optional[str] = 'SHA'
     AuthPassphrase: Optional[str] = ''
-    PrivType: Optional[str] = ''
+    PrivType: Optional[str] = 'AES'
     PrivPassphrase: Optional[str] = ''
-    Permissions: Optional[str] = ''
+    Permissions: Optional[str] = 'rwprivgroup'
+    
+
 
     def from_dict(userDict :dict):
             user = V3User(
@@ -316,25 +319,12 @@ async def _overWriteWithDefaultSnmpConf():
 
 
 
-# ====================================================================
-# SNMP DAEMON
-# ====================================================================
-async def StopSnmpd():
-    print("stoping... snmpd")
-    await runCmd(["systemctl", "stop", "snmpd"])
 
-async def StartSnmpd():
-    print("starting... snmpd")
-    await runCmd(["systemctl", "start", "snmpd"])
 
-async def RestartSnmpd():
-    print("restarting... snmpd")
-    await runCmd(["systemctl", "restart", "snmpd"])
     
-    
-async def ResetSnmpd() -> str:
+async def ResetSnmpd(bus :MessageBus) -> str:
     # 1. Stop Snmp
-    await StopSnmpd()
+    await systemd_stop(bus, 'snmpd.service')
     # 2. Remove Persistent Dir
     await _deletePersistentDir()
     # 3. Reset Main Config
@@ -342,36 +332,31 @@ async def ResetSnmpd() -> str:
     # 4. Set Tmp Path for Persistent Dir
     await _setPersistentDir("/var/lib/tmp")
     # 5. Start Snmp
-    await StartSnmpd()
+    await systemd_start(bus, 'snmpd.service')
     # 6. Stop Snmp
-    await StopSnmpd()
+    await systemd_stop(bus, 'snmpd.service')
     # 7. Remove Temp Persistent Dir
     await _deletePersistentDir()
     # 8. Set Real Path for Persistent Dir
     await _setPersistentDir("/var/lib/snmp")
     # 9. Start Snmp
-    await StartSnmpd()
+    await systemd_start(bus, 'snmpd.service')
 
     return "snmpd reset"
 
 
-async def IsActiveSnmpd() -> bool:
-    status = await runCmd(["sudo", "systemctl", "is-active", "snmpd"])
-    if status.strip("\n") == "active":
-        return True
-    else:
-        return False
+
     
 
 # ====================================================================
 # V3 USERS
 # ====================================================================
-async def AddV3User(user: V3User):
+async def AddV3User(bus :MessageBus, user: V3User):
     '''add v3 user'''
     print('add v3 dude')
-    await StopSnmpd()
+    await systemd_stop(bus, 'snmpd.service')
     await _writeV3UserCreateDirective(user)
-    await StartSnmpd() # real user created
+    await systemd_start(bus, 'snmpd.service') # real user created
     await _deleteV3UserCreateDirective(user)
 
 async def ReadV3UserByUsername(username: str) -> V3User:
@@ -382,6 +367,7 @@ async def ReadV3UserByUsername(username: str) -> V3User:
     return None
 
 async def ReadV3Users() -> list[V3User]:
+    print('read v3 users')
     groups = await _readSnmpGroupsFromFile()
     v3s = await _readV3UsersFromFile()
     g: Group
@@ -394,37 +380,40 @@ async def ReadV3Users() -> list[V3User]:
                 v3.Version = g.Version
         pass #endfor
     pass #endfor
+    print(v3s)
     return v3s
 
-async def EditV3User(inituser :V3User, finaluser: V3User):
+async def EditV3User(bus: MessageBus, inituser :V3User, finaluser: V3User):
     '''edit v3 user'''
     print("EditV3User")
 
     if not inituser:
         print("v3 USER NOT FOUND")
-        sys.exit()
+        #sys.exit()
 
-    await StopSnmpd()
+    await systemd_stop(bus, 'snmpd.service')
     await _deleteV3UserFromStorage(inituser) # remove actual
     await _deleteV3UserFromConfig(inituser) # remove group
     await _writeV3UserCreateDirective(finaluser) # add grup and create
-    await StartSnmpd() # create
+    await systemd_start(bus, 'snmpd.service')
     await _deleteV3UserCreateDirective(finaluser) # remove create dir
 
-async def DeleteV3User(user: V3User):
+async def DeleteV3User(bus: MessageBus, user: V3User):
+    await systemd_stop(bus, 'snmpd.service')
     await _deleteV3UserFromConfig(user)
     await _deleteV3UserFromStorage(user)
+    await systemd_start(bus, 'snmpd.service')
 
 
 # ====================================================================
 # V2 USERS
 # ====================================================================
-async def AddV2User(user: V2User):
+async def AddV2User(bus: MessageBus, user: V2User):
     '''add v2 user'''
     print("add a v2 user")
-    await StopSnmpd()
+    await systemd_stop(bus, 'snmpd.service')
     await _writeV2User(user)
-    await StartSnmpd()
+    await systemd_start(bus, 'snmpd.service')
 
 async def ReadV2UserByCommunity(community: str) -> V2User:
     u :V2User
@@ -456,7 +445,7 @@ async def ReadV2Users() -> list[V2User]:
     pass #endfor
     return v2s
 
-async def EditV2User(user: V2User):
+async def EditV2User(bus : MessageBus, user: V2User):
     '''edit v2 user'''
     print("EditV2User")
     existingUser = await ReadV2UserBySecurityName(user.SecName)
@@ -465,14 +454,16 @@ async def EditV2User(user: V2User):
         print("USER NOT FOUND")
         sys.exit()
 
-    await StopSnmpd()
+    await systemd_stop(bus, 'snmpd.service')
     await DeleteV2User(existingUser)
     await _writeV2User(user)
-    await StartSnmpd()
+    await systemd_start(bus, 'snmpd.service')
 
-async def DeleteV2User(user: V2User):
+async def DeleteV2User(bus : MessageBus, user: V2User):
     '''delete v2 user'''
-    print(__name__)
+    print('delete v2')
+    
+    await systemd_stop(bus, 'snmpd.service')
     
     _user = [ user.SecName, user.Source, user.Community]
     _group = [ user.Permissions, user.Version, user.SecName]
@@ -488,6 +479,9 @@ async def DeleteV2User(user: V2User):
 
     async with aiofiles.open(snmp_config_file, "w") as f:
         await f.writelines(content)
+    
+    
+    await systemd_start(bus, 'snmpd.service')
 
 
 
