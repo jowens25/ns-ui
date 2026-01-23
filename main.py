@@ -125,9 +125,20 @@ async def root():
     with ui.footer().classes("bg-dark"):
         ui.label(version)
 
+    if production:
+        ui.sub_pages({
+        '/networking': network_page, 
+        '/networking/firewall': firewall_page,
+        '/networking/{interface_name}': interface_page,
+      
+        '/snmp': snmp_page, 
+        '/snmp/{version}/{user}': snmp_user_page,
 
+        '/terminal': terminal_page,
+        })
     ui.sub_pages({
-        '/': root_page, 
+        
+            '/': root_page, 
         '/networking': network_page, 
         '/networking/firewall': firewall_page,
         '/networking/{interface_name}': interface_page,
