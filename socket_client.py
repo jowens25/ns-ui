@@ -20,14 +20,27 @@ from pprint import pprint
 from dbus_next.aio import MessageBus
 
 import asyncio
-
+import time
 from dbus_next.constants import BusType
 
 from socket_lib import *
 
-async def test_snmp_client():
+from ntl import NtpServerProperties
 
-    print(await sendCommands(["$GPNTL,15,0,?"], True))
+async def test_snmp_client():
+    
+    #with open('configs/PtpGmNtpServer.ucm') as f:
+    #    content = f.read()
+    #await WriteConfig(content)
+    
+    cmds = {}
+    
+    for propName, i in NtpServerProperties.items():
+        cmds[propName] = f'$GPNTL,22,{i},?'
+
+    start = time.time_ns()
+    print(await sendCommands(cmds, False))
+    print((time.time_ns()-start)/(10**9))
 
 
     #def rx_callback(msg):
