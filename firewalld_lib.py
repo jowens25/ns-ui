@@ -113,32 +113,3 @@ def getZoneInfo(name :str, zone :dict) -> dict:
         
 
 
-
-# ====================================================================
-# Firewall DAEMON
-# ====================================================================
-async def StopFirewalld():
-    print("stoping... firewalld")
-    await runCmd(["systemctl", "stop", "firewalld"])
-
-async def StartFirewalld():
-    print("starting... firewalld")
-    await runCmd(["systemctl", "start", "firewalld"])
-
-async def RestartFirewalld():
-    print("restarting... firewalld")
-    await runCmd(["systemctl", "restart", "firewalld"])
-    
-    
-async def ResetFirewalld() -> str:
-    print("ERROR firewalld not reset")
-    return "firewalld not reset"
-
-
-async def IsActiveFirewalld() -> bool:
-    status = await runCmd(["sudo", "systemctl", "is-active", "firewalld"])
-    if status.strip("\n") == "active":
-        return True
-    else:
-        return False
-    

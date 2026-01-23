@@ -1,17 +1,18 @@
-import asyncio
+
 from dataclasses import asdict, field
-from pprint import pprint
 from typing import List, Optional
 from nicegui import ui, app, binding
-from theme import init_colors
-from rest_api import APIClient
-
 
 from dbus_next.signature import Variant
 from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
-from dbus import dbus
+from dbus_next import Message
+
+
+# ====================================================================
+# data classes
+# ====================================================================
 
 class ConnectionDetails:
     Id:          Optional[str] = ''
@@ -51,20 +52,6 @@ class Ipv4v6:
     RouteData:        Optional[list[IpRoute]] = field(default_factory=list)   # used
     #Routes:           Optional[list[list[int]]] = field(default_factory=list) # not used
 
-#@binding.bindable_dataclass
-#class Ip6:
-#    AddrGenMod:       Optional[int] = 0
-#    AddressData:      Optional[list[IpAddress]] = field(default_factory=list)
-#    #Addresses:        Optional[list[list[int]]] = None
-#    #Dns:              Optional[list[list[int]]] = None
-#    DnsData:          Optional[list[DnsServer]] = field(default_factory=list)
-#    DnsSearch:        Optional[list[DnsServer]] = field(default_factory=list)
-#    Gateway:          Optional[str] = ''
-#    IgnoreAutoDns:    Optional[bool] = False
-#    IgnoreAutoRoutes: Optional[bool] = False
-#    Method:           Optional[str] = ''
-#    RouteData:        Optional[list[IpRoute]] = field(default_factory=list)
-#    #Routes:           Optional[list[list[int]]] = None
 
 @binding.bindable_dataclass
 class Settings:
@@ -105,13 +92,79 @@ class InterfaceData:
 
 
 
-async def GetInterfaceData(nm: ProxyInterface, iface :str) -> InterfaceData:
+# ====================================================================
+# Proxies
+# ====================================================================
+def GetNetworkManager(bus: MessageBus) -> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager')
+
+
+def GetDevice(bus: MessageBus, path :str) -> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.Device.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Device')
+
+
+def GetActiveConnection(bus: MessageBus, path :str) -> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.Connection.Active.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Connection.Active')
+
+
+def GetIp4Config(bus: MessageBus, path :str) -> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.IP4Config.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.IP4Config')
+
+def GetIp6Config(bus: MessageBus, path :str) -> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.IP6Config.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.IP6Config')
+
+
+def GetSettingsManager(bus: MessageBus, path :str) -> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.Settings.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Settings')
+
+def GetConnection(bus: MessageBus, path : str)-> ProxyInterface:
+    file_name = 'org.freedesktop.NetworkManager.Settings.Connection.xml'
+    with open("introspection/"+file_name, "r") as f:
+        introspection = f.read()
+    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
+    return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
+
+
+async def GetConnectionFromDevice(bus: MessageBus, device :ProxyInterface) -> ProxyInterface:
+    active_connection_path = await device.get_active_connection()
+    if len(active_connection_path) > 1:
+        activeConnection = GetActiveConnection(bus, active_connection_path)
+        connection_path = await activeConnection.get_connection()
+        return GetConnection(bus, connection_path)
+    
+    
+# ====================================================================
+# Getters and Setters
+# ====================================================================
+
+async def GetInterfaceData(bus: MessageBus, nm: ProxyInterface, iface :str) -> InterfaceData:
     i = InterfaceData()
-
     i._dev_path = await nm.call_get_device_by_ip_iface(iface)
-    dev = GetDevice(dbus.Bus, i._dev_path)
-
-
+    dev = GetDevice(bus, i._dev_path)
     i.Name = iface
     i.HardwareAddress = await dev.get_hw_address()
     i.StateNumber = await dev.get_state()
@@ -125,16 +178,16 @@ async def GetInterfaceData(nm: ProxyInterface, iface :str) -> InterfaceData:
     i._act_con_path = await dev.get_active_connection()
 
     if len(i._act_con_path) > 1:
-        activeConnection = GetActiveConnection(dbus.Bus, i._act_con_path)
+        activeConnection = GetActiveConnection(bus, i._act_con_path)
         connection_path = await activeConnection.get_connection()
-        connection = GetConnection(dbus.Bus, connection_path)
+        connection = GetConnection(bus, connection_path)
         settings = await connection.call_get_settings()
         i.AutoConnect = settings['connection'].get('autoconnect', Variant('b', True)).value
 
 
     if len(ip4_config_path) > 1:
-        ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
-        ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
+        ip4Config = GetIp4Config(bus, ip4_config_path)
+        ip6Config = GetIp6Config(bus, ip6_config_path)
         ip4AddressData = await ip4Config.get_address_data()
         ip6AddressData = await ip6Config.get_address_data()
         i.Ip4 = addressDataToString(ip4AddressData)
@@ -144,65 +197,13 @@ async def GetInterfaceData(nm: ProxyInterface, iface :str) -> InterfaceData:
 
     return i
 
-def GetNetworkManager(bus: MessageBus):
-    file_name = 'org.freedesktop.NetworkManager.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager', introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager')
 
-def GetDevice(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.Device.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.Device')
-
-
-def GetActiveConnection(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.Connection.Active.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.Connection.Active')
-
-
-def GetIp4Config(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.IP4Config.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.IP4Config')
-
-def GetIp6Config(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.IP6Config.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.IP6Config')
-
-
-def GetSettingsManager(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.Settings.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.Settings')
-
-def GetConnection(bus: MessageBus, path : str):
-    file_name = 'org.freedesktop.NetworkManager.Settings.Connection.xml'
-    with open("introspection/"+file_name, "r") as f:
-        introspection = f.read()
-    obj = bus.get_proxy_object('org.freedesktop.NetworkManager', path, introspection)
-    return obj.get_interface('org.freedesktop.NetworkManager.Settings.Connection')
-
-
-async def GetSettings(dev: ProxyInterface) -> dict:
+async def GetSettings(bus: MessageBus, dev: ProxyInterface) -> dict:
     active_connection_path = await dev.get_active_connection()
     if len(active_connection_path) > 1:
-        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
+        activeConnection = GetActiveConnection(bus, active_connection_path)
         connection_path = await activeConnection.get_connection()
-        connection = GetConnection(dbus.Bus, connection_path)
+        connection = GetConnection(bus, connection_path)
         connection_settings = await connection.call_get_settings()
     return connection_settings
 
@@ -275,25 +276,18 @@ def SetIp(ip: Ipv4v6, version: str, settings :dict) -> dict:
 
     # address data
     settings[version]['address-data'] = addresses_to_dbus(ip.AddressData)
-
     # dns data
     settings[version]['dns-data'] = dns_to_dbus(ip.DnsData)
-
     # dns search
     settings[version]['dns-search'] = dns_to_dbus(ip.DnsSearch)
-
     # gateway
     settings[version]['gateway'] = Variant('s', ip.Gateway)
-
     # ignore auto dns
     settings[version]['ignore-auto-dns'] = Variant('b',  ( ip.IgnoreAutoDns))
-
     # ignore auto routes
     settings[version]['ignore-auto-routes'] = Variant('b', ( ip.IgnoreAutoRoutes))
-
     # method  
     settings[version]['method'] = Variant('s', ip.Method)
-
     #route data
     settings[version]['route-data'] = route_to_dbus(ip.RouteData)
 
@@ -314,8 +308,6 @@ def route_to_dbus(route: list[IpRoute]):
                                'next-hop': Variant('s', r.NextHop),
                                'metric': Variant('u', int(r.Metric)),
                                } for r in route])
-
-
 
 
 
@@ -423,16 +415,15 @@ def combineAddresses(ipv4AddressData, ipv6AddressData) -> str:
 
 
 
-async def GetDeviceFromInterface(iface :str) -> Device:
-    nm = GetNetworkManager(dbus.Bus)
+async def GetDeviceFromInterface(bus: MessageBus, iface :str) -> Device:
+    nm = GetNetworkManager(bus)
     device_path = await nm.call_get_device_by_ip_iface(iface)
-    device = GetDevice(dbus.Bus, device_path)
+    device = GetDevice(bus, device_path)
 
     hwaddr = await device.get_hw_address()
     flags = await device.get_interface_flags()
     carrier = processInterfaceFlags(flags)
 
-    #autoConnect = await device.get_autoconnect()
     state = await device.get_state()
     deviceState = processDeviceState(state)
     ip4_config_path = await device.get_ip4_config()
@@ -453,46 +444,34 @@ async def GetDeviceFromInterface(iface :str) -> Device:
 
     return myDevice
 
-    #return Device(device, )
 
 
 def isAutoconnect(settings :dict) -> bool:
     return settings['connection']
 
-async def  EnableConnection(devicePath):
-    nm = GetNetworkManager(dbus.Bus)
-    await nm.call_activate_connection("/", devicePath, "/")
 
-async def DisableConnection(activeConnectionPath):
-    nm = GetNetworkManager(dbus.Bus)
-    await nm.call_deactivate_connection(activeConnectionPath)
 
-async def GetConnectionFromDevice(device :ProxyInterface) -> ProxyInterface:
-    active_connection_path = await device.get_active_connection()
-    if len(active_connection_path) > 1:
-        activeConnection = GetActiveConnection(dbus.Bus, active_connection_path)
-        connection_path = await activeConnection.get_connection()
-        return GetConnection(dbus.Bus, connection_path)
 
-async def GetInterfacesAndAddresses() -> list:
+
+async def GetInterfacesAndAddresses(bus: MessageBus) -> list:
 
     rows = []
 
-    nm = GetNetworkManager(dbus.Bus)
+    nm = GetNetworkManager(bus)
     
     device_paths = await nm.call_get_devices()
     
     for devicePath in device_paths:
 
-        device = GetDevice(dbus.Bus, devicePath)
+        device = GetDevice(bus, devicePath)
         interface = await device.get_interface()
 
         ip4_config_path = await device.get_ip4_config()
         ip6_config_path = await device.get_ip6_config()
         if len(ip4_config_path) > 1:
 
-            ip4Config = GetIp4Config(dbus.Bus, ip4_config_path)
-            ip6Config = GetIp6Config(dbus.Bus, ip6_config_path)
+            ip4Config = GetIp4Config(bus, ip4_config_path)
+            ip6Config = GetIp6Config(bus, ip6_config_path)
 
             ip4AddressData = await ip4Config.get_address_data()
             ip6AddressData = await ip6Config.get_address_data()
@@ -503,14 +482,18 @@ async def GetInterfacesAndAddresses() -> list:
     return rows
 
 
+async def nm_call(bus: MessageBus, member: str, signature:str, body):
 
-
-
-
-
-
-
-
-
-
-#async def GetIp4Gateway(settings :dict) -> Ip4Gateway:
+    rsp = await bus.call(
+        Message(
+            destination='org.freedesktop.NetworkManager',
+            path='/org/freedesktop/NetworkManager',
+            interface='org.freedesktop.NetworkManager',
+            member=member,
+            signature=signature,
+            body=[body]
+        )
+    )
+    
+    if rsp.body:
+        return rsp.body[0]

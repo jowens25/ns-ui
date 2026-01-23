@@ -8,7 +8,7 @@ from commands import runCmd
 from typing import Optional
 
 from dbus import dbus
-from snmp_client import GetSnmp, snmp_call
+from snmp_lib import GetSnmp, snmp_call
 
 
 snmp_config_file = "/etc/snmp/snmpd.conf"

@@ -1,7 +1,6 @@
 from nicegui import ui, app, binding
 from networking_lib import *
 from firewalld_lib import *
-from firewalld_client import *
 from dbus_next.signature import Variant
 from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
@@ -18,7 +17,7 @@ async def network_page():
             with ui.card():
                 await firewall_status(True)
             
-            interfaces = await GetInterfacesAndAddresses()
+            interfaces = await GetInterfacesAndAddresses(dbus.AppBus)
             
             interface_table = ui.table(
                 title="Interfaces",
@@ -141,13 +140,13 @@ async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface)
 
 
 async def interface_page(interface_name: str):
-    nm = GetNetworkManager(dbus.Bus)
+    nm = GetNetworkManager(dbus.AppBus)
 
     dev_path = await nm.call_get_device_by_ip_iface(interface_name)
 
-    device = GetDevice(dbus.Bus, dev_path)
+    device = GetDevice(dbus.AppBus, dev_path)
 
-    interface = await GetInterfaceData(nm, interface_name)
+    interface = await GetInterfaceData(dbus.AppBus, nm, interface_name)
 
     await interface_card(nm, device, interface)
     
@@ -175,11 +174,11 @@ async def interface_page(interface_name: str):
 
 async def edit_ip_connection(version: str, device: ProxyInterface):
 
-    settings = await GetSettings(device)
+    settings = await GetSettings(dbus.AppBus, device)
 
     ip = GetIp(version, settings)
 
-    connection = await GetConnectionFromDevice(device)
+    connection = await GetConnectionFromDevice(dbus.AppBus, device)
 
     def add_ip_address(a: str = None, p: str = None, g: str = None):
         ip.AddressData.append(IpAddress(a, p))

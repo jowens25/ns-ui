@@ -7,6 +7,7 @@ from snmp_interface import SnmpInterface
 from pam_interface import PamInterface
 from systemd_lib import *
 
+from cockpit_dbus_superuser_service import Superuser
 async def main():
     
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
@@ -17,6 +18,9 @@ async def main():
 
     pamInterface = PamInterface('com.novus.ns.pam')
     bus.export('/com/novus/ns', pamInterface)
+    
+    userInterface = Superuser('com.novus.ns.super')
+    bus.export('/com/novus/ns', userInterface)
     
     #firewallInterface = FirewalldInterface('com.novus.ns.firewall')
     #bus.export('/com/novus/ns', firewallInterface)

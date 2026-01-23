@@ -17,6 +17,11 @@ from tests_page import tests_page
 from dbus import dbus
 from firewalld_page import firewall_page
 
+
+production = False
+
+version = '0.0.1'
+
 @ui.page('/networking')
 @ui.page('/networking/firewall')
 @ui.page('/networking/{interface_name}')
@@ -24,15 +29,13 @@ from firewalld_page import firewall_page
 @ui.page('/snmp')
 @ui.page('/snmp/{version}/{user}')
 
-@ui.page('/ntp')
-
-@ui.page('/accounts')
-@ui.page('/accounts/{user}')
-
 @ui.page('/terminal')
 
-@ui.page('/fpga')
 
+@ui.page('/ntp')
+@ui.page('/accounts')
+@ui.page('/accounts/{user}')
+@ui.page('/fpga')
 @ui.page('/tests')
 
 @ui.page('/')
@@ -50,7 +53,7 @@ async def root():
         )
         ui.image("assets/NOVUS_LOGO.svg").classes("w-48")
         ui.label(f'Welcome {app.storage.user["username"]}!')
-        ui.button("Request Admin").classes("bg-secondary").props("flat color=accent")
+        #ui.button("Request Admin").classes("bg-secondary").props("flat color=accent")
 
         label = ui.label()
 
@@ -120,23 +123,23 @@ async def root():
 
     # Footer
     with ui.footer().classes("bg-dark"):
-        ui.label("FOOTER")
+        ui.label(version)
 
 
     ui.sub_pages({
-                    '/': root_page, 
-                  '/networking': network_page, 
-                  '/networking/firewall': firewall_page,
-                  '/networking/{interface_name}': interface_page,
-                  '/ntp' : ntp_page,
-                  '/snmp': snmp_page, 
-                  '/snmp/{version}/{user}': snmp_user_page,
-                  '/accounts': accounts_page, 
-                  '/accounts/{user}': accounts_user_page,
-                  '/terminal': terminal_page,
-                  '/fpga': fpga_page,
-                  '/tests': tests_page,
-                  })
+        '/': root_page, 
+        '/networking': network_page, 
+        '/networking/firewall': firewall_page,
+        '/networking/{interface_name}': interface_page,
+        '/ntp' : ntp_page,
+        '/snmp': snmp_page, 
+        '/snmp/{version}/{user}': snmp_user_page,
+        '/accounts': accounts_page, 
+        '/accounts/{user}': accounts_user_page,
+        '/terminal': terminal_page,
+        '/fpga': fpga_page,
+        '/tests': tests_page
+        })
 
 
 

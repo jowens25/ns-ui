@@ -4,7 +4,6 @@ from dataclasses import asdict
 from dbus_next.service import ServiceInterface, method
 
 from snmp_lib import *
-from systemd_lib import *
 
 class SnmpInterface(ServiceInterface):
     def __init__(self, name):

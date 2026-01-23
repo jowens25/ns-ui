@@ -484,4 +484,28 @@ async def DeleteV2User(bus : MessageBus, user: V2User):
     await systemd_start(bus, 'snmpd.service')
 
 
+# ====================================================================
+# dbus
+# ====================================================================
 
+async def GetSnmp(bus: MessageBus):
+    introspection = await bus.introspect('com.novus.ns', '/com/novus/ns')
+    obj = bus.get_proxy_object('com.novus.ns', '/com/novus/ns', introspection)
+    return obj.get_interface('com.novus.ns.snmp')
+
+
+async def snmp_call(bus: MessageBus, member: str, signature:str, body):
+
+    rsp = await bus.call(
+        Message(
+            destination='com.novus.ns',
+            path='/com/novus/ns',
+            interface='com.novus.ns.snmp',
+            member=member,
+            signature=signature,
+            body=[body]
+        )
+    )
+    
+    if rsp.body:
+        return rsp.body[0]

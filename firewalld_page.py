@@ -1,24 +1,22 @@
 from nicegui import ui, app, binding
 from networking_lib import *
 from firewalld_lib import *
-from firewalld_client import *
 from dbus_next.signature import Variant
 from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
 from dbus import dbus
 
-
+from systemd_lib import isActive
 
 @ui.refreshable
 async def firewall_status(on_network_page: bool):
 
     firewall = Firewall()
-    fire = await GetFirewall(dbus.Bus)
-    firewall.Enable = await fire.call_is_active()
+    firewall.Enable = await isActive(dbus.AppBus, 'firewalld.service')
     firewall.Status = "Enabled" if firewall.Enable else "Disabled"
     numActiveZones = 0
     if firewall.Enable:
-        zone = await GetFirewalldZone(dbus.Bus)
+        zone = await GetFirewalldZone(dbus.AppBus)
         numActiveZones = len(await zone.call_get_active_zones())
         
     
@@ -109,17 +107,17 @@ def formatServicesInRows(serviceSettings :ServiceSetting):
 async def removeServiceFromZone(zoneName: str, serviceName:str):
     
     print(f'remove {serviceName} from {zoneName}')
-    zone = await GetFirewalldZone(dbus.Bus)
+    zone = await GetFirewalldZone(dbus.AppBus)
     
     res = await zone.call_remove_service(zoneName, serviceName)
     print("res1: ", res)
-    conf = await GetFirewalldConfig(dbus.Bus)
+    conf = await GetFirewalldConfig(dbus.AppBus)
     
     p = await conf.call_get_zone_by_name(zoneName)
     
     print(p)
     
-    configZone = await GetFirewalldConfigZone(dbus.Bus, p)
+    configZone = await GetFirewalldConfigZone(dbus.AppBus, p)
     res = await configZone.call_remove_service(serviceName)
     print(res)
     return
@@ -238,13 +236,13 @@ async def zone_list(firewall):
 async def firewall_table():
     
     firewall = Firewall()
-    fire = await GetFirewall(dbus.Bus)
+    fire = await GetFirewall(dbus.AppBus)
     firewall.Enable = await fire.call_is_active()
     firewall.Status = "Enabled" if firewall.Enable else "Disabled"
     
     if firewall.Enable:
-        fire = await GetFirewalld(dbus.Bus)
-        zone = await GetFirewalldZone(dbus.Bus)
+        fire = await GetFirewalld(dbus.AppBus)
+        zone = await GetFirewalldZone(dbus.AppBus)
         firewall.ActiveZones = await zone.call_get_active_zones()
         
         for az in firewall.ActiveZones:
@@ -290,15 +288,15 @@ async def firewall_table():
 
 
 
-def daemon_cb(mystr):
-    print(mystr)
-    firewall_table.refresh()
+#def daemon_cb(mystr):
+#    print(mystr)
+#    firewall_table.refresh()
 
 async def firewall_page():
     
     
-    fire = await GetFirewall(dbus.Bus)
-    fire.on_daemon_changed(daemon_cb)
+    #fire = await GetFirewall(dbus.AppBus)
+    #fire.on_daemon_changed(daemon_cb)
 
     with ui.card():
         with ui.row():
