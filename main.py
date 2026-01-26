@@ -32,13 +32,14 @@ version = '0.0.1'
 @ui.page('/terminal')
 
 
-@ui.page('/ntp')
+#@ui.page('/ntp')
 @ui.page('/accounts')
 @ui.page('/accounts/{user}')
-@ui.page('/fpga')
-@ui.page('/tests')
-
+#@ui.page('/fpga')
+#@ui.page('/tests')
 @ui.page('/')
+
+@ui.page('/root')
 async def root():
 
     init_colors()
@@ -80,19 +81,22 @@ async def root():
         ).props("flat color=white align=left").classes("full-width")
 
 
-        ui.button(
-            "NTP",
-            on_click=lambda: nav('/ntp'),
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
+        #ui.button(
+        #    "NTP",
+        #    on_click=lambda: nav('/ntp'),
+        #    icon="settings_ethernet",
+        #).props("flat color=white align=left").classes("full-width")
 
-        ui.button("Terminal", on_click=lambda: nav('/terminal'), icon="terminal").props("flat color=white align=left").classes("full-width")
+        ui.button("Terminal",
+                  on_click=lambda: nav('/terminal'), 
+                  icon="terminal"
+                  ).props("flat color=white align=left").classes("full-width")
 
-        ui.button(
-            "FPGA",
-            on_click=lambda: nav('/fpga'),
-            icon="settings_ethernet",
-        ).props("flat color=white align=left").classes("full-width")
+        #ui.button(
+        #    "FPGA",
+        #    on_click=lambda: nav('/fpga'),
+        #    icon="settings_ethernet",
+        #).props("flat color=white align=left").classes("full-width")
 
 
         ui.button(
@@ -107,11 +111,11 @@ async def root():
             icon="group",
         ).props("flat color=white align=left").classes("full-width")
 
-        ui.button(
-            "Tests",
-            on_click=lambda: nav('/tests'),
-            icon="group",
-        ).props("flat color=white align=left").classes("full-width")
+        #ui.button(
+        #    "Tests",
+        #    on_click=lambda: nav('/tests'),
+        #    icon="group",
+        #).props("flat color=white align=left").classes("full-width")
 
         ui.separator()
 
@@ -125,20 +129,9 @@ async def root():
     with ui.footer().classes("bg-dark"):
         ui.label(version)
 
-    if production:
-        ui.sub_pages({
-        '/networking': network_page, 
-        '/networking/firewall': firewall_page,
-        '/networking/{interface_name}': interface_page,
-      
-        '/snmp': snmp_page, 
-        '/snmp/{version}/{user}': snmp_user_page,
 
-        '/terminal': terminal_page,
-        })
     ui.sub_pages({
-        
-            '/': root_page, 
+        '/': network_page,
         '/networking': network_page, 
         '/networking/firewall': firewall_page,
         '/networking/{interface_name}': interface_page,
@@ -148,8 +141,8 @@ async def root():
         '/accounts': accounts_page, 
         '/accounts/{user}': accounts_user_page,
         '/terminal': terminal_page,
-        '/fpga': fpga_page,
-        '/tests': tests_page
+        #'/fpga': fpga_page,
+        #'/tests': tests_page
         })
 
 
