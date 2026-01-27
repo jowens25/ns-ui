@@ -37,9 +37,13 @@ async def test_snmp_client():
     
     for propName, i in NtpServerProperties.items():
         cmds[propName] = f'$GPNTL,22,{i},?'
+        
+    #for i in range(len(NtpServerProperties)):
+    #    cmds[str(i)] = f'$BAUDNV'
+        
 
     start = time.time_ns()
-    print(await sendCommands(cmds, False))
+    print(await sendCommands(cmds, True))
     print((time.time_ns()-start)/(10**9))
 
 
