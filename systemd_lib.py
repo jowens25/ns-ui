@@ -144,7 +144,7 @@ async def getServiceState(bus: MessageBus, service: str) -> str:
 
 async def isActive(bus: MessageBus, service: str) -> bool:
     state = await getServiceState(bus, service)
-    print('is active? ', state)
+    print(f'{service} is active: {state}')
     if state == 'active':
         return True
     else:

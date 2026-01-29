@@ -12,9 +12,9 @@ from firewalld_page import firewall_status
 
 
 async def network_page():
-    with ui.column():
-            
-            with ui.card():
+
+    with ui.column().classes("w-full"):
+            with ui.card().classes("w-full").props('flat'):
                 await firewall_status(True)
             
             interfaces = await GetInterfacesAndAddresses(dbus.AppBus)
@@ -27,7 +27,7 @@ async def network_page():
                     "align": "left",
                     "headerClasses": "uppercase text-primary",
                 },
-            )
+            ).classes("w-full").props('flat')
             
             interface_table.add_slot(
                 "body-cell-name",
@@ -58,9 +58,9 @@ async def network_page():
 @ui.refreshable
 async def interface_card(nm : ProxyInterface, device: ProxyInterface, interface):
 
-    with ui.card():
+    with ui.card().props('flat'):
         with ui.row():
-            ui.link("Networking", "/networking")
+            ui.link("Networking", "/networking").classes('text-accent')
             ui.label(">")
             ui.label(interface.Name)
             ui.label(interface.Active)

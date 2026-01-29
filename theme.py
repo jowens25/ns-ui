@@ -12,7 +12,8 @@ def init_colors():
         negative="#c10015",
         info="#31ccec",
         warning="#f2c037",
-    )
+        firewallcard="#3A3D3D")
+
     dark = ui.dark_mode()
     dark.enable()
     ui.query("body").classes("bg-secondary")

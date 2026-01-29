@@ -9,6 +9,7 @@ from dbus_next.aio.proxy_object import ProxyInterface
 from dbus_next.aio import MessageBus
 from dbus_next import Message
 
+from firewalld_lib import formatListToString
 
 # ====================================================================
 # data classes
@@ -451,7 +452,19 @@ def isAutoconnect(settings :dict) -> bool:
 
 
 
+async def GetInterfaces(bus: MessageBus) -> list:
 
+    interfaces = []
+
+    nm = GetNetworkManager(bus)
+
+    devices_paths = await nm.call_get_devices()
+
+    for p in devices_paths:
+        dev = GetDevice(bus, p)
+        interfaces.append(await dev.get_interface())
+    
+    return interfaces
 
 async def GetInterfacesAndAddresses(bus: MessageBus) -> list:
 
@@ -465,7 +478,9 @@ async def GetInterfacesAndAddresses(bus: MessageBus) -> list:
 
         device = GetDevice(bus, devicePath)
         interface = await device.get_interface()
-
+        hwaddr = await device.get_hw_address()
+        state = await device.get_state()
+        processDeviceState
         ip4_config_path = await device.get_ip4_config()
         ip6_config_path = await device.get_ip6_config()
         if len(ip4_config_path) > 1:
@@ -475,9 +490,22 @@ async def GetInterfacesAndAddresses(bus: MessageBus) -> list:
 
             ip4AddressData = await ip4Config.get_address_data()
             ip6AddressData = await ip6Config.get_address_data()
+
+            gw = []
+            ip4gw = await ip4Config.get_gateway()
+            if ip4gw:
+                gw.append(ip4gw)
+            ip6gw = await ip6Config.get_gateway()
+            if ip6gw:
+                gw.append(ip4gw)
+
+
     
-            rows.append({'name': interface,'addresses': 
-                combineAddresses(ip4AddressData, ip6AddressData)})
+            rows.append({'name': interface,
+                         'addresses': combineAddresses(ip4AddressData, ip6AddressData),
+                         'state':processDeviceState(state),
+                         'gateway': formatListToString(gw),
+                         'hw address': hwaddr})
         
     return rows
 

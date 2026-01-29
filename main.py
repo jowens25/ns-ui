@@ -143,7 +143,7 @@ async def root():
         '/terminal': terminal_page,
         #'/fpga': fpga_page,
         #'/tests': tests_page
-        })
+        }).classes("w-full")
 
 
 

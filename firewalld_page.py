@@ -6,25 +6,42 @@ from dbus_next.errors import DBusError
 from dbus_next.aio.proxy_object import ProxyInterface
 from dbus import dbus
 
-from systemd_lib import isActive
+from systemd_lib import *
+
+async def interface_list(checks: dict):
+    for i in await GetInterfaces(dbus.AppBus):
+        checks[i] = False
+        ui.checkbox(i).props("flat color=accent align=left").bind_value(checks, i)
+
+async def service_list(services: dict):
+    for s in await getServices(dbus.AppBus):
+        with ui.row():
+            ui.checkbox(s).props("flat color=accent align=left").bind_value(services, s)
+
+            with ui.column():
+                ui.label().bind_text_from(s, "UDP")
+                ui.label().bind_text_from(s, "TCP")
+
 
 @ui.refreshable
 async def firewall_status(on_network_page: bool):
 
     firewall = Firewall()
     firewall.Enable = await isActive(dbus.AppBus, 'firewalld.service')
-    firewall.Status = "Enabled" if firewall.Enable else "Disabled"
+    firewall.Status = (await getServiceState(dbus.AppBus, "firewalld.service")).capitalize()
     numActiveZones = 0
     if firewall.Enable:
         zone = await GetFirewalldZone(dbus.AppBus)
         numActiveZones = len(await zone.call_get_active_zones())
         
     
-    with ui.column():
+    with ui.column().classes("w-full"):
         with ui.row().classes("w-full items-center justify-between"):
             with ui.row().classes( "items-center"):
                 ui.label("Firewall").classes("text-h6")
-
+                if on_network_page:
+                    ui.link(f'{numActiveZones} active zones', '/networking/firewall').classes('text-accent')
+            
                 async def fire_switch_cb(e):
                     action = "enable" if  e.sender.value else "disable"
                     with ui.dialog() as dialog, ui.card():
@@ -33,23 +50,25 @@ async def firewall_status(on_network_page: bool):
                             ui.button('Cancel', on_click=lambda: dialog.submit("Cancel")).props("flat color=accent align=left")
                             ui.button(f'{action}', on_click=lambda: dialog.submit(action)).props("flat color=accent align=left")
                     result = await dialog
-                    active = await fire.call_is_active()
+                    active = await isActive(dbus.AppBus, "firewalld.service")
                     if result == "enable" and not active:
-                        await fire.call_start()
+                        await systemd_start(dbus.AppBus, "firewalld.service")
                     if result == "disable" and active:
-                        await fire.call_stop()
-
+                        await systemd_stop(dbus.AppBus, "firewalld.service")
                     await firewall_status.refresh()
-                ui.switch(firewall.Status).on('click', lambda e: fire_switch_cb(e)
-                    ).props("flat color=accent align=left dense").bind_value(firewall, "Enable").bind_text
+
+                ui.switch(f"Status: {firewall.Status}").on('click', lambda e: fire_switch_cb(e)
+                        ).props("flat color=accent align=left dense").bind_value(firewall, "Enable").bind_text
 
             if on_network_page:
                 ui.button("Edit rules and zones", on_click=lambda e: ui.navigate.to('/networking/firewall')).props("flat color=accent align=left dense")
 
             else:
-                ui.button("add new zone").props("color=accent align=left")
+                zoneDialog = await addZoneDialog()
+                ui.button("add new zone", on_click=zoneDialog.open).props("color=accent align=left")
         
-        ui.link(f'{numActiveZones} active zones', '/networking/firewall').classes('text-accent')
+
+ 
 
 
     
@@ -73,36 +92,7 @@ def AllowedAddressText(zoneSettings :ZoneSetting):
     return (l1, l2)
 
 
-def getUdpPorts(ports) -> list:
-    out = []
-    for p in ports:
-        if p[1]=='udp':
-            out.append(p[0])
 
-    return formatListToString(out)
-
-def getTcpPorts(ports) -> list:
-    out = []
-    for p in ports:
-        if p[1]=='tcp':
-            out.append(p[0])
-
-    return formatListToString(out)
-    
-def formatServicesInRows(serviceSettings :ServiceSetting):
-    
-
-    rows = []
-    for n, s in serviceSettings.items():
-                    
-        rows.append({ #"expand": '',
-                     "Service": n
-                     ,"UDP": getUdpPorts(s.Ports)
-                     ,"TCP": getTcpPorts(s.Ports)
-                     ,"Description": s.Description
-                     #,"remove": ''
-                     })
-    return rows
 
 async def removeServiceFromZone(zoneName: str, serviceName:str):
     
@@ -124,14 +114,92 @@ async def removeServiceFromZone(zoneName: str, serviceName:str):
 
 
 
-
 async def addZoneDialog():
     with ui.dialog() as dialog:
-        with ui.card():
+        with ui.card().props('flat'):
+            ui.label("Add zone").classes("text-h5")
+            ui.label("Interfaces").classes("text-h6")
+
+            with ui.row():
+                checks = {}
+                await interface_list(checks)
+
+            #selectedServices = ui.input_chips('Allowed services', new_value_mode='add-unique', clearable=True).props('disable-input')
+            with ui.scroll_area():
+                services = formatServicesInRows(await getServices(dbus.AppBus))
+                services_table = ui.table(
+                        rows=services,
+                        column_defaults={
+                            "align": "left",
+                            "headerClasses": "uppercase text-primary",
+                        },
+                        row_key='Service',
+                        selection='multiple',
+                        #on_select=lambda e: print(f'selected: {e.selection}'),                   
+                          ).props('dense')
+                
+              
+
+                services_table.props(f'visible-columns=["Service","UDP","TCP"]')
+#
+                services_table.add_slot('header', r'''
+                    <q-tr :props="props">
+                        <q-th auto-width />
+                        <q-th auto-width />
+
+                        <q-th v-for="col in props.cols" :key="col.name" :props="props"> {{ col.label }} </q-th>
+                    </q-tr>
+                ''')
+#
+                services_table.add_slot('body', r'''
+                    <q-tr :props="props">
+                                <!-- selection checkbox -->
+            <q-td auto-width>
+                <q-checkbox 
+                    :model-value="props.selected" 
+                    @update:model-value="props.selected = !props.selected"
+                    color="accent"
+                    dense 
+                />
+            </q-td>
+
+                        <!-- expand button -->
+                        <q-td auto-width @click.stop="">
+                            <q-btn size="sm" color="accent" round dense 
+                                   @click="props.expand = !props.expand" 
+                                   :icon="props.expand ? 'remove' : 'add'" />
+                        </q-td>
+                        <!-- normal columns -->
+                        <q-td v-for="col in props.cols" :key="col.name" :props="props" 
+                              style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 200px;">
+                            {{ col.value }}
+                        </q-td>                 
+                    </q-tr>
+                    <!-- expanded description -->
+                    <q-tr v-show="props.expand" :props="props">
+                        <q-td colspan="100%" style="max-width: 0;">
+                            <div class="text-left"
+                                 style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
+                                {{ props.row.Description }}
+                            </div>
+                        </q-td>
+                    </q-tr>
+                ''')
+#
+            serviceFilter = ui.input('Search for services').bind_value(services_table, "filter")
+
+            def on_save_cb():
+                for c,v in checks.items():
+                    print(c, v)
+
+                # Get selected services when saving
+                selected = [row['Service'] for row in services if row.get('Select', False)]
+                print(f"Selected services: {selected}")
             
-            ui.label("nothing")
-            ui.button('close', on_click=dialog.close)
-        
+            with ui.row():
+                ui.button('Add zone', on_click=on_save_cb).props("color=accent align=left")
+                ui.button('Cancel', on_click=dialog.close).props("flat color=accent align=left")
+
     return dialog
 
 async def addServiceDialog():
@@ -150,7 +218,7 @@ async def addServiceDialog():
 async def zone_list(firewall):
     with ui.column():
         for zoneName, zoneSetting in firewall.ZoneSettings.items():
-            with ui.card().classes("w-full"):
+            with ui.card().classes("w-full").props('flat').classes("bg-secondary"):
                 with ui.column():
                     with ui.row().classes("w-full items-baseline justify-between"):
                         with ui.row().classes("items-baseline"):
@@ -174,7 +242,7 @@ async def zone_list(firewall):
                             "headerClasses": "uppercase text-primary",
                         },
                         row_key='Service'
-                    )
+                    ).props("flat")
                     service_table.props(f'visible-columns={"Service,UDP,TCP"}')  # Only show these
                     
                     service_table.add_slot('header', r'''
@@ -236,9 +304,9 @@ async def zone_list(firewall):
 async def firewall_table():
     
     firewall = Firewall()
-    fire = await GetFirewall(dbus.AppBus)
-    firewall.Enable = await fire.call_is_active()
-    firewall.Status = "Enabled" if firewall.Enable else "Disabled"
+    #fire = await GetFirewall(dbus.AppBus)
+    firewall.Enable = await isActive(dbus.AppBus, "firewalld.service")
+    firewall.Status = (await getServiceState(dbus.AppBus, "firewalld.service")).capitalize()
     
     if firewall.Enable:
         fire = await GetFirewalld(dbus.AppBus)
@@ -300,7 +368,7 @@ async def firewall_page():
 
     with ui.card():
         with ui.row():
-            ui.link("Networking", "/networking")
+            ui.link("Networking", "/networking").classes('text-accent')
             ui.label(">")
             ui.label('firewall')
         await firewall_status(False)

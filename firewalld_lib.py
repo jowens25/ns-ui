@@ -110,6 +110,70 @@ def getZoneInfo(name :str, zone :dict) -> dict:
     sources = formatListToString(zone.get('sources', []))
 
     return {'name':name, 'interfaces':interfaces, 'sources':sources}
+
+
+async def getServices(bus: MessageBus):
+    '''all not just runtime'''
+
+    fire = await GetFirewalld(bus)
+
+    conf = await GetFirewalldConfig(bus)
+    serviceNames = await conf.call_get_service_names()
+    services = {}
+    for name in serviceNames:
+        s = ServiceSetting()
+        s.Name = name
+        serviceSettings = await fire.call_get_service_settings2(s.Name)
+                                
+        includes = serviceSettings.get('includes', False)
+        if includes:
+            for i in includes.value:
+                ser_set = await fire.call_get_service_settings2(i)
+                s.Ports.extend(ser_set.get('ports', Variant('a(ss)', [['port not available', 'protocol not available']])).value)
+
+                            
+        s.Name = serviceSettings.get('short', Variant('s', 'name not available')).value
+        s.Ports.extend(serviceSettings.get('ports', Variant('a(ss)', [['port not available', 'protocol not available']])).value)
+        s.Description = serviceSettings.get('description', Variant('s', 'Description not available')).value
+
+        services[name] = s
+
+
+    return services
+
+
+
+def getUdpPorts(ports) -> list:
+    out = []
+    for p in ports:
+        if p[1]=='udp':
+            out.append(p[0])
+
+    return formatListToString(out)
+
+def getTcpPorts(ports) -> list:
+    out = []
+    for p in ports:
+        if p[1]=='tcp':
+            out.append(p[0])
+
+    return formatListToString(out)
+    
+
+
+def formatServicesInRows(serviceSettings :dict):
+    
+
+    rows = []
+    for n, s in serviceSettings.items():
+        rows.append({ 
+                     #"Select": False,
+                     "Service": n
+                     ,"UDP": getUdpPorts(s.Ports)
+                     ,"TCP": getTcpPorts(s.Ports)
+                     ,"Description": s.Description
+                     #,"remove": ''
+                     })
         
-
-
+    #pprint(rows)
+    return rows
